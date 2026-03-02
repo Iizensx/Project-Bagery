@@ -1,0 +1,766 @@
+@{
+    ViewData["Title"] = "เมนู";
+}
+
+<style>
+    body {
+        margin-top: 80px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+        height: 400px;
+        background-color: #1a1a1a;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-align: center;
+        overflow: hidden;
+    }
+
+    .hero-title {
+        font-size: 4rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        z-index: 1;
+        text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Main Container */
+    .main-container {
+        max-width: 1400px;
+        margin: 50px auto 0;
+        padding: 0 2rem 4rem;
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2.5rem;
+    }
+
+    /* Sidebar */
+    .menu-sidebar {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        height: fit-content;
+        position: sticky;
+        top: 100px;
+    }
+
+    .menu-title {
+        color: #F97316;
+        font-weight: 800;
+        letter-spacing: 2px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .menu-heading {
+        font-size: 1.8rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 2rem;
+        color: #1a1a1a;
+    }
+
+    .menu-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        text-decoration: none;
+        color: #4B5563;
+        font-weight: 600;
+        border-radius: 15px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid transparent;
+    }
+
+    .menu-item:hover {
+        background: #FFF8E7;
+        color: #F97316;
+        transform: translateX(8px);
+    }
+
+    .menu-item.active {
+        background: #F97316;
+        color: white;
+        box-shadow: 0 10px 20px rgba(249, 115, 22, 0.2);
+    }
+
+    .menu-icon {
+        font-size: 1.4rem;
+    }
+
+    /* Products Grid */
+    .products-section {
+        background: white;
+        padding: 3rem;
+        border-radius: 32px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.03);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .dot {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #F97316;
+        opacity: 0.1;
+    }
+
+    .dot-1 { top: 40px; right: 40px; }
+    .dot-2 { bottom: 60px; left: 40px; }
+    .dot-3 { top: 60%; right: 20px; }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 3rem;
+    }
+
+    .section-subtitle {
+        color: #F97316;
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+        font-size: 2.8rem;
+        font-weight: 900;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .nav-controls {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .nav-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        border: 2px solid #F3F4F6;
+        background: white;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .nav-btn:hover {
+        border-color: #F97316;
+        color: #F97316;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2.5rem;
+        width: 100%;
+        max-width: 1400px;
+    }
+
+    /* Product Card */
+    .product-card {
+        background: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid #F3F4F6;
+        position: relative;
+    }
+
+    .product-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        border-color: #F97316;
+    }
+
+    .product-image {
+        height: 220px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .product-card:hover .product-image img {
+        transform: scale(1.1);
+    }
+
+    .product-info {
+        padding: 1.8rem;
+    }
+
+    .product-name {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #1a1a1a;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-price {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #F97316;
+        margin-bottom: 1.2rem;
+    }
+
+    .btn-order {
+        width: 100%;
+        padding: 1rem;
+        background: #1a1a1a;
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .btn-order:hover {
+        background: #F97316;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(249, 115, 22, 0.3);
+    }
+
+    /* Testimonials Section */
+    .testimonials-section {
+        background: #1a1a1a;
+        border-radius: 40px;
+        padding: 5rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5rem;
+        align-items: center;
+        color: white;
+        margin-bottom: 4rem;
+    }
+
+    .testimonial-label {
+        color: #F97316;
+        font-weight: 800;
+        letter-spacing: 3px;
+        margin-bottom: 1.5rem;
+    }
+
+    .testimonial-title {
+        font-size: 3.5rem;
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 2.5rem;
+    }
+
+    .testimonial-text {
+        font-size: 1.2rem;
+        line-height: 1.8;
+        color: #9CA3AF;
+        margin-bottom: 3rem;
+        font-style: italic;
+    }
+
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .author-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        background: #F97316;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 800;
+    }
+
+    .author-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+
+    .author-title {
+        color: #6B7280;
+    }
+
+    .author-rating {
+        color: #FBBF24;
+        margin-top: 0.5rem;
+        font-weight: 700;
+    }
+
+    .testimonial-image {
+        position: relative;
+        height: 600px;
+        border-radius: 30px;
+        overflow: hidden;
+    }
+
+    /* Features Section */
+    .features-card {
+        background: white;
+        border-radius: 30px;
+        padding: 3rem;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+        margin-top: -100px;
+        position: relative;
+        z-index: 3;
+        border: 1px solid #F3F4F6;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 1rem;
+    }
+
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        background: #FFF8E7;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+    }
+
+    .feature-title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #1a1a1a;
+        margin: 0;
+    }
+
+    .feature-text {
+        color: #6B7280;
+        margin: 0.3rem 0 0 0;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        body {
+            margin-top: 60px;
+        }
+    }
+
+    @@media (max-width: 1200px) {
+        .main-container {
+            grid-template-columns: 1fr;
+            padding: 0 1.5rem 3rem;
+        }
+
+        .menu-sidebar {
+            position: relative;
+            top: 0;
+            margin-bottom: 2rem;
+        }
+
+        .menu-list {
+            flex-direction: row;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .menu-item {
+            white-space: nowrap;
+        }
+
+        .testimonials-section {
+            grid-template-columns: 1fr;
+            padding: 3rem;
+        }
+    }
+
+    .stock-badge {
+        display: inline-block;
+        padding: 0.35rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: #f0fdf4;
+        color: #166534;
+    }
+
+    .btn-details {
+        width: 100%;
+        padding: 0.8rem;
+        background: #f3f4f6;
+        color: #4b5563;
+        border: none;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        cursor: pointer;
+        margin-bottom: 0.8rem;
+    }
+
+    .btn-details:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 24px;
+        border: none;
+        overflow: hidden;
+    }
+
+    .detail-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-price {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #F97316;
+        margin-bottom: 1rem;
+    }
+
+    .detail-description {
+        color: #4b5563;
+        line-height: 1.6;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    @@media (max-width: 768px) {
+        .section-title {
+            font-size: 2rem;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .testimonials-section {
+            padding: 2rem;
+        }
+
+        .testimonial-title {
+            font-size: 2rem;
+        }
+
+        .products-section {
+            padding: 1.5rem;
+        }
+    }
+</style>
+
+<!-- Hero Banner -->
+<div class="hero-banner">
+    <img src="~/img/bagery1.png" alt="Menu Banner" style="width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0.5;">
+    <h1 class="hero-title">Menu</h1>
+</div>
+
+<!-- Features Section -->
+<div class="container">
+    <div class="features-card">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">🛵</div>
+                    <div>
+                        <h3 class="feature-title">Fast Delivery</h3>
+                        <p class="feature-text">Within 30 minutes</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">🥐</div>
+                    <div>
+                        <h3 class="feature-title">Freshly Baked</h3>
+                        <p class="feature-text">Baked fresh every morning</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-item">
+                    <div class="feature-icon">📦</div>
+                    <div>
+                        <h3 class="feature-title">Free Delivery</h3>
+                        <p class="feature-text">Free on your first 3 orders</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-container">
+    <!-- Sidebar Menu -->
+    <aside class="menu-sidebar">
+        <div class="menu-title">OUR MENU</div>
+        <div class="menu-heading">Menu That Always Makes You Fall In Love</div>
+        <div class="menu-list">
+            <a href="#" class="menu-item active" onclick="filterMenu('all', event)">
+                <span class="menu-icon">🥐</span>
+                เมนูทั้งหมด
+            </a>
+            <a href="#" class="menu-item" onclick="filterMenu('signature', event)">
+                <span class="menu-icon">⭐</span>
+                เมนูซิกเนเจอร์
+            </a>
+            <a href="#" class="menu-item" onclick="filterMenu('pastry', event)">
+                <span class="menu-icon">🥐</span>
+                ครัวซองต์ & เพสตรี้
+            </a>
+            <a href="#" class="menu-item" onclick="filterMenu('cake', event)">
+                <span class="menu-icon">🍰</span>
+                เค้ก & เบเกอรี่หวาน
+            </a>
+            <a href="#" class="menu-item" onclick="filterMenu('drinks', event)">
+                <span class="menu-icon">☕</span>
+                เครื่องดื่ม
+            </a>
+        </div>
+    </aside>
+
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="dot dot-1"></div>
+        <div class="dot dot-2"></div>
+        <div class="dot dot-3"></div>
+
+        <div class="section-header">
+            <div>
+                <div class="section-subtitle">Special Offer</div>
+                <h2 class="section-title">Popular Menu</h2>
+            </div>
+            <div class="nav-controls">
+                <button class="nav-btn">←</button>
+                <button class="nav-btn" style="background: #E85D5D; color: white;">→</button>
+            </div>
+        </div>
+
+        <div class="products-grid">
+            <!-- Pastry -->
+            <div class="product-card" data-category="pastry">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=400" alt="Plain Croissant">
+                </div>
+                <div class="product-info">
+                    <div class="product-name">Plain Croissant</div>
+                    <div class="product-price">75 บาท</div>
+                    <div class="stock-badge">คงเหลือ: 5</div>
+                    <button class="btn-details" onclick="showProductDetails('Plain Croissant', 'ครัวซองต์เนยสดแท้ นำเข้าจากฝรั่งเศส อบสดใหม่ทุกวัน ผิวกรอบนอก นุ่มใน หอมกลิ่นเนยสุดๆ', 75, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
+                    <button class="btn-order" onclick="addToCart('Plain Croissant', 75)">สั่งเลย</button>
+                </div>
+            </div>
+
+            <!-- Signature -->
+            <div class="product-card" data-category="signature">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=400" alt="Blueberry Cheesecake">
+                </div>
+                <div class="product-info">
+                    <div class="product-name">Blueberry Cheesecake</div>
+                    <div class="product-price">145 บาท</div>
+                    <div class="stock-badge">คงเหลือ: 5</div>
+                    <button class="btn-details" onclick="showProductDetails('Blueberry Cheesecake', 'ชีสเค้กเนื้อเนียนนุ่ม ราดด้วยซอสบลูเบอร์รี่เข้มข้น และบลูเบอร์รี่สด ฐานกรุบกรอบเข้ากันได้อย่างลงตัว', 145, 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
+                    <button class="btn-order" onclick="addToCart('Blueberry Cheesecake', 145)">สั่งเลย</button>
+                </div>
+            </div>
+
+            <!-- Pastry -->
+            <div class="product-card" data-category="pastry">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=400" alt="Almond Croissant">
+                </div>
+                <div class="product-info">
+                    <div class="product-name">Almond Croissant</div>
+                    <div class="product-price">95 บาท</div>
+                    <div class="stock-badge">คงเหลือ: 5</div>
+                    <button class="btn-details" onclick="showProductDetails('Almond Croissant', 'ครัวซองต์สอดไส้ครีมอัลมอนด์ โรยหน้าด้วยอัลมอนด์สไลด์และไอซิ่ง หอมหวานกรุบกรอบ', 95, 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
+                    <button class="btn-order" onclick="addToCart('Almond Croissant', 95)">สั่งเลย</button>
+                </div>
+            </div>
+
+            <!-- Cake -->
+            <div class="product-card" data-category="cake">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=400" alt="Chocolate Fudge Cake">
+                </div>
+                <div class="product-info">
+                    <div class="product-name">Chocolate Fudge Cake</div>
+                    <div class="product-price">125 บาท</div>
+                    <div class="stock-badge">คงเหลือ: 5</div>
+                    <button class="btn-details" onclick="showProductDetails('Chocolate Fudge Cake', 'เค้กช็อกโกแลตเนื้อนุ่มสลับชั้นกับฟัดจ์ช็อกโกแลตเข้มข้น รสชาติไม่หวานจนเกินไป สำหรับคนรักช็อกโกแลต', 125, 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
+                    <button class="btn-order" onclick="addToCart('Chocolate Fudge Cake', 125)">สั่งเลย</button>
+                </div>
+            </div>
+
+            <div class="product-card" data-category="cake">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&q=80&w=400" alt="Strawberry Shortcake">
+                </div>
+                <div class="product-info">
+                    <div class="product-name">Strawberry Shortcake</div>
+                    <div class="product-price">135 บาท</div>
+                    <div class="stock-badge">คงเหลือ: 5</div>
+                    <button class="btn-details" onclick="showProductDetails('Strawberry Shortcake', 'เค้กวานิลลาเนื้อเบา สลับชั้นกับครีมสดและสตรอว์เบอร์รี่สด รสชาติหวานอมเปรี้ยว สดชื่น', 135, 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
+                    <button class="btn-order" onclick="addToCart('Strawberry Shortcake', 135)">สั่งเลย</button>
+                </div>
+            </div>
+
+            <!-- Drinks -->
+            <div class="product-card" data-category="drinks">
+                <div class="product-image">
+                    <img src="https://images.unsplash.com/photo-1572286258217-40142c1c6a70?auto=format&fit=crop&q=80&w=400" alt="Iced Caramel Macchiato">
+                </div>
+                <div class="product-info">
+                    <div class="product-name">Iced Caramel Macchiato</div>
+                    <div class="product-price">115 บาท</div>
+                    <div class="stock-badge">คงเหลือ: 5</div>
+                    <button class="btn-details" onclick="showProductDetails('Iced Caramel Macchiato', 'กาแฟเอสเพรสโซ่เข้มข้น ผสมกับนมสดและไซรัปวานิลลา ราดด้วยซอสคาราเมลหอมหวาน', 115, 'https://images.unsplash.com/photo-1572286258217-40142c1c6a70?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
+                    <button class="btn-order" onclick="addToCart('Iced Caramel Macchiato', 115)">สั่งเลย</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Testimonials Section -->
+<div class="main-container" style="margin-top: 3rem;">
+    <section class="testimonials-section">
+        <div class="testimonial-content">
+            <div class="testimonial-label">WHAT THEY SAY</div>
+            <h2 class="testimonial-title">What Our Customers Say About Us</h2>
+            <p class="testimonial-text">
+                "The best bakery in town! Everything is so fresh and delicious. The croissants are flaky and the cakes are divine. I highly recommend BAGERY to everyone!"
+            </p>
+            <div class="testimonial-author">
+                <div class="author-avatar">TJ</div>
+                <div class="author-info">
+                    <div class="author-name">Theresa Jordan</div>
+                    <div class="author-title">Bakery Blogger</div>
+                    <div class="author-rating">⭐⭐⭐⭐⭐ 4.8</div>
+                </div>
+            </div>
+            <div class="testimonial-avatars">
+                <div class="small-avatar">👨</div>
+                <div class="small-avatar">👩</div>
+                <div class="small-avatar">👨</div>
+            </div>
+        </div>
+        <div class="testimonial-image">
+            <img src="~/img/bagery1.png" alt="Chef" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+    </section>
+</div>
+
+<!-- Product Detail Modal -->
+<div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="productDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productDetailModalLabel" style="font-weight: 800; color: #1a1a1a;">รายละเอียดสินค้า</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalProductImage" src="" alt="Product Image" class="detail-image">
+                <h2 id="modalProductName" class="section-title" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></h2>
+                <div id="modalProductStock" class="stock-badge"></div>
+                <div id="modalProductPrice" class="detail-price"></div>
+                <p id="modalProductDescription" class="detail-description"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; padding: 0.75rem 1.5rem; font-weight: 600;">ปิด</button>
+                <button type="button" id="modalAddToCartBtn" class="btn-order" style="width: auto; padding: 0.75rem 2rem;">สั่งเข้าตะกร้า</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showProductDetails(name, description, price, imageUrl, stock) {
+            document.getElementById('modalProductName').innerText = name;
+            document.getElementById('modalProductDescription').innerText = description;
+            document.getElementById('modalProductPrice').innerText = price + ' บาท';
+            document.getElementById('modalProductImage').src = imageUrl;
+            document.getElementById('modalProductStock').innerText = 'คงเหลือ: ' + stock;
+            
+            // Update Add to Cart button in modal
+            const addToCartBtn = document.getElementById('modalAddToCartBtn');
+            addToCartBtn.onclick = function() {
+                addToCart(name, price);
+                // Optional: close modal after adding to cart
+                // var modal = bootstrap.Modal.getInstance(document.getElementById('productDetailModal'));
+                // modal.hide();
+            };
+
+            // Show modal
+            var productModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+            productModal.show();
+        }
+
+        function filterMenu(category, event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            // Update active class for menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // If event is provided, set active to the clicked item
+            if (event) {
+                event.currentTarget.classList.add('active');
+            }
+
+            // Filter products
+            const products = document.querySelectorAll('.product-card');
+            products.forEach(product => {
+                const productCategory = product.getAttribute('data-category');
+                if (category === 'all' || productCategory === category) {
+                    product.style.display = 'block';
+                } else {
+                    product.style.display = 'none';
+                }
+            });
+
+            console.log('Filtered by:', category);
+        }
+    </script>
+}

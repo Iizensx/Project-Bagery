@@ -1,0 +1,103 @@
+<nav class="navbar navbar-expand-lg fixed-top" style="background-color: #FDE8E1; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 999; position: fixed;">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand" asp-controller="Account" asp-action="Home" style="font-size: 1.5rem; font-weight: bold; color: #F97316;">
+            BAGERY
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+            <ul class="navbar-nav gap-4">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Account" asp-action="Home" style="color: #333; font-weight: 500;">home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="Account" asp-action="Menu" style="color: #333; font-weight: 500;">Menu</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#order" style="color: #333; font-weight: 500;">Order</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#service" style="color: #333; font-weight: 500;">Service</a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="d-flex align-items-center" id="auth-section">
+            <a href="javascript:void(0)" id="cart-trigger" style="color: #333; text-decoration: none; font-size: 1.2rem; position: relative; display: flex; align-items: center;">
+                🛒
+                <span id="cart-count" class="cart-count-badge" style="display: none;">0</span>
+            </a>
+            
+            <div class="auth-divider" style="width: 1px; height: 20px; background-color: #ccc; margin: 0 15px;"></div>
+
+            <!-- Default Login Link (will be hidden if logged in) -->
+            <div id="login-link-container">
+                <a asp-controller="Account" asp-action="Login" style="color: #333; text-decoration: none; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>👤</span>
+                    <span>เข้าสู่ระบบ</span>
+                </a>
+            </div>
+
+            <!-- User Dropdown (will be shown if logged in) -->
+            <div id="user-dropdown-container" class="dropdown" style="display: none;">
+                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #333; font-weight: 500; cursor: pointer;">
+                    <span style="font-size: 1.2rem;">👤</span>
+                    <span id="display-username">User</span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userDropdown" style="border-radius: 12px; min-width: 200px; margin-top: 15px;">
+                    <li>
+                        <a class="dropdown-item py-2" asp-controller="Account" asp-action="Profile">
+                            <i class="fas fa-user-circle me-2 text-primary"></i> แก้ไขข้อมูลส่วนตัว
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2" href="#">
+                            <i class="fas fa-shopping-bag me-2 text-success"></i> ประวัติการสั่งซื้อ
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item py-2 text-danger" href="javascript:void(0)" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i> ออกจากระบบ
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+    function checkLoginStatus() {
+        const userData = localStorage.getItem('user');
+        const loginContainer = document.getElementById('login-link-container');
+        const userDropdownContainer = document.getElementById('user-dropdown-container');
+        const displayUsername = document.getElementById('display-username');
+
+        if (!loginContainer || !userDropdownContainer || !displayUsername) return;
+
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                if (user && user.username) {
+                    displayUsername.innerText = user.username;
+                    loginContainer.style.display = 'none';
+                    userDropdownContainer.style.display = 'block';
+                }
+            } catch (e) {
+                console.error("Error parsing user data", e);
+            }
+        }
+    }
+
+    checkLoginStatus();
+    document.addEventListener('DOMContentLoaded', checkLoginStatus);
+
+    function logout() {
+        localStorage.removeItem('user');
+        window.location.href = '@Url.Action("Home", "Account")';
+    }
+</script>

@@ -1,0 +1,328 @@
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>สมัครสมาชิก - BAGERY</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #FFF8E7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            min-height: 600px;
+        }
+
+        .login-form-section {
+            flex: 1;
+            padding: 3rem 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            margin-bottom: 2rem;
+        }
+
+        .form-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            font-size: 0.95rem;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background-color: #F9FAFB;
+            transition: all 0.3s ease;
+            color: #374151;
+        }
+
+        .form-control:focus {
+            outline: none;
+            background-color: white;
+            border-color: #1a1a1a;
+            box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+        }
+
+        .strength-meter {
+            height: 4px;
+            background-color: #E5E7EB;
+            margin-top: 0.5rem;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-meter-fill {
+            height: 100%;
+            width: 0;
+            transition: all 0.3s ease;
+        }
+
+        .strength-weak {
+            width: 33.33%;
+            background-color: #EF4444;
+        }
+
+        .strength-medium {
+            width: 66.66%;
+            background-color: #F59E0B;
+        }
+
+        .strength-strong {
+            width: 100%;
+            background-color: #10B981;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.875rem;
+            background-color: #1a1a1a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 1rem;
+        }
+
+        .btn-submit:hover {
+            background-color: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #6B7280;
+        }
+
+        .form-link a {
+            color: #1a1a1a;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .form-link a:hover {
+            color: #4B5563;
+            text-decoration: underline;
+        }
+
+        .login-image-section {
+            flex: 1;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-background {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 550"><defs><filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2"/></filter></defs><rect fill="%23000" width="400" height="550"/><circle cx="80" cy="100" r="40" fill="%23FF6B35" opacity="0.3" filter="url(%23blur)"/><circle cx="320" cy="150" r="50" fill="%23FF8A50" opacity="0.2" filter="url(%23blur)"/><circle cx="150" cy="350" r="60" fill="%23FF6B35" opacity="0.25" filter="url(%23blur)"/><circle cx="300" cy="450" r="45" fill="%23FF8A50" opacity="0.2" filter="url(%23blur)"/></svg>');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .flower {
+            position: absolute;
+            font-size: 3rem;
+            opacity: 0.4;
+            animation: sway 4s ease-in-out infinite;
+        }
+
+        @@keyframes sway {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(-5px, 5px);
+            }
+        }
+
+        @@media (max-width: 1024px) {
+            .login-image-section {
+                display: none;
+            }
+
+            .login-card {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Include Navbar -->
+    @await Html.PartialAsync("_Navbar")
+    <div class="login-wrapper">
+        <div class="login-card">
+            <!-- Left Side - Form -->
+            <div class="login-form-section">
+                <div class="form-header">
+                    <h1 class="form-title">Create Account ✨</h1>
+                    <p class="form-subtitle">Join us and start your journey with BAGERY.</p>
+                </div>
+
+                <form id="signupForm" method="post" asp-controller="Account" asp-action="Signup">
+                    <div class="form-group">
+                        <label for="username">Full Name</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="John Doe"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="example@email.com"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" placeholder="08x-xxx-xxxx"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-control"
+                            placeholder="At least 8 characters" required>
+                        <div class="strength-meter">
+                            <div id="strength-fill" class="strength-meter-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="form-control"
+                            placeholder="Repeat your password" required>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Sign up</button>
+                </form>
+
+                <div class="form-link">
+                    Already have an account? <a asp-controller="Account" asp-action="Login">Sign in</a>
+                </div>
+            </div>
+
+            <!-- Right Side - Image -->
+            <div class="login-image-section">
+                <div class="image-background"></div>
+                <div class="flower" style="top: 80px; right: 60px;">🧁</div>
+                <div class="flower" style="top: 250px; left: 40px;">🍰</div>
+                <div class="flower" style="bottom: 100px; right: 80px;">🍩</div>
+                <div class="flower" style="top: 150px; right: 30px;">🍪</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const signupForm = document.getElementById('signupForm');
+        signupForm.addEventListener('submit', function () {
+            const user = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value
+            };
+            localStorage.setItem('user', JSON.stringify(user));
+        });
+
+        const passwordInput = document.getElementById('password');
+        const strengthFill = document.getElementById('strength-fill');
+
+        passwordInput.addEventListener('input', function () {
+            const val = passwordInput.value;
+            let strength = 0;
+
+            if (val.length >= 8) strength++;
+            if (val.match(/[a-z]/) && val.match(/[A-Z]/)) strength++;
+            if (val.match(/[0-9]/) || val.match(/[^a-zA-Z0-9]/)) strength++;
+
+            strengthFill.className = 'strength-meter-fill';
+
+            if (val.length === 0) {
+                // No fill
+            } else if (strength === 1) {
+                strengthFill.classList.add('strength-weak');
+            } else if (strength === 2) {
+                strengthFill.classList.add('strength-medium');
+            } else if (strength >= 3) {
+                strengthFill.classList.add('strength-strong');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,35 @@
+@{
+    ViewBag.Title = "Admin Dashboard";
+    ViewBag.PageTitle = "รายงาน & สรุปยอด";
+    Layout = "_AdminLayout";
+}
+
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+        <div class="stat-label">ยอดขายวันนี้</div>
+        <div class="stat-value">฿12,450</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div class="stat-label">ผู้เข้าชม</div>
+        <div class="stat-value">1,240</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-box"></i></div>
+        <div class="stat-label">ออเดอร์ใหม่</div>
+        <div class="stat-value">45</div>
+    </div>
+    <div class="stat-card" style="border-left-color: #ff6b6b;">
+        <div class="stat-icon" style="color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="stat-label">สินค้าใกล้หมด</div>
+        <div class="stat-value">12</div>
+    </div>
+</div>
+
+<div class="dashboard-card">
+    <h3 class="dashboard-card-title">สรุปภาพรวมรายเดือน</h3>
+    <div style="height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
+        <p class="text-muted"><i class="fas fa-chart-line fa-3x mb-3 d-block text-center"></i> พื้นที่แสดงกราฟสถิติ</p>
+    </div>
+</div>
