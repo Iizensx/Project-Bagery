@@ -24,13 +24,13 @@
         }
 
         body {
-            background: #FFF8E7;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 2rem;
-        }
+    background: #FFF8E7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;        /* ลดจาก 2rem */
+}
 
         .login-wrapper {
             width: 100%;
@@ -38,25 +38,26 @@
         }
 
         .login-card {
-            background: white;
-            border-radius: 30px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            display: flex;
-            min-height: 600px;
-        }
+    background: white;
+    border-radius: 30px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    min-height: auto;       /* เปลี่ยนจาก 600px เป็น auto */
+}
 
         .login-form-section {
-            flex: 1;
-            padding: 3rem 3rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
+    flex: 1;
+    padding: 2rem 3rem;     /* ลดจาก 3rem 3rem */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
 
         .form-header {
-            margin-bottom: 2rem;
-        }
+    margin-bottom: 1rem;    /* ลดจาก 2rem */
+}
+
 
         .form-title {
             font-size: 1.8rem;
@@ -72,8 +73,8 @@
         }
 
         .form-group {
-            margin-bottom: 1.2rem;
-        }
+    margin-bottom: 0.75rem; /* ลดจาก 1.2rem */
+}
 
         .form-group label {
             display: block;
@@ -145,7 +146,7 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-top: 1rem;
+            margin-top: 0.5rem;
         }
 
         .btn-submit:hover {
@@ -224,8 +225,7 @@
 </head>
 
 <body>
-    <!-- Include Navbar -->
-    @await Html.PartialAsync("_Navbar")
+    
     <div class="login-wrapper">
         <div class="login-card">
             <!-- Left Side - Form -->

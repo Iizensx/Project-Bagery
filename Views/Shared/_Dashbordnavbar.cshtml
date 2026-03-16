@@ -131,6 +131,12 @@
                 <span>จัดการสินค้า & สต๊อก</span>
             </a>
         </li>
+        <li class="navbar-item">
+            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Order" ? "active" : "")" asp-controller="Account" asp-action="Order">
+                <i class="fas fa-shopping-cart"></i>
+                <span>ออเดอร์</span>
+            </a>
+        </li>
 
         <!-- จัดการผู้ใช้งาน -->
         <li class="navbar-item">

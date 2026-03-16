@@ -1,7 +1,8 @@
+@model List<_66022380.Models.Db.User>
+
 @{
     ViewBag.Title = "จัดการผู้ใช้งาน";
-    ViewBag.PageTitle = "จัดการผู้ใช้งาน";
-    Layout = "_AdminLayout";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="dashboard-card">
@@ -9,9 +10,6 @@
         <h3 class="dashboard-card-title" style="margin: 0;">
             <i class="fas fa-users"></i> รายชื่อผู้ใช้งาน
         </h3>
-        <button class="btn btn-dashboard primary" onclick="alert('เพิ่มผู้ใช้ใหม่')">
-            <i class="fas fa-user-plus"></i> เพิ่มผู้ใช้
-        </button>
     </div>
 
     <div style="margin-bottom: 20px;">
@@ -21,44 +19,42 @@
     <table class="table table-hover">
         <thead>
             <tr>
+                <th>รหัสผู้ใช้</th>
                 <th>ชื่อผู้ใช้</th>
                 <th>อีเมล</th>
+                <th>เบอร์โทร</th>
                 <th>บทบาท</th>
-                <th>สถานะ</th>
                 <th>การกระทำ</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Admin User</td>
-                <td>admin@bagery.com</td>
-                <td><span class="badge bg-primary">Admin</span></td>
-                <td><span class="badge bg-success">ใช้งาน</span></td>
-                <td>
-                    <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                    <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                </td>
-            </tr>
-            <tr>
-                <td>Jenny Wilson</td>
-                <td>jenny@example.com</td>
-                <td><span class="badge bg-secondary">User</span></td>
-                <td><span class="badge bg-success">ใช้งาน</span></td>
-                <td>
-                    <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                    <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                </td>
-            </tr>
-            <tr>
-                <td>Marvin McKinney</td>
-                <td>marvin@example.com</td>
-                <td><span class="badge bg-secondary">User</span></td>
-                <td><span class="badge bg-danger">ปิด</span></td>
-                <td>
-                    <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                    <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                </td>
-            </tr>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.UserId</td>
+                    <td>@user.Username</td>
+                    <td>@(user.Email ?? "-")</td>
+                    <td>@(user.Phone ?? "-")</td>
+                    <td>
+                        @if (user.Role?.RoleName == "Admin")
+                        {
+                            <span class="badge bg-primary">Admin</span>
+                        }
+                        else if (user.Role?.RoleName == "Staff")
+                        {
+                            <span class="badge bg-warning text-dark">Staff</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">User</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-dashboard primary">แก้ไข</button>
+                        <button class="btn btn-sm btn-dashboard danger">ลบ</button>
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
 </div>

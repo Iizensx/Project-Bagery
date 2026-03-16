@@ -1,0 +1,84 @@
+# Bakery Shop Management System
+
+ระบบจัดการร้านเบเกอรี่แบบ Web Application
+รองรับผู้ใช้งาน 3 ระดับ
+
+## Roles
+
+* Customer
+* Staff
+* Admin
+
+## Features
+
+### Customer
+
+* Register / Login
+* ดูสินค้าและโปรโมชั่น
+* สั่งซื้อสินค้า
+* ชำระเงิน
+* ดูสถานะการจัดส่ง
+* จัดการข้อมูลส่วนตัวและที่อยู่
+
+### Staff
+
+* ตรวจสอบคำสั่งซื้อ
+* อัปเดตสถานะออเดอร์
+* จัดการสต็อกสินค้า
+
+### Admin
+
+* จัดการสินค้า
+* จัดการโปรโมชั่น
+* ดูรายงานยอดขาย
+* ตรวจสอบคำสั่งซื้อทั้งหมด
+
+## Order Flow
+
+1. Customer creates order → Pending
+2. Customer makes payment → Paid
+3. Staff prepares order → Shipped
+4. Customer receives order → Completed
+
+## Tech Stack
+
+Backend:
+
+* C#
+* ASP.NET Core Web API
+
+Database:
+
+* MySQL
+
+Tools:
+
+* Swagger
+* Entity Framework Core
+
+## Database Tables
+
+* user
+* role
+* address
+* category
+* product
+* stock
+* order
+* orderdetail
+* promotion
+
+## Example Order Status
+
+Status:
+
+* Pending
+* Paid
+* Shipped
+* Cancelled
+
+PaymentStatus:
+
+* Pending
+* Paid
+* Refunded
