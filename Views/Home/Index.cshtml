@@ -2,16 +2,356 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Bagery @ViewBag.R1</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    /* ─── Hero Banner ─────────────────────────────── */
+    .hero-banner-wrap {
+        position: relative;
+        width: 100%;
+        height: 92vh;
+        min-height: 580px;
+        max-height: 750px;
+        overflow: visible; /* ต้องเป็น visible ให้ card ล้นออกมาได้ */
+        margin-top: -80px;
+    }
+
+    /* คลิปเฉพาะรูปและ overlay ไม่ให้เกินกรอบ */
+    .hero-banner-clip {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: 0;
+    }
+
+    .hero-bg-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 30%;
+        animation: heroZoom 8s ease-out forwards;
+    }
+
+    @@keyframes heroZoom {
+        from { transform: scale(1.06); }
+        to   { transform: scale(1.00); }
+    }
+
+    /* Dark overlay */
+    .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            105deg,
+            rgba(15, 8, 3, 0.82) 0%,
+            rgba(20, 10, 4, 0.65) 40%,
+            rgba(10, 5, 2, 0.28) 70%,
+            rgba(0, 0, 0, 0.08) 100%
+        );
+    }
+
+    .hero-overlay::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 30% 50%, transparent 40%, rgba(0,0,0,0.40) 100%);
+    }
+
+    /* ─── Content ─────────────────────────────────── */
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0 6rem;
+        padding-bottom: 5rem; /* เว้นล่างให้ card */
+        max-width: 700px;
+        animation: heroComeIn 1s ease-out 0.3s both;
+    }
+
+    @@keyframes heroComeIn {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(249, 115, 22, 0.18);
+        border: 1px solid rgba(249, 115, 22, 0.50);
+        color: #FFB980;
+        font-size: 0.75rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        padding: 6px 18px;
+        border-radius: 30px;
+        margin-bottom: 1.5rem;
+        width: fit-content;
+    }
+
+    .hero-eyebrow::before {
+        content: '';
+        width: 6px; height: 6px;
+        background: #F97316;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .hero-title {
+        font-size: clamp(2.4rem, 5vw, 3.8rem);
+        font-weight: 800;
+        line-height: 1.1;
+        color: #FFFFFF;
+        margin: 0 0 0.5rem;
+        letter-spacing: -1px;
+    }
+
+    .hero-title .accent       { color: #F97316; display: block; }
+    .hero-title .accent-light { color: #FFD4A8; }
+
+    .hero-subtitle {
+        color: rgba(255, 230, 205, 0.80);
+        font-size: 1.05rem;
+        line-height: 1.7;
+        margin: 1.2rem 0 2rem;
+        max-width: 420px;
+    }
+
+    /* Buttons */
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn-hero-primary {
+        background: #F97316;
+        color: #fff;
+        padding: 0.85rem 2.2rem;
+        border-radius: 50px;
+        border: none;
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+        box-shadow: 0 8px 24px rgba(249, 115, 22, 0.40);
+    }
+    .btn-hero-primary:hover {
+        background: #ea580c;
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(249, 115, 22, 0.50);
+        color: #fff;
+    }
+
+    .btn-hero-secondary {
+        background: rgba(255,255,255,0.10);
+        color: #fff;
+        padding: 0.85rem 2.2rem;
+        border-radius: 50px;
+        border: 1.5px solid rgba(255,255,255,0.45);
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-decoration: none;
+        backdrop-filter: blur(4px);
+        transition: all 0.3s;
+    }
+    .btn-hero-secondary:hover {
+        background: rgba(255,255,255,0.20);
+        border-color: rgba(255,255,255,0.70);
+        color: #fff;
+        transform: translateY(-3px);
+    }
+
+    /* Scroll indicator */
+    .scroll-hint {
+        position: absolute;
+        bottom: 130px;
+        right: 5rem;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        animation: heroComeIn 1s ease-out 1.2s both;
+    }
+    .scroll-hint span {
+        font-size: 0.68rem;
+        letter-spacing: 3px;
+        color: rgba(255,220,190,0.55);
+        text-transform: uppercase;
+        writing-mode: vertical-rl;
+    }
+    .scroll-line {
+        width: 1px; height: 50px;
+        background: linear-gradient(to bottom, rgba(249,115,22,0.7), transparent);
+        animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @@keyframes scrollPulse {
+        0%,100% { opacity:0.5; transform:scaleY(1); }
+        50%      { opacity:1;   transform:scaleY(1.2); }
+    }
+
+    /* ─── Features Card (ลอยทับ) ──────────────────── */
+    .features-float {
+        position: absolute;            /* ทับบน hero */
+        bottom: -72px;                 /* ล้นออกมาครึ่งหนึ่ง */
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 4rem);
+        max-width: 1100px;
+        z-index: 10;
+        animation: heroComeIn 1s ease-out 0.9s both;
+    }
+
+    .features-card-inner {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 2rem 2.5rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18),
+                    0 4px 16px rgba(0, 0, 0, 0.08);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+        padding: 0.8rem 1.5rem;
+        border-right: 1px solid #F3F4F6;
+        transition: background 0.3s;
+        border-radius: 12px;
+    }
+    .feature-item:last-child { border-right: none; }
+    .feature-item:hover { background: #FFF8F3; }
+
+    .feature-icon-box {
+        width: 56px; height: 56px;
+        background: #FFF3E8;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        flex-shrink: 0;
+        transition: transform 0.3s;
+    }
+    .feature-item:hover .feature-icon-box { transform: scale(1.1) rotate(-4deg); }
+
+    .feature-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin: 0 0 3px;
+    }
+    .feature-text {
+        font-size: 0.82rem;
+        color: #6B7280;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    /* ─── Spacer ให้ section ถัดไปไม่ทับ card ───── */
+    .hero-spacer {
+        height: 90px; /* รองรับ card ที่ล้นออกมา */
+        background: #FDE8E1;
+    }
+
+    /* ─── Responsive ──────────────────────────────── */
+    @@media (max-width: 900px) {
+        .features-card-inner {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        .feature-item { border-right: none; border-bottom: 1px solid #F3F4F6; }
+        .feature-item:last-child { border-bottom: none; }
+        .features-float { bottom: -190px; }
+        .hero-spacer    { height: 230px; }
+    }
+
+    @@media (max-width: 768px) {
+        .hero-content { padding: 0 2rem; padding-bottom: 4rem; max-width: 100%; }
+        .hero-title   { font-size: 2.2rem; }
+        .scroll-hint  { display: none; }
+        .features-float { width: calc(100% - 2rem); }
+    }
+
+    @@media (max-width: 480px) {
+        .hero-banner-wrap { height: 100svh; max-height: none; }
+        .hero-content { padding: 0 1.5rem; }
+        .hero-title   { font-size: 1.9rem; }
+        .features-float { bottom: -240px; }
+        .hero-spacer    { height: 280px; }
+    }
+</style>
+
+<div class="hero-banner-wrap">
+
+    @* ─── Background image + overlay clipped ─── *@
+    <div class="hero-banner-clip">
+        <img class="hero-bg-img" src="~/img/HomeBG.jpg" alt="BAGERY Bakery">
+        <div class="hero-overlay"></div>
+    </div>
+
+    @* ─── Content ─── *@
+    <div class="hero-content">
+        <div class="hero-eyebrow">อบสดทุกเช้า &nbsp;·&nbsp; ส่งเร็วภายใน 30 นาที</div>
+
+        <h1 class="hero-title">
+            <span class="accent-light">เบเกอรี่และเค้ก</span>
+            <span class="accent">อร่อยทุกคำ</span>
+            ส่งตรงถึงบ้าน
+        </h1>
+
+        <p class="hero-subtitle">
+            คัดสรรวัตถุดิบคุณภาพ อบสดใหม่ทุกวัน
+            ครัวซองต์ เค้ก ขนมปัง และเมนูพิเศษอีกมากมาย
+        </p>
+
+        <div class="hero-actions">
+            <a href="#menu" class="btn-hero-primary">🛒 &nbsp;สั่งเลยตอนนี้</a>
+            <a asp-controller="Account" asp-action="Menu" class="btn-hero-secondary">ดูเมนูทั้งหมด →</a>
+        </div>
+    </div>
+
+    @* ─── Scroll indicator ─── *@
+    <div class="scroll-hint">
+        <div class="scroll-line"></div>
+        <span>scroll</span>
+    </div>
+
+    @* ─── Features Card floating element ─── *@
+    <div class="features-float">
+        <div class="features-card-inner">
+            <div class="feature-item">
+                <div class="feature-icon-box">🛵</div>
+                <div>
+                    <p class="feature-title">Fast Delivery</p>
+                    <p class="feature-text">จัดส่งด่วนภายใน 30 นาที</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon-box">🥐</div>
+                <div>
+                    <p class="feature-title">Fresh Food</p>
+                    <p class="feature-text">วัตถุดิบคุณภาพ อบสดทุกเช้า</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon-box">📦</div>
+                <div>
+                    <p class="feature-title">Free Delivery</p>
+                    <p class="feature-text">3 ออเดอร์แรก ฟรีค่าจัดส่ง</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-
-<form asp-controller="Account" asp-action="Test2" method="get">
-    <button type="submit" class="btn btn-primary">
-        clickไปร้าน
-    </button>
-</form>
-
+@* ─── Spacer to prevent next section from overlapping the floating features card ─── *@
+<div class="hero-spacer"></div>
 

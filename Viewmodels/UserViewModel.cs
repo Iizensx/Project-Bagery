@@ -1,4 +1,4 @@
-namespace _66022380.Models;
+namespace _66022380.Viewmodels;
 
 public class UserViewModel
 {
