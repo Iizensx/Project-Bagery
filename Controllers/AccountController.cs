@@ -49,6 +49,66 @@ public class AccountController : Controller
         return RedirectToAction("Home");
     }
 
+    public IActionResult Lab10(int id = 0)
+    {   
+        var check = ( from us in _db.Users where us.UserId == id select new UserViewModel
+        {
+            UserId = us.UserId,
+            Username = us.Username,
+            Email = us.Email,
+            Phone = us.Phone
+        }).FirstOrDefault();
+        return View(check);
+    }
+
+    [HttpPost]
+    public IActionResult Lab10(UserViewModel model)
+    {
+        if (model.UserId > 0)
+        {
+            
+            var user = _db.Users.Find(model.UserId);
+            if (user != null)
+            {
+                user.Username = model.Username;
+                user.Email = model.Email;
+                user.Phone = model.Phone;
+                _db.SaveChanges();
+            }
+        }
+        else
+        {
+            // Add new user
+            var newUser = new User
+            {
+                Username = model.Username,
+                Email = model.Email,
+                Phone = model.Phone,
+                Password = "default123", 
+                RoleId = 3 
+            };
+            _db.Users.Add(newUser);
+            _db.SaveChanges();
+        }
+
+        return RedirectToAction("Member");
+    }
+
+    public IActionResult Lab10D(String id)
+    {
+        var user = _db.Users.FirstOrDefault(u => u.UserId == int.Parse(id));
+
+        if (user != null)
+        {
+            _db.Users.Remove(user);
+            _db.SaveChanges();
+        }
+
+        return RedirectToAction("Member", "Account");
+    }
+
+    
+
     [HttpPost]
     public IActionResult Signup(string username, string email, string phone, string password, string confirmPassword)
     {

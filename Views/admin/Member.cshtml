@@ -10,6 +10,9 @@
         <h3 class="dashboard-card-title" style="margin: 0;">
             <i class="fas fa-users"></i> รายชื่อผู้ใช้งาน
         </h3>
+        <a asp-action="Lab10" asp-controller="Account" class="btn btn-success btn-sm">
+            <i class="fas fa-plus"></i> เพิ่มผู้ใช้งาน
+        </a>
     </div>
 
     <div style="margin-bottom: 20px;">
@@ -50,9 +53,9 @@
                         }
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-dashboard primary">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger">ลบ</button>
-                    </td>
+    <a asp-route-id="@user.UserId" asp-action="Lab10" asp-controller="Account" class="btn btn-sm btn-dashboard primary">แก้ไข</a>
+    <a asp-route-id="@user.UserId" asp-action="Lab10D" asp-controller="Account" class="btn btn-sm btn-dashboard danger">ลบ</a>
+</td>
                 </tr>
             }
         </tbody>

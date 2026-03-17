@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Annie\\Downloads\\66022380-สมัครแล้วบันทึกลงDatabase\\66022380\\66022380.csproj": {}
+    "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\66022380\\66022380.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Annie\\Downloads\\66022380-สมัครแล้วบันทึกลงDatabase\\66022380\\66022380.csproj": {
+    "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\66022380\\66022380.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Annie\\Downloads\\66022380-สมัครแล้วบันทึกลงDatabase\\66022380\\66022380.csproj",
+        "projectUniqueName": "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\66022380\\66022380.csproj",
         "projectName": "66022380",
-        "projectPath": "C:\\Users\\Annie\\Downloads\\66022380-สมัครแล้วบันทึกลงDatabase\\66022380\\66022380.csproj",
+        "projectPath": "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\66022380\\66022380.csproj",
         "packagesPath": "C:\\Users\\Annie\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Annie\\Downloads\\66022380-สมัครแล้วบันทึกลงDatabase\\66022380\\obj\\",
+        "outputPath": "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\66022380\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Annie\\AppData\\Roaming\\NuGet\\NuGet.Config"
