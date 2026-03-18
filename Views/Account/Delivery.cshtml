@@ -1,0 +1,816 @@
+@{
+    ViewData["Title"] = "Delivery";
+}
+
+@* 
+    จำลอง status ออเดอร์ — ในระบบจริงดึงจาก DB
+    เปลี่ยน currentStatus เพื่อทดสอบ:
+    "none" | "Preparing" | "Shipped" | "Completed"
+*@
+@{
+    var currentStatus = "Preparing"; @* เปลี่ยนตรงนี้เพื่อทดสอบ *@
+    var hasOrder = currentStatus != "none";
+    var orderId  = "ORD-042";
+    var orderEta = "14:30 น.";
+}
+
+<style>
+    body { background-color: #FDE8E1; }
+
+    /* ═══════════════════════════════════════
+       HERO
+    ═══════════════════════════════════════ */
+    .del-hero {
+        position: relative;
+        height: 320px;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d1a08 60%, #4a2800 100%);
+        display: flex; align-items: center; justify-content: center;
+        text-align: center; overflow: hidden;
+        margin-top: -80px;
+    }
+
+    .del-hero-dots {
+        position: absolute; inset: 0;
+        background-image: radial-gradient(circle, rgba(249,115,22,0.12) 1px, transparent 1px);
+        background-size: 32px 32px;
+    }
+
+    .del-hero-glow {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%,-50%);
+        width: 500px; height: 300px;
+        background: radial-gradient(ellipse, rgba(249,115,22,0.18) 0%, transparent 70%);
+    }
+
+    .del-hero-content { position: relative; z-index: 2; }
+
+    .del-hero-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(249,115,22,0.15);
+        border: 1px solid rgba(249,115,22,0.4);
+        color: #FFB980; font-size: 0.72rem; letter-spacing: 3px;
+        padding: 5px 16px; border-radius: 30px; margin-bottom: 1.2rem;
+    }
+
+    .del-hero-badge::before {
+        content: ''; width: 5px; height: 5px;
+        background: #F97316; border-radius: 50%;
+    }
+
+    .del-hero h1 {
+        color: #fff; font-size: 3.2rem; font-weight: 900;
+        letter-spacing: -1px; margin: 0 0 0.5rem;
+    }
+
+    .del-hero h1 span { color: #F97316; }
+
+    .del-hero p {
+        color: rgba(255,220,190,0.7); font-size: 1rem; margin: 0;
+    }
+
+    /* ═══════════════════════════════════════
+       TRACKING SECTION
+    ═══════════════════════════════════════ */
+    .tracking-wrap {
+    max-width: 1100px;
+    margin: -60px auto 0;
+    padding: 0 1.5rem;
+    position: relative;
+    z-index: 5;
+}
+
+    .tracking-card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 2.5rem 3rem;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06);
+        animation: fadeUp 0.7s ease-out both;
+    }
+
+    @@keyframes fadeUp {
+        from { opacity:0; transform: translateY(30px); }
+        to   { opacity:1; transform: translateY(0); }
+    }
+
+    .tracking-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 2rem; padding-bottom: 1.2rem;
+        border-bottom: 1px solid #F3F4F6;
+    }
+
+    .tracking-order-id {
+        font-size: 0.8rem; color: #9CA3AF; margin-bottom: 3px;
+        letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    .tracking-order-num {
+        font-size: 1.5rem; font-weight: 800; color: #1a1a1a;
+    }
+
+    .tracking-eta {
+        text-align: right;
+    }
+
+    .tracking-eta-label {
+        font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .tracking-eta-time {
+        font-size: 1.4rem; font-weight: 800; color: #F97316;
+    }
+
+    /* ─── Steps ─────────────────────────── */
+    .steps-row {
+        display: grid;
+        grid-template-columns: 1fr 60px 1fr 60px 1fr;
+        align-items: center;
+        margin-bottom: 0.8rem;
+    }
+
+    .step-box {
+        display: flex; flex-direction: column;
+        align-items: center; gap: 0.7rem;
+        text-align: center;
+    }
+
+    .step-icon-wrap {
+        position: relative;
+        width: 72px; height: 72px;
+    }
+
+    .step-icon-bg {
+        width: 72px; height: 72px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem;
+        transition: all 0.5s;
+        border: 3px solid #E5E7EB;
+        background: #F9FAFB;
+    }
+
+    .step-icon-bg.done {
+        background: #FFF3E8;
+        border-color: #F97316;
+    }
+
+    .step-icon-bg.active {
+        background: #F97316;
+        border-color: #F97316;
+        box-shadow: 0 0 0 8px rgba(249,115,22,0.15);
+    }
+
+    /* pulse ring สำหรับ active */
+    .step-icon-bg.active::after {
+        content: '';
+        position: absolute; inset: -8px;
+        border-radius: 50%;
+        border: 2px solid rgba(249,115,22,0.4);
+        animation: pulseRing 1.8s ease-out infinite;
+    }
+
+    @@keyframes pulseRing {
+        0%   { transform: scale(0.9); opacity: 0.8; }
+        100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .step-label {
+        font-size: 0.85rem; font-weight: 700;
+        color: #9CA3AF;
+        transition: color 0.5s;
+    }
+
+    .step-label.done  { color: #F97316; }
+    .step-label.active { color: #1a1a1a; }
+
+    .step-sublabel {
+        font-size: 0.72rem; color: #C4C9D4; margin-top: -4px;
+    }
+
+    .step-sublabel.active { color: #6B7280; }
+
+    /* ─── Connector line ─────────────────── */
+    .step-connector {
+        position: relative; height: 4px;
+        background: #E5E7EB; border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 40px; /* ชดเชยกับ label */
+    }
+
+    .step-connector-fill {
+        position: absolute; top: 0; left: 0;
+        height: 100%; border-radius: 2px;
+        background: linear-gradient(90deg, #F97316, #FFB347);
+        width: 0%;
+        transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* fill states */
+    .step-connector-fill.fill-done  { width: 100%; }
+    .step-connector-fill.fill-half  { width: 50%; }
+    .step-connector-fill.fill-anim {
+        width: 0%;
+        animation: fillLine 1.5s ease-out 0.5s forwards;
+    }
+
+    @@keyframes fillLine {
+        from { width: 0%; }
+        to   { width: 100%; }
+    }
+
+    /* scooter บนเส้น */
+    .step-connector-scooter {
+        position: absolute; top: -10px;
+        font-size: 1.2rem;
+        animation: scootAnim 2s ease-in-out infinite alternate;
+        display: none;
+    }
+
+    .step-connector-scooter.show { display: block; }
+
+    @@keyframes scootAnim {
+        from { left: 10%; }
+        to   { left: 70%; }
+    }
+
+    /* ─── No order state ─────────────────── */
+    .no-order-wrap {
+        text-align: center; padding: 1.5rem 0 0.5rem;
+    }
+
+    .no-order-icon {
+        font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.4;
+    }
+
+    .no-order-text {
+        color: #9CA3AF; font-size: 1rem; font-weight: 600;
+    }
+
+    .no-order-sub {
+        color: #C4C9D4; font-size: 0.85rem; margin-top: 4px;
+    }
+
+    /* ═══════════════════════════════════════
+       MAIN CONTENT SECTIONS
+    ═══════════════════════════════════════ */
+    .del-section-wrap {
+        max-width: 1100px;
+        margin: 4rem auto 0;
+        padding: 0 1.5rem 4rem;
+    }
+
+    .del-section-title {
+        color: #F97316; font-size: 0.75rem;
+        letter-spacing: 3px; text-transform: uppercase;
+        margin-bottom: 0.5rem; font-weight: 700;
+    }
+
+    .del-section-heading {
+        font-size: 2rem; font-weight: 800;
+        color: #1a1a1a; margin-bottom: 2rem;
+        line-height: 1.2;
+    }
+
+    /* ─── Order flow ─────────────────────── */
+    .flow-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem; margin-bottom: 4rem;
+    }
+
+    .flow-card {
+        background: #fff; border-radius: 18px;
+        padding: 1.8rem 1.4rem;
+        border: 1px solid #F3F4F6;
+        text-align: center;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .flow-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(249,115,22,0.12);
+        border-color: #F97316;
+    }
+
+    .flow-card::after {
+        content: '→';
+        position: absolute; right: -14px; top: 50%;
+        transform: translateY(-50%);
+        color: #F97316; font-size: 1.2rem; font-weight: 700;
+        z-index: 2;
+    }
+
+    .flow-card:last-child::after { display: none; }
+
+    .flow-num {
+        width: 28px; height: 28px;
+        background: #FFF3E8; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.75rem; font-weight: 800; color: #F97316;
+        margin: 0 auto 1rem;
+    }
+
+    .flow-icon { font-size: 2rem; margin-bottom: 0.8rem; }
+
+    .flow-title {
+        font-size: 0.9rem; font-weight: 700;
+        color: #1a1a1a; margin-bottom: 0.3rem;
+    }
+
+    .flow-sub { font-size: 0.78rem; color: #9CA3AF; line-height: 1.5; }
+
+    /* ─── Delivery info cards ────────────── */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.2rem; margin-bottom: 4rem;
+    }
+
+    .info-card {
+        background: #fff; border-radius: 20px;
+        padding: 2rem 1.8rem;
+        border: 1px solid #F3F4F6;
+        transition: all 0.3s;
+    }
+
+    .info-card:hover {
+        border-color: #F97316;
+        box-shadow: 0 8px 24px rgba(249,115,22,0.10);
+    }
+
+    .info-icon {
+        width: 52px; height: 52px;
+        background: #FFF3E8; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; margin-bottom: 1.2rem;
+    }
+
+    .info-card-title {
+        font-size: 1rem; font-weight: 800;
+        color: #1a1a1a; margin-bottom: 0.8rem;
+    }
+
+    .info-card-body {
+        font-size: 0.85rem; color: #6B7280;
+        line-height: 1.8;
+    }
+
+    .info-tag {
+        display: inline-block;
+        background: #FFF3E8; color: #F97316;
+        font-size: 0.75rem; font-weight: 700;
+        padding: 3px 10px; border-radius: 20px;
+        margin: 2px 2px 0 0;
+    }
+
+    .info-tag.free {
+        background: #F0FDF4; color: #166534;
+    }
+
+    /* ─── Zone map placeholder ───────────── */
+    .zone-section {
+        background: #fff; border-radius: 24px;
+        padding: 2.5rem; margin-bottom: 4rem;
+        border: 1px solid #F3F4F6;
+    }
+
+    .zone-map-placeholder {
+        height: 220px;
+        background: linear-gradient(135deg, #FFF8E7 0%, #FDE8D0 100%);
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        flex-direction: column; gap: 0.8rem;
+        margin-bottom: 1.5rem;
+        border: 2px dashed #F97316;
+        opacity: 0.7;
+    }
+
+    .zone-map-placeholder span { font-size: 2.5rem; }
+    .zone-map-placeholder p { font-size: 0.9rem; color: #9CA3AF; margin: 0; }
+
+    .zone-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+    .zone-tag {
+        background: #FFF3E8; color: #7C3A0E;
+        font-size: 0.8rem; font-weight: 600;
+        padding: 6px 14px; border-radius: 20px;
+        border: 1px solid rgba(249,115,22,0.2);
+    }
+
+    /* ─── Contact channels ───────────────── */
+    .contact-section {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d1a08 100%);
+        border-radius: 24px;
+        padding: 3rem; margin-bottom: 4rem;
+    }
+
+    .contact-section .del-section-title { color: #F97316; }
+    .contact-section .del-section-heading { color: #fff; margin-bottom: 2rem; }
+
+    .contact-channels {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .channel-card {
+        border-radius: 16px;
+        padding: 1.8rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 1.5px solid rgba(255,255,255,0.1);
+    }
+
+    .channel-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(249,115,22,0.6);
+        background: rgba(249,115,22,0.1);
+    }
+
+    .channel-line { background: rgba(0,185,0,0.12); }
+    .channel-web  { background: rgba(249,115,22,0.08); }
+    .channel-tel  { background: rgba(59,130,246,0.08); }
+
+    .channel-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .channel-name { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem; }
+    .channel-val  { font-size: 0.85rem; color: rgba(255,220,190,0.7); }
+
+    /* ─── Pricing table ──────────────────── */
+    .pricing-section {
+        background: #fff; border-radius: 24px;
+        padding: 2.5rem; margin-bottom: 4rem;
+    }
+
+    .pricing-rows { display: flex; flex-direction: column; gap: 0; }
+
+    .pricing-row {
+        display: flex; justify-content: space-between;
+        align-items: center; padding: 1rem 1.2rem;
+        border-radius: 12px; transition: background 0.2s;
+    }
+
+    .pricing-row:hover { background: #FFF8F3; }
+    .pricing-row + .pricing-row { border-top: 1px solid #F3F4F6; }
+
+    .pricing-range { font-size: 0.9rem; color: #4B5563; font-weight: 600; }
+    .pricing-fee   { font-size: 0.9rem; font-weight: 800; }
+    .pricing-fee.free { color: #22C55E; }
+    .pricing-fee.paid { color: #F97316; }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+    @@media (max-width: 900px) {
+        .flow-grid  { grid-template-columns: repeat(2,1fr); }
+        .info-grid  { grid-template-columns: 1fr 1fr; }
+        .contact-channels { grid-template-columns: 1fr; }
+        .flow-card::after { display: none; }
+    }
+
+    @@media (max-width: 600px) {
+        .tracking-card { padding: 1.8rem 1.4rem; }
+        .steps-row { grid-template-columns: 1fr 40px 1fr 40px 1fr; }
+        .step-icon-bg { width: 56px; height: 56px; font-size: 1.4rem; }
+        .del-hero h1 { font-size: 2.2rem; }
+        .flow-grid { grid-template-columns: 1fr; }
+        .info-grid { grid-template-columns: 1fr; }
+        .del-section-heading { font-size: 1.5rem; }
+        .tracking-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .tracking-eta { text-align: left; }
+    }
+</style>
+
+
+@* ─── HERO ─────────────────────────────────────────── *@
+<div class="del-hero">
+    <div class="del-hero-dots"></div>
+    <div class="del-hero-glow"></div>
+    <div class="del-hero-content">
+        <div class="del-hero-badge">จัดส่งด่วน · ภายใน 30 นาที</div>
+        <h1>BAGERY <span>Delivery</span></h1>
+        <p>ติดตามออเดอร์ & ข้อมูลการจัดส่งทั้งหมด</p>
+    </div>
+</div>
+
+
+@* ─── TRACKING CARD ────────────────────────────────── *@
+<div class="tracking-wrap">
+    <div class="tracking-card">
+
+        @if (hasOrder)
+        {
+            <div class="tracking-header">
+                <div>
+                    <div class="tracking-order-id">ออเดอร์ของท่าน</div>
+                    <div class="tracking-order-num">#@orderId</div>
+                </div>
+                <div class="tracking-eta">
+                    <div class="tracking-eta-label">คาดว่าจะถึง</div>
+                    <div class="tracking-eta-time">~@orderEta</div>
+                </div>
+            </div>
+
+            @* ─── Steps ─── *@
+            <div class="steps-row">
+
+                @* Step 1: กำลังจัดออเดอร์ *@
+                <div class="step-box">
+                    <div class="step-icon-wrap">
+                        <div class="step-icon-bg @(currentStatus == "Preparing" ? "active" : "done")">
+                            @(currentStatus == "Preparing" ? "📦" : "✅")
+                        </div>
+                    </div>
+                    <div class="step-label @(currentStatus == "Preparing" ? "active" : "done")">
+                        กำลังจัดออเดอร์
+                    </div>
+                    <div class="step-sublabel @(currentStatus == "Preparing" ? "active" : "")">
+                        @(currentStatus == "Preparing" ? "กำลังดำเนินการ..." : "เสร็จแล้ว")
+                    </div>
+                </div>
+
+                @* Connector 1 *@
+                <div class="step-connector">
+                    @if (currentStatus == "Preparing")
+                    {
+                        <div class="step-connector-fill fill-anim"></div>
+                        <div class="step-connector-scooter show">🛵</div>
+                    }
+                    else
+                    {
+                        <div class="step-connector-fill fill-done"></div>
+                    }
+                </div>
+
+                @* Step 2: กำลังจัดส่ง *@
+                <div class="step-box">
+                    <div class="step-icon-wrap">
+                        <div class="step-icon-bg @(currentStatus == "Shipped" ? "active" : (currentStatus == "Completed" ? "done" : ""))">
+                            @(currentStatus == "Shipped" ? "🛵" : (currentStatus == "Completed" ? "✅" : "🛵"))
+                        </div>
+                    </div>
+                    <div class="step-label @(currentStatus == "Shipped" ? "active" : (currentStatus == "Completed" ? "done" : ""))">
+                        กำลังจัดส่ง
+                    </div>
+                    <div class="step-sublabel @(currentStatus == "Shipped" ? "active" : "")">
+                        @(currentStatus == "Shipped" ? "กำลังมาหาท่าน!" : (currentStatus == "Completed" ? "เสร็จแล้ว" : "รอดำเนินการ"))
+                    </div>
+                </div>
+
+                @* Connector 2 *@
+                <div class="step-connector">
+                    @if (currentStatus == "Shipped")
+                    {
+                        <div class="step-connector-fill fill-anim"></div>
+                        <div class="step-connector-scooter show">🛵</div>
+                    }
+                    else if (currentStatus == "Completed")
+                    {
+                        <div class="step-connector-fill fill-done"></div>
+                    }
+                    else
+                    {
+                        <div class="step-connector-fill"></div>
+                    }
+                </div>
+
+                @* Step 3: ได้รับของ *@
+                <div class="step-box">
+                    <div class="step-icon-wrap">
+                        <div class="step-icon-bg @(currentStatus == "Completed" ? "done" : "")">
+                            @(currentStatus == "Completed" ? "✅" : "🏠")
+                        </div>
+                    </div>
+                    <div class="step-label @(currentStatus == "Completed" ? "done" : "")">
+                        ได้รับของแล้ว
+                    </div>
+                    <div class="step-sublabel">
+                        @(currentStatus == "Completed" ? "ขอบคุณที่ใช้บริการ!" : "รอรับสินค้า")
+                    </div>
+                </div>
+
+            </div>
+
+            @if (currentStatus == "Shipped")
+            {
+                <div style="text-align:center; margin-top:0.8rem;
+                            background:#FFF3E8; border-radius:12px; padding:0.9rem;
+                            color:#9a4500; font-size:0.88rem; font-weight:600;">
+                    🛵 &nbsp;ไรเดอร์กำลังมาหาท่าน — กรุณาเตรียมรับสินค้า
+                </div>
+            }
+        }
+        else
+        {
+            @* ─── No Order ─── *@
+            <div class="steps-row" style="opacity:0.4;">
+                <div class="step-box">
+                    <div class="step-icon-bg"><span>📦</span></div>
+                    <div class="step-label">กำลังจัดออเดอร์</div>
+                </div>
+                <div class="step-connector"><div class="step-connector-fill"></div></div>
+                <div class="step-box">
+                    <div class="step-icon-bg"><span>🛵</span></div>
+                    <div class="step-label">กำลังจัดส่ง</div>
+                </div>
+                <div class="step-connector"><div class="step-connector-fill"></div></div>
+                <div class="step-box">
+                    <div class="step-icon-bg"><span>🏠</span></div>
+                    <div class="step-label">ได้รับของแล้ว</div>
+                </div>
+            </div>
+
+            <div class="no-order-wrap">
+                <div class="no-order-icon">🛍️</div>
+                <div class="no-order-text">ตอนนี้ยังไม่มีออเดอร์</div>
+                <div class="no-order-sub">เริ่มสั่งสินค้าเพื่อติดตามการจัดส่ง</div>
+                <a asp-controller="Account" asp-action="Menu"
+                   style="display:inline-block; margin-top:1.2rem;
+                          background:#F97316; color:#fff;
+                          padding:0.75rem 2rem; border-radius:25px;
+                          font-weight:700; text-decoration:none; font-size:0.9rem;
+                          box-shadow: 0 8px 20px rgba(249,115,22,0.3);">
+                    🥐 &nbsp;ดูเมนูสั่งซื้อ
+                </a>
+            </div>
+        }
+
+    </div>
+</div>
+
+
+@* ─── MAIN SECTIONS ────────────────────────────────── *@
+<div class="del-section-wrap">
+
+    @* ── How it works ── *@
+    <div style="margin-top:3rem;">
+        <p class="del-section-title">How it works</p>
+        <h2 class="del-section-heading">วิธีสั่งซื้อ & รับสินค้า</h2>
+
+        <div class="flow-grid">
+            <div class="flow-card">
+                <div class="flow-num">1</div>
+                <div class="flow-icon">🛒</div>
+                <div class="flow-title">เลือกสินค้า</div>
+                <div class="flow-sub">เลือกเมนูที่ชอบ กด Add to Cart แล้วไปหน้า Checkout</div>
+            </div>
+            <div class="flow-card">
+                <div class="flow-num">2</div>
+                <div class="flow-icon">💳</div>
+                <div class="flow-title">ชำระเงิน</div>
+                <div class="flow-sub">โอนเงิน / QR Code / PromptPay รับสลิปยืนยันทันที</div>
+            </div>
+            <div class="flow-card">
+                <div class="flow-num">3</div>
+                <div class="flow-icon">👨‍🍳</div>
+                <div class="flow-title">จัดเตรียม</div>
+                <div class="flow-sub">ทีมงานเริ่มอบและแพ็คสินค้าสดใหม่ให้ท่าน</div>
+            </div>
+            <div class="flow-card">
+                <div class="flow-num">4</div>
+                <div class="flow-icon">🛵</div>
+                <div class="flow-title">จัดส่งถึงบ้าน</div>
+                <div class="flow-sub">ไรเดอร์รับสินค้าและจัดส่งภายใน 30 นาที</div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Info cards ── *@
+    <div>
+        <p class="del-section-title">Delivery Info</p>
+        <h2 class="del-section-heading">รายละเอียดการจัดส่ง</h2>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <div class="info-icon">⏰</div>
+                <div class="info-card-title">เวลาจัดส่ง</div>
+                <div class="info-card-body">
+                    <strong>จันทร์ – ศุกร์</strong><br>08:00 – 20:00 น.<br>
+                    <strong>เสาร์ – อาทิตย์</strong><br>09:00 – 21:00 น.<br><br>
+                    <span class="info-tag">Last order 30 นาทีก่อนปิด</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">⚡</div>
+                <div class="info-card-title">ระยะเวลาจัดส่ง</div>
+                <div class="info-card-body">
+                    โดยเฉลี่ย <strong>20–35 นาที</strong><br>
+                    ขึ้นอยู่กับระยะทางและสภาพจราจร<br><br>
+                    <span class="info-tag">Rush Hour อาจช้ากว่าปกติ</span>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-icon">📍</div>
+                <div class="info-card-title">การแพ็คสินค้า</div>
+                <div class="info-card-body">
+                    กล่องกันกระแทกพิเศษ<br>
+                    รักษาอุณหภูมิระหว่างส่ง<br>
+                    แพ็คสด ไม่เปลี่ยนรูปทรง<br><br>
+                    <span class="info-tag">ปลอดภัย 100%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Zone ── *@
+    <div class="zone-section">
+        <p class="del-section-title">Delivery Zone</p>
+        <h2 class="del-section-heading" style="margin-bottom:1.5rem;">โซนที่จัดส่งได้</h2>
+
+        <div class="zone-map-placeholder">
+            <span>🗺️</span>
+            <p>แผนที่โซนจัดส่ง — ใส่ Google Maps Embed ตรงนี้</p>
+        </div>
+
+        <div class="zone-tags">
+            <span class="zone-tag">📍 บางกอกน้อย</span>
+            <span class="zone-tag">📍 บางกอกใหญ่</span>
+            <span class="zone-tag">📍 ธนบุรี</span>
+            <span class="zone-tag">📍 คลองสาน</span>
+            <span class="zone-tag">📍 ราษฎร์บูรณะ</span>
+            <span class="zone-tag">📍 จอมทอง</span>
+            <span class="zone-tag">📍 ตลิ่งชัน</span>
+            <span class="zone-tag">📍 ทวีวัฒนา</span>
+            <span class="zone-tag">📍 หนองแขม</span>
+        </div>
+    </div>
+
+    @* ── Pricing ── *@
+    <div class="pricing-section">
+        <p class="del-section-title">Delivery Fee</p>
+        <h2 class="del-section-heading" style="margin-bottom:1.5rem;">ค่าจัดส่ง</h2>
+
+        <div class="pricing-rows">
+            <div class="pricing-row">
+                <div class="pricing-range">3 ออเดอร์แรก (สมาชิกใหม่)</div>
+                <div class="pricing-fee free">ฟรี 🎉</div>
+            </div>
+            <div class="pricing-row">
+                <div class="pricing-range">สั่งครบ 300 บาทขึ้นไป</div>
+                <div class="pricing-fee free">ฟรี</div>
+            </div>
+            <div class="pricing-row">
+                <div class="pricing-range">ระยะ 0 – 3 กม.</div>
+                <div class="pricing-fee paid">20 บาท</div>
+            </div>
+            <div class="pricing-row">
+                <div class="pricing-range">ระยะ 3 – 7 กม.</div>
+                <div class="pricing-fee paid">35 บาท</div>
+            </div>
+            <div class="pricing-row">
+                <div class="pricing-range">ระยะ 7 – 12 กม.</div>
+                <div class="pricing-fee paid">50 บาท</div>
+            </div>
+            <div class="pricing-row">
+                <div class="pricing-range">มากกว่า 12 กม.</div>
+                <div class="pricing-fee paid">ติดต่อสอบถาม</div>
+            </div>
+        </div>
+    </div>
+
+    @* ── Contact channels ── *@
+    <div class="contact-section">
+        <p class="del-section-title">Order Channel</p>
+        <h2 class="del-section-heading">ช่องทางสั่งซื้อ</h2>
+
+        <div class="contact-channels">
+            <div class="channel-card channel-line">
+                <div class="channel-icon">💬</div>
+                <div class="channel-name">LINE Official</div>
+                <div class="channel-val">@@BAGERY</div>
+                <div style="margin-top:1rem;">
+                    <span style="background:rgba(0,185,0,0.25); color:#4ade80;
+                                 font-size:0.75rem; padding:4px 12px; border-radius:20px; font-weight:700;">
+                        เปิด 08:00–21:00
+                    </span>
+                </div>
+            </div>
+            <div class="channel-card channel-web">
+                <div class="channel-icon">🌐</div>
+                <div class="channel-name">สั่งผ่านเว็บไซต์</div>
+                <div class="channel-val">bagery.com</div>
+                <div style="margin-top:1rem;">
+                    <a asp-controller="Account" asp-action="Menu"
+                       style="background:#F97316; color:#fff; font-size:0.78rem;
+                              padding:5px 14px; border-radius:20px; font-weight:700;
+                              text-decoration:none; display:inline-block;">
+                        สั่งเลย →
+                    </a>
+                </div>
+            </div>
+            <div class="channel-card channel-tel">
+                <div class="channel-icon">📞</div>
+                <div class="channel-name">โทรสั่ง</div>
+                <div class="channel-val">02-XXX-XXXX</div>
+                <div style="margin-top:1rem;">
+                    <span style="background:rgba(59,130,246,0.2); color:#93c5fd;
+                                 font-size:0.75rem; padding:4px 12px; border-radius:20px; font-weight:700;">
+                        09:00–18:00
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

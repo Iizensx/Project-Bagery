@@ -20,6 +20,7 @@ public class AccountController : Controller
     public IActionResult Profile() => View();
     public IActionResult Menu() => View();
     public IActionResult lab8() => View();
+    public IActionResult Delivery() => View();
 
     // ─── หน้า Admin ──────────────────────────────────────
     public IActionResult Dashbordadmin() => View("~/Views/admin/Dashbordadmin.cshtml");
