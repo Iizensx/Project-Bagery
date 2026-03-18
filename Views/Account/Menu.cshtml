@@ -1,3 +1,6 @@
+@using _66022380.Models.Db;
+@model List<Stock>
+
 @{
     ViewData["Title"] = "เมนู";
 }
@@ -536,22 +539,16 @@
                 <span class="menu-icon">🥐</span>
                 เมนูทั้งหมด
             </a>
-            <a href="#" class="menu-item" onclick="filterMenu('signature', event)">
-                <span class="menu-icon">⭐</span>
-                เมนูซิกเนเจอร์
-            </a>
-            <a href="#" class="menu-item" onclick="filterMenu('pastry', event)">
-                <span class="menu-icon">🥐</span>
-                ครัวซองต์ & เพสตรี้
-            </a>
-            <a href="#" class="menu-item" onclick="filterMenu('cake', event)">
-                <span class="menu-icon">🍰</span>
-                เค้ก & เบเกอรี่หวาน
-            </a>
-            <a href="#" class="menu-item" onclick="filterMenu('drinks', event)">
-                <span class="menu-icon">☕</span>
-                เครื่องดื่ม
-            </a>
+            @if (Model != null && Model.Count > 0)
+            {
+                @foreach (var category in Model.GroupBy(p => p.Category?.CategoryName).Select(g => g.Key).Distinct())
+                {
+                    <a href="#" class="menu-item" onclick="filterMenu('@(category?.ToLower() ?? "all")', event)">
+                        <span class="menu-icon">@GetCategoryIcon(category)</span>
+                        @category
+                    </a>
+                }
+            }
         </div>
     </aside>
 
@@ -573,88 +570,30 @@
         </div>
 
         <div class="products-grid">
-            <!-- Pastry -->
-            <div class="product-card" data-category="pastry">
-                <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=400" alt="Plain Croissant">
+            @if (Model != null && Model.Count > 0)
+            {
+                @foreach (var product in Model)
+                {
+                    <div class="product-card" data-category="@(product.Category?.CategoryName?.ToLower() ?? "all")">
+                        <div class="product-image">
+                            <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=400" alt="@product.ProductName">
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">@product.ProductName</div>
+                            <div class="product-price">@product.Price บาท</div>
+                            <div class="stock-badge">คงเหลือ: @(product.Stock1 ?? 0)</div>
+                            <button class="btn-details" onclick="showProductDetails('@product.ProductName', '@(product.Description ?? "ไม่มีรายละเอียด")', @product.Price, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=600', @(product.Stock1 ?? 0))">รายละเอียด</button>
+                            <button class="btn-order" onclick="addToCart('@product.ProductName', @product.Price)">สั่งเลย</button>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666;">
+                    <p>ไม่มีสินค้าในระบบ</p>
                 </div>
-                <div class="product-info">
-                    <div class="product-name">Plain Croissant</div>
-                    <div class="product-price">75 บาท</div>
-                    <div class="stock-badge">คงเหลือ: 5</div>
-                    <button class="btn-details" onclick="showProductDetails('Plain Croissant', 'ครัวซองต์เนยสดแท้ นำเข้าจากฝรั่งเศส อบสดใหม่ทุกวัน ผิวกรอบนอก นุ่มใน หอมกลิ่นเนยสุดๆ', 75, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
-                    <button class="btn-order" onclick="addToCart('Plain Croissant', 75)">สั่งเลย</button>
-                </div>
-            </div>
-
-            <!-- Signature -->
-            <div class="product-card" data-category="signature">
-                <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=400" alt="Blueberry Cheesecake">
-                </div>
-                <div class="product-info">
-                    <div class="product-name">Blueberry Cheesecake</div>
-                    <div class="product-price">145 บาท</div>
-                    <div class="stock-badge">คงเหลือ: 5</div>
-                    <button class="btn-details" onclick="showProductDetails('Blueberry Cheesecake', 'ชีสเค้กเนื้อเนียนนุ่ม ราดด้วยซอสบลูเบอร์รี่เข้มข้น และบลูเบอร์รี่สด ฐานกรุบกรอบเข้ากันได้อย่างลงตัว', 145, 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
-                    <button class="btn-order" onclick="addToCart('Blueberry Cheesecake', 145)">สั่งเลย</button>
-                </div>
-            </div>
-
-            <!-- Pastry -->
-            <div class="product-card" data-category="pastry">
-                <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=400" alt="Almond Croissant">
-                </div>
-                <div class="product-info">
-                    <div class="product-name">Almond Croissant</div>
-                    <div class="product-price">95 บาท</div>
-                    <div class="stock-badge">คงเหลือ: 5</div>
-                    <button class="btn-details" onclick="showProductDetails('Almond Croissant', 'ครัวซองต์สอดไส้ครีมอัลมอนด์ โรยหน้าด้วยอัลมอนด์สไลด์และไอซิ่ง หอมหวานกรุบกรอบ', 95, 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
-                    <button class="btn-order" onclick="addToCart('Almond Croissant', 95)">สั่งเลย</button>
-                </div>
-            </div>
-
-            <!-- Cake -->
-            <div class="product-card" data-category="cake">
-                <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=400" alt="Chocolate Fudge Cake">
-                </div>
-                <div class="product-info">
-                    <div class="product-name">Chocolate Fudge Cake</div>
-                    <div class="product-price">125 บาท</div>
-                    <div class="stock-badge">คงเหลือ: 5</div>
-                    <button class="btn-details" onclick="showProductDetails('Chocolate Fudge Cake', 'เค้กช็อกโกแลตเนื้อนุ่มสลับชั้นกับฟัดจ์ช็อกโกแลตเข้มข้น รสชาติไม่หวานจนเกินไป สำหรับคนรักช็อกโกแลต', 125, 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
-                    <button class="btn-order" onclick="addToCart('Chocolate Fudge Cake', 125)">สั่งเลย</button>
-                </div>
-            </div>
-
-            <div class="product-card" data-category="cake">
-                <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&q=80&w=400" alt="Strawberry Shortcake">
-                </div>
-                <div class="product-info">
-                    <div class="product-name">Strawberry Shortcake</div>
-                    <div class="product-price">135 บาท</div>
-                    <div class="stock-badge">คงเหลือ: 5</div>
-                    <button class="btn-details" onclick="showProductDetails('Strawberry Shortcake', 'เค้กวานิลลาเนื้อเบา สลับชั้นกับครีมสดและสตรอว์เบอร์รี่สด รสชาติหวานอมเปรี้ยว สดชื่น', 135, 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
-                    <button class="btn-order" onclick="addToCart('Strawberry Shortcake', 135)">สั่งเลย</button>
-                </div>
-            </div>
-
-            <!-- Drinks -->
-            <div class="product-card" data-category="drinks">
-                <div class="product-image">
-                    <img src="https://images.unsplash.com/photo-1572286258217-40142c1c6a70?auto=format&fit=crop&q=80&w=400" alt="Iced Caramel Macchiato">
-                </div>
-                <div class="product-info">
-                    <div class="product-name">Iced Caramel Macchiato</div>
-                    <div class="product-price">115 บาท</div>
-                    <div class="stock-badge">คงเหลือ: 5</div>
-                    <button class="btn-details" onclick="showProductDetails('Iced Caramel Macchiato', 'กาแฟเอสเพรสโซ่เข้มข้น ผสมกับนมสดและไซรัปวานิลลา ราดด้วยซอสคาราเมลหอมหวาน', 115, 'https://images.unsplash.com/photo-1572286258217-40142c1c6a70?auto=format&fit=crop&q=80&w=600', 5)">รายละเอียด</button>
-                    <button class="btn-order" onclick="addToCart('Iced Caramel Macchiato', 115)">สั่งเลย</button>
-                </div>
-            </div>
+            }
         </div>
     </section>
 </div>
@@ -710,6 +649,20 @@
         </div>
     </div>
 </div>
+
+@functions {
+    private string GetCategoryIcon(string categoryName)
+    {
+        return categoryName?.ToLower() switch
+        {
+            var s when s.Contains("ครัว") || s.Contains("pastry") => "🥐",
+            var s when s.Contains("เค้ก") || s.Contains("cake") => "🍰",
+            var s when s.Contains("เครื่องดื่ม") || s.Contains("drink") => "☕",
+            var s when s.Contains("ซิก") || s.Contains("signature") => "⭐",
+            _ => "🥐"
+        };
+    }
+}
 
 @section Scripts {
     <script>

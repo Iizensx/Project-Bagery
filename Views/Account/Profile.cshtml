@@ -1,3 +1,6 @@
+@using _66022380.Models;
+@model ProfileViewModel
+
 @{
     ViewData["Title"] = "ข้อมูลของฉัน";
     Layout = "~/Views/Shared/_Layoutmain.cshtml";
@@ -150,6 +153,41 @@
             font-size: 15px;
             transition: all 0.3s;
             font-family: 'Sarabun', sans-serif;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-input-wrapper input {
+            width: 100%;
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #667eea;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: #764ba2;
+            transform: scale(1.1);
+        }
+
+        .toggle-password svg {
+            width: 20px;
+            height: 20px;
         }
 
         .form-group input:focus {
@@ -475,27 +513,31 @@
                 </div>
 
                 <div class="profile-form">
-                    <div class="form-group">
-                        <label>ชื่อผู้ใช้งาน</label>
-                        <input type="text" id="profile-name" value="ชื่อ" placeholder="กรอกชื่อผู้ใช้งาน">
-                    </div>
+                    <form id="profile-form">
+                        <input type="hidden" id="profile-userid" name="UserId" value="@Model.UserId">
+                        
+                        <div class="form-group">
+                            <label>ชื่อผู้ใช้งาน</label>
+                            <input type="text" id="profile-name" name="Username" value="@Model.Username" placeholder="กรอกชื่อผู้ใช้งาน" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label>อีเมล</label>
-                        <input type="email" id="profile-email" value="xxxxxxxx@gmail.com" placeholder="กรอกอีเมล">
-                    </div>
+                        <div class="form-group">
+                            <label>อีเมล</label>
+                            <input type="email" id="profile-email" name="Email" value="@Model.Email" placeholder="กรอกอีเมล" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label>เบอร์โทรศัพท์</label>
-                        <input type="tel" id="profile-phone" value="094xxxxxx" placeholder="กรอกเบอร์โทรศัพท์">
-                    </div>
+                        <div class="form-group">
+                            <label>เบอร์โทรศัพท์</label>
+                            <input type="tel" id="profile-phone" name="Phone" value="@Model.Phone" placeholder="กรอกเบอร์โทรศัพท์">
+                        </div>
 
-                    <div class="form-group">
-                        <label>รหัสผ่าน</label>
-                        <a href="#" class="change-password-link">เปลี่ยนรหัสผ่าน</a>
-                    </div>
+                        <div class="form-group">
+                            <label>รหัสผ่าน</label>
+                            <button type="button" class="change-password-link" id="btn-change-password" style="border: none; background: none; padding: 0; cursor: pointer; color: #dc3545; text-decoration: none; font-size: 14px; font-weight: 600;">เปลี่ยนรหัสผ่าน</button>
+                        </div>
 
-                    <button class="save-btn" id="save-profile">บันทึก</button>
+                        <button type="submit" class="save-btn" id="save-profile">บันทึก</button>
+                    </form>
                 </div>
             </div>
 
@@ -507,26 +549,48 @@
                 </div>
 
                 <div id="address-list">
-                    <!-- Address cards will be rendered here -->
-                    <div class="address-card">
-                        <span class="default-badge">ค่าเริ่มต้น</span>
-                        
-                        <div class="address-content">
-                            <div class="address-name" id="display-address-name">บ้าน</div>
-                            <div class="address-details" id="display-address-details">
-                                Tiger pizza house 26 21 ซอย ประชามิตรศักดิ์ ตำบลอรัณยิก อำเภอพระรัณ ประรวงศรีนิติ 77110 ประเทศไทย Prachuap Khiri Khan
+                    @if (Model.Addresses != null && Model.Addresses.Count > 0)
+                    {
+                        @foreach (var address in Model.Addresses)
+                        {
+                            <div class="address-card" data-address-id="@address.AddressId">
+                                @if (Model.Addresses.IndexOf(address) == 0)
+                                {
+                                    <span class="default-badge">ค่าเริ่มต้น</span>
+                                }
+                                
+                                <div class="address-content">
+                                    <div class="address-name" data-field="name">@address.AddressLine</div>
+                                    <div class="address-details" data-field="details">
+                                        @if (!string.IsNullOrEmpty(address.District) || !string.IsNullOrEmpty(address.Province) || !string.IsNullOrEmpty(address.PostalCode))
+                                        {
+                                            @address.District @address.Province @address.PostalCode
+                                        }
+                                    </div>
+                                    
+                                    <div class="address-actions">
+                                        <button class="action-btn edit btn-edit-address" data-address-id="@address.AddressId">
+                                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                            </svg>
+                                            แก้ไข
+                                        </button>
+                                        <button class="action-btn delete btn-delete-address" data-address-id="@address.AddressId">
+                                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                                                <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 1a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v1h-9V1z"/>
+                                            </svg>
+                                            ลบ
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <div class="address-actions">
-                                <button class="action-btn edit" id="btn-edit-address">
-                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-                                    </svg>
-                                    แก้ไข
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                        }
+                    }
+                    @if (Model.Addresses == null || Model.Addresses.Count == 0)
+                    {
+                        <p style="color: #999; text-align: center; padding: 20px;">ไม่มีที่อยู่สำหรับแสดง</p>
+                    }
                 </div>
             </div>
 
@@ -538,21 +602,92 @@
                         <h2 id="modal-title">แก้ไขที่อยู่</h2>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label>ชื่อที่อยู่ (เช่น บ้าน, ที่ทำงาน)</label>
-                            <input type="text" id="input-address-name" placeholder="ระบุชื่อที่อยู่">
-                        </div>
-                        <div class="form-group">
-                            <label>ที่อยู่โดยละเอียด</label>
-                            <textarea id="input-address-details" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-family: 'Sarabun'; height: 100px;"></textarea>
-                        </div>
+                        <form id="address-form">
+                            <input type="hidden" id="input-address-id" name="addressId" value="0">
+                            
+                            <div class="form-group">
+                                <label>ที่อยู่</label>
+                                <input type="text" id="input-address-name" name="addressLine" placeholder="ระบุที่อยู่" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>อำเภอ/เขต</label>
+                                <input type="text" id="input-address-district" name="district" placeholder="ระบุอำเภอ/เขต">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>จังหวัด</label>
+                                <input type="text" id="input-address-province" name="province" placeholder="ระบุจังหวัด">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>รหัสไปรษณีย์</label>
+                                <input type="text" id="input-address-postal" name="postalCode" placeholder="ระบุรหัสไปรษณีย์">
+                            </div>
+                        </form>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn-cancel">ยกเลิก</button>
-                        <button class="save-btn" style="margin-top:0;" id="save-address">บันทึกที่อยู่</button>
+                        <button class="btn-cancel" type="button">ยกเลิก</button>
+                        <button class="save-btn" style="margin-top:0;" id="save-address" type="button">บันทึกที่อยู่</button>
                     </div>
                 </div>
             </div>
+            </div>
+
+            <!-- Password Change Modal -->
+            <div id="passwordModal" class="modal">
+                <div class="modal-content">
+                    <span class="close-modal-password">&times;</span>
+                    <div class="modal-header">
+                        <h2>เปลี่ยนรหัสผ่าน</h2>
+                    </div>
+                    <div class="modal-body">
+                        <form id="password-form">
+                            <div class="form-group">
+                                <label>รหัสผ่านปัจจุบัน</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="input-current-password" name="currentPassword" placeholder="กรอกรหัสผ่านปัจจุบัน" required>
+                                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('input-current-password')">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>รหัสผ่านใหม่</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="input-new-password" name="newPassword" placeholder="กรอกรหัสผ่านใหม่" required>
+                                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('input-new-password')">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>ยืนยันรหัสผ่านใหม่</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="input-confirm-new-password" name="confirmPassword" placeholder="ยืนยันรหัสผ่านใหม่" required>
+                                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('input-confirm-new-password')">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-cancel" type="button" id="cancel-password">ยกเลิก</button>
+                        <button class="save-btn" style="margin-top:0;" id="save-password" type="button">เปลี่ยนรหัสผ่าน</button>
+                    </div>
+                </div>
             </div>
 
             <!-- ส่วนสมาชิก S&P Card (ถ้ามี) -->
@@ -565,15 +700,15 @@
     </div>
 
     <script>
-        // DOM Elements
         const modal = document.getElementById('addressModal');
         const closeModal = document.querySelector('.close-modal');
         const cancelBtn = document.querySelector('.btn-cancel');
         const saveAddressBtn = document.getElementById('save-address');
         const btnAddAddress = document.getElementById('btn-add-address');
-        const btnEditAddress = document.getElementById('btn-edit-address');
+        const profileForm = document.getElementById('profile-form');
+        const addressForm = document.getElementById('address-form');
+        const userId = document.getElementById('profile-userid').value;
 
-        // Tab switching functionality
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -581,35 +716,64 @@
             });
         });
 
-        // Profile Save functionality
-        document.getElementById('save-profile').addEventListener('click', function(e) {
-            e.preventDefault();
-            const userData = {
-                name: document.getElementById('profile-name').value,
-                email: document.getElementById('profile-email').value,
-                phone: document.getElementById('profile-phone').value
-            };
-            localStorage.setItem('userProfile', JSON.stringify(userData));
-            alert('บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว!');
-        });
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                fetch('@Url.Action("Profile", "Account")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        UserId: parseInt(document.getElementById('profile-userid').value),
+                        Username: document.getElementById('profile-name').value,
+                        Email: document.getElementById('profile-email').value,
+                        Phone: document.getElementById('profile-phone').value
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                    } else {
+                        alert(data.message || 'เกิดข้อผิดพลาด');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('เกิดข้อผิดพลาด');
+                });
+            });
+        }
 
-        // Address Modal functionality
-        function openModal(title, name = '', details = '') {
+        function openModal(title, addressId = 0, name = '', district = '', province = '', postal = '') {
             document.getElementById('modal-title').innerText = title;
+            document.getElementById('input-address-id').value = addressId;
             document.getElementById('input-address-name').value = name;
-            document.getElementById('input-address-details').value = details;
+            document.getElementById('input-address-district').value = district;
+            document.getElementById('input-address-province').value = province;
+            document.getElementById('input-address-postal').value = postal;
             modal.style.display = 'flex';
         }
 
         function hideModal() {
             modal.style.display = 'none';
+            addressForm.reset();
         }
 
         btnAddAddress.addEventListener('click', () => openModal('เพิ่มที่อยู่ใหม่'));
-        btnEditAddress.addEventListener('click', () => {
-            const currentName = document.getElementById('display-address-name').innerText;
-            const currentDetails = document.getElementById('display-address-details').innerText.trim();
-            openModal('แก้ไขที่อยู่', currentName, currentDetails);
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-edit-address')) {
+                const card = e.target.closest('.address-card');
+                const addressId = card.dataset.addressId;
+                const name = card.querySelector('[data-field="name"]').innerText;
+                const details = card.querySelector('[data-field="details"]').innerText;
+                const parts = details.trim().split(/\s+/);
+                
+                openModal('แก้ไขที่อยู่', addressId, name, parts[0] || '', parts[1] || '', parts[2] || '');
+            }
         });
 
         closeModal.addEventListener('click', hideModal);
@@ -618,59 +782,186 @@
             if (e.target === modal) hideModal();
         });
 
-        // Save Address functionality
         saveAddressBtn.addEventListener('click', function() {
             const name = document.getElementById('input-address-name').value;
-            const details = document.getElementById('input-address-details').value;
+            const district = document.getElementById('input-address-district').value;
+            const province = document.getElementById('input-address-province').value;
+            const postal = document.getElementById('input-address-postal').value;
+            const addressId = document.getElementById('input-address-id').value;
 
-            if (!name || !details) {
-                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+            if (!name) {
+                alert('กรุณากรอกข้อมูลที่อยู่');
                 return;
             }
 
-            const addressData = { name, details };
-            localStorage.setItem('userAddress', JSON.stringify(addressData));
-
-            // Update UI
-            document.getElementById('display-address-name').innerText = name;
-            document.getElementById('display-address-details').innerText = details;
-
-            hideModal();
-            alert('บันทึกที่อยู่เรียบร้อยแล้ว!');
+            fetch('@Url.Action("SaveAddress", "Account")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({
+                    userId: userId,
+                    addressId: addressId,
+                    addressLine: name,
+                    district: district,
+                    province: province,
+                    postalCode: postal
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('เกิดข้อผิดพลาด');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาด');
+            });
         });
 
-        // Load saved data on page load
-        window.addEventListener('load', function() {
-            // Load Profile
-            const savedProfile = localStorage.getItem('userProfile');
-            if (savedProfile) {
-                const userData = JSON.parse(savedProfile);
-                document.getElementById('profile-name').value = userData.name || '';
-                document.getElementById('profile-email').value = userData.email || '';
-                document.getElementById('profile-phone').value = userData.phone || '';
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-delete-address')) {
+                if (confirm('คุณต้องการลบที่อยู่นี้หรือไม่?')) {
+                    const card = e.target.closest('.address-card');
+                    const addressId = card.dataset.addressId;
+                    
+                    fetch('@Url.Action("DeleteAddress", "Account")', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: new URLSearchParams({
+                            addressId: addressId,
+                            userId: userId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert('เกิดข้อผิดพลาด');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('เกิดข้อผิดพลาด');
+                    });
+                }
             }
+        });
 
-            // Load Address
-            const savedAddress = localStorage.getItem('userAddress');
-            if (savedAddress) {
-                const addressData = JSON.parse(savedAddress);
-                document.getElementById('display-address-name').innerText = addressData.name;
-                document.getElementById('display-address-details').innerText = addressData.details;
+        const passwordModal = document.getElementById('passwordModal');
+        const closePasswordModal = document.querySelector('.close-modal-password');
+        const cancelPasswordBtn = document.getElementById('cancel-password');
+        const savePasswordBtn = document.getElementById('save-password');
+        const passwordForm = document.getElementById('password-form');
+        const changePasswordBtn = document.getElementById('btn-change-password');
+
+        function openPasswordModal() {
+            passwordModal.style.display = 'flex';
+            passwordForm.reset();
+        }
+
+        function togglePasswordVisibility(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                if (element.type === 'password') {
+                    element.type = 'text';
+                } else {
+                    element.type = 'password';
+                }
             }
+        }
+
+        function hidePasswordModal() {
+            passwordModal.style.display = 'none';
+            passwordForm.reset();
+        }
+
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', openPasswordModal);
+        }
+
+        if (closePasswordModal) {
+            closePasswordModal.addEventListener('click', hidePasswordModal);
+        }
+
+        if (cancelPasswordBtn) {
+            cancelPasswordBtn.addEventListener('click', hidePasswordModal);
+        }
+
+        window.addEventListener('click', (e) => {
+            if (e.target === passwordModal) hidePasswordModal();
         });
 
-        // Change password link
-        document.querySelector('.change-password-link').addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('ฟังก์ชันเปลี่ยนรหัสผ่าน');
-        });
+        if (savePasswordBtn) {
+            savePasswordBtn.addEventListener('click', function() {
+                const currentPassword = document.getElementById('input-current-password').value;
+                const newPassword = document.getElementById('input-new-password').value;
+                const confirmPassword = document.getElementById('input-confirm-new-password').value;
 
-        // S&P Card membership
+                console.log('Password Change Debug Info:');
+                console.log('Current Password Length:', currentPassword.length);
+                console.log('New Password Length:', newPassword.length);
+                console.log('Confirm Password Length:', confirmPassword.length);
+                console.log('Current Password Value:', currentPassword);
+
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    alert('กรุณากรอกข้อมูลให้ครบ');
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    alert('รหัสผ่านใหม่และการยืนยันไม่ตรงกัน');
+                    return;
+                }
+
+                const payloadData = {
+                    UserId: parseInt(document.getElementById('profile-userid').value),
+                    Username: document.getElementById('profile-name').value,
+                    Email: document.getElementById('profile-email').value,
+                    Phone: document.getElementById('profile-phone').value,
+                    CurrentPassword: currentPassword,
+                    NewPassword: newPassword,
+                    ConfirmPassword: confirmPassword
+                };
+
+                console.log('Sending JSON:', JSON.stringify(payloadData));
+
+                fetch('@Url.Action("Profile", "Account")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payloadData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        hidePasswordModal();
+                        location.reload();
+                    } else {
+                        alert(data.message || 'เกิดข้อผิดพลาด');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('เกิดข้อผิดพลาด');
+                });
+            });
+        }
+
         document.querySelector('.membership-btn').addEventListener('click', function() {
             alert('ฟังก์ชันบัตรสมาชิกจะเปิดในอนาคต');
         });
 
-        // Change avatar
         document.querySelector('.change-avatar-btn').addEventListener('click', function() {
             alert('ฟังก์ชันเปลี่ยนรูปโปรไฟล์');
         });
