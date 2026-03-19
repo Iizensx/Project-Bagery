@@ -20,6 +20,8 @@ public partial class BakerydbContext : DbContext
 
     public virtual DbSet<Category> Categories { get; set; }
 
+    public virtual DbSet<Historyorder> Historyorders { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<Orderdetail> Orderdetails { get; set; }
@@ -69,6 +71,29 @@ public partial class BakerydbContext : DbContext
 
             entity.Property(e => e.CategoryName).HasMaxLength(100);
             entity.Property(e => e.Description).HasColumnType("text");
+        });
+
+        modelBuilder.Entity<Historyorder>(entity =>
+        {
+            entity.HasKey(e => e.HistoryOrderId).HasName("PRIMARY");
+
+            entity.ToTable("historyorder");
+
+            entity.HasIndex(e => e.OrderId, "OrderId");
+
+            entity.HasIndex(e => e.UserId, "UserId");
+
+            entity.Property(e => e.CompletedAt).HasColumnType("datetime");
+            entity.Property(e => e.DeliveryAddress).HasMaxLength(500);
+            entity.Property(e => e.ItemSummary).HasColumnType("text");
+            entity.Property(e => e.OrderDate).HasColumnType("datetime");
+            entity.Property(e => e.PaymentStatus).HasMaxLength(50);
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.TotalAmount).HasPrecision(10, 2);
+
+            entity.HasOne(d => d.User).WithMany(p => p.Historyorders)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("historyorder_ibfk_1");
         });
 
         modelBuilder.Entity<Order>(entity =>

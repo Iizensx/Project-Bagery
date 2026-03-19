@@ -198,8 +198,18 @@ public class AccountController : Controller
             .ToList();
 
         var activeOrder = orders.FirstOrDefault(o => o.Status != "Completed");
+        var userOrderIds = orders.Select(o => o.OrderId).ToList();
+        var historyOrders = _db.Historyorders
+            .Where(h => h.UserId == userId || (h.OrderId.HasValue && userOrderIds.Contains(h.OrderId.Value)))
+            .OrderByDescending(h => h.CompletedAt)
+            .ThenByDescending(h => h.HistoryOrderId)
+            .ToList();
 
-        return View(BuildDeliveryTrackingViewModel(activeOrder, orders));
+        var completedOrders = orders
+            .Where(o => o.Status == "Completed")
+            .ToList();
+
+        return View(BuildDeliveryTrackingViewModel(activeOrder, historyOrders, completedOrders));
     }
     public IActionResult Checkout() => View();
 
@@ -640,12 +650,43 @@ public class AccountController : Controller
 
         try
         {
-            var order = _db.Orders.FirstOrDefault(o => o.OrderId == orderId && o.UserId == userId);
+            var order = _db.Orders
+                .Include(o => o.Address)
+                .Include(o => o.Orderdetails)
+                    .ThenInclude(d => d.Product)
+                .FirstOrDefault(o => o.OrderId == orderId && o.UserId == userId);
             if (order == null)
                 return Json(new { success = false, message = "ไม่พบออเดอร์" });
 
             if (order.Status != "Shipped")
                 return Json(new { success = false, message = "ออเดอร์นี้ยังไม่อยู่ในสถานะจัดส่ง" });
+
+            var existingHistory = _db.Historyorders.FirstOrDefault(h => h.OrderId == order.OrderId);
+            if (existingHistory == null)
+            {
+                var deliveryAddress = string.Join(", ", new[]
+                {
+                    order.Address?.AddressLine,
+                    order.Address?.District,
+                    order.Address?.Province,
+                    order.Address?.PostalCode
+                }.Where(part => !string.IsNullOrWhiteSpace(part)));
+
+                var itemSummary = string.Join(", ", order.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}"));
+
+                _db.Historyorders.Add(new Historyorder
+                {
+                    OrderId = order.OrderId,
+                    UserId = order.UserId,
+                    OrderDate = order.OrderDate,
+                    CompletedAt = DateTime.Now,
+                    TotalAmount = order.TotalAmount,
+                    Status = "Completed",
+                    PaymentStatus = order.PaymentStatus,
+                    DeliveryAddress = deliveryAddress,
+                    ItemSummary = itemSummary
+                });
+            }
 
             order.Status = "Completed";
             _db.Update(order);
@@ -661,26 +702,51 @@ public class AccountController : Controller
         }
     }
 
-    private DeliveryTrackingViewModel BuildDeliveryTrackingViewModel(Order? order, List<Order> orders)
+    private DeliveryTrackingViewModel BuildDeliveryTrackingViewModel(Order? order, List<Historyorder> historyOrders, List<Order>? completedOrders = null)
     {
-        var history = orders.Select(o => new DeliveryOrderHistoryItem
+        var history = historyOrders.Select(h => new DeliveryOrderHistoryItem
         {
-            OrderId = o.OrderId,
-            OrderNumber = $"ORD-{o.OrderId}",
-            OrderStatus = o.Status ?? "Pending",
-            PaymentStatus = o.PaymentStatus ?? "Pending",
-            CreatedAtText = o.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "-",
-            TotalAmount = o.TotalAmount ?? 0,
-            DeliveryAddress = string.Join(", ", new[]
-            {
-                o.Address?.AddressLine,
-                o.Address?.District,
-                o.Address?.Province,
-                o.Address?.PostalCode
-            }.Where(part => !string.IsNullOrWhiteSpace(part))),
-            ItemSummary = string.Join(", ", o.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}")),
-            IsActive = order != null && o.OrderId == order.OrderId
+            OrderId = h.OrderId ?? 0,
+            OrderNumber = h.OrderId.HasValue ? $"ORD-{h.OrderId}" : "-",
+            OrderStatus = h.Status ?? "Completed",
+            PaymentStatus = h.PaymentStatus ?? "Pending",
+            CreatedAtText = h.CompletedAt?.ToString("dd/MM/yyyy HH:mm") ?? h.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "-",
+            SortDate = h.CompletedAt ?? h.OrderDate ?? DateTime.MinValue,
+            TotalAmount = h.TotalAmount ?? 0,
+            DeliveryAddress = string.IsNullOrWhiteSpace(h.DeliveryAddress) ? "-" : h.DeliveryAddress,
+            ItemSummary = string.IsNullOrWhiteSpace(h.ItemSummary) ? "-" : h.ItemSummary,
+            IsActive = false
         }).ToList();
+
+        if (completedOrders != null && completedOrders.Count > 0)
+        {
+            var historyOrderIds = history
+                .Where(h => h.OrderId > 0)
+                .Select(h => h.OrderId)
+                .ToHashSet();
+
+            var fallbackHistory = completedOrders
+                .Where(o => !historyOrderIds.Contains(o.OrderId))
+                .Select(o => new DeliveryOrderHistoryItem
+                {
+                    OrderId = o.OrderId,
+                    OrderNumber = $"ORD-{o.OrderId}",
+                    OrderStatus = string.IsNullOrWhiteSpace(o.Status) ? "Completed" : o.Status,
+                    PaymentStatus = string.IsNullOrWhiteSpace(o.PaymentStatus) ? "Pending" : o.PaymentStatus,
+                    CreatedAtText = o.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "-",
+                    SortDate = o.OrderDate ?? DateTime.MinValue,
+                    TotalAmount = o.TotalAmount ?? 0,
+                    DeliveryAddress = BuildDeliveryAddress(o),
+                    ItemSummary = BuildItemSummary(o),
+                    IsActive = false
+                });
+
+            history.AddRange(fallbackHistory);
+            history = history
+                .OrderByDescending(h => h.SortDate)
+                .ThenByDescending(h => h.OrderId)
+                .ToList();
+        }
 
         if (order == null)
         {
@@ -761,6 +827,27 @@ public class AccountController : Controller
             IsCompleted = normalizedStatus == "Completed",
             OrderHistory = history
         };
+    }
+
+    private string BuildDeliveryAddress(Order order)
+    {
+        var addressParts = new[]
+        {
+            order.Address?.AddressLine,
+            order.Address?.District,
+            order.Address?.Province,
+            order.Address?.PostalCode
+        }
+        .Where(part => !string.IsNullOrWhiteSpace(part));
+
+        var address = string.Join(", ", addressParts);
+        return string.IsNullOrWhiteSpace(address) ? "-" : address;
+    }
+
+    private string BuildItemSummary(Order order)
+    {
+        var itemSummary = string.Join(", ", order.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}"));
+        return string.IsNullOrWhiteSpace(itemSummary) ? "-" : itemSummary;
     }
     
 

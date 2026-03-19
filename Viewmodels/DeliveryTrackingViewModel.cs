@@ -29,6 +29,7 @@ public class DeliveryOrderHistoryItem
     public string OrderStatus { get; set; } = "Pending";
     public string PaymentStatus { get; set; } = "Pending";
     public string CreatedAtText { get; set; } = "-";
+    public DateTime SortDate { get; set; }
     public decimal TotalAmount { get; set; }
     public string ItemSummary { get; set; } = "-";
     public string DeliveryAddress { get; set; } = "-";

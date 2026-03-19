@@ -81,6 +81,55 @@ namespace _66022380.Migrations
                     b.ToTable("category", (string)null);
                 });
 
+            modelBuilder.Entity("_66022380.Models.Db.Historyorder", b =>
+                {
+                    b.Property<int>("HistoryOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("HistoryOrderId"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("DeliveryAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("ItemSummary")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("OrderDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PaymentStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<decimal?>("TotalAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("HistoryOrderId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "OrderId" }, "OrderId");
+
+                    b.HasIndex(new[] { "UserId" }, "UserId");
+
+                    b.ToTable("historyorder", (string)null);
+                });
+
             modelBuilder.Entity("_66022380.Models.Db.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -382,6 +431,16 @@ namespace _66022380.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("_66022380.Models.Db.Historyorder", b =>
+                {
+                    b.HasOne("_66022380.Models.Db.User", "User")
+                        .WithMany("Historyorders")
+                        .HasForeignKey("UserId")
+                        .HasConstraintName("historyorder_ibfk_1");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("_66022380.Models.Db.UserPromotion", b =>
                 {
                     b.HasOne("_66022380.Models.Db.Promotion", "Promotion")
@@ -436,6 +495,8 @@ namespace _66022380.Migrations
             modelBuilder.Entity("_66022380.Models.Db.User", b =>
                 {
                     b.Navigation("Addresses");
+
+                    b.Navigation("Historyorders");
 
                     b.Navigation("Orders");
                 });
