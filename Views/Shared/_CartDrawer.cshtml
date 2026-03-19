@@ -18,7 +18,7 @@
         width: 400px;
         height: 100%;
         background: white;
-        box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
         transition: right 0.3s ease-in-out;
         z-index: 1060;
         display: flex;
@@ -109,21 +109,21 @@
             <span>ยอดรวมทั้งหมด:</span>
             <span id="cart-total-amount">0 บาท</span>
         </div>
-        <button class="btn-checkout">สั่งซื้อสินค้า</button>
+        <button class="btn-checkout" onclick="window.checkout()">สั่งซื้อสินค้า</button>
     </div>
 </div>
 
 <!-- Cart Logic -->
 <script>
     // Global Cart Logic
-    (function() {
+    (function () {
         let cart = JSON.parse(localStorage.getItem('bakeryCart')) || [];
 
         function updateCartUI() {
             const container = document.getElementById('cart-items-container');
             const totalAmountEl = document.getElementById('cart-total-amount');
             const cartCounts = document.querySelectorAll('#cart-count');
-            
+
             if (!container || !totalAmountEl) return;
 
             // Update items list
@@ -165,7 +165,7 @@
             localStorage.setItem('bakeryCart', JSON.stringify(cart));
         }
 
-        window.addToCart = function(name, price) {
+        window.addToCart = function (name, price) {
             const existingItem = cart.find(item => item.name === name);
             if (existingItem) {
                 existingItem.quantity += 1;
@@ -176,7 +176,7 @@
             openCart();
         };
 
-        window.updateQuantity = function(index, delta) {
+        window.updateQuantity = function (index, delta) {
             cart[index].quantity += delta;
             if (cart[index].quantity <= 0) {
                 cart.splice(index, 1);
@@ -184,17 +184,17 @@
             updateCartUI();
         };
 
-        window.removeFromCart = function(index) {
+        window.removeFromCart = function (index) {
             cart.splice(index, 1);
             updateCartUI();
         };
 
-        window.openCart = function() {
+        window.openCart = function () {
             document.getElementById('cart-drawer').classList.add('open');
             document.getElementById('cart-overlay').style.display = 'block';
         }
 
-        window.closeCart = function() {
+        window.closeCart = function () {
             document.getElementById('cart-drawer').classList.remove('open');
             document.getElementById('cart-overlay').style.display = 'none';
         }
@@ -216,5 +216,13 @@
 
             updateCartUI();
         });
+
+        window.checkout = function () {
+            if (cart.length === 0) {
+                alert('ตะกร้าว่างเปล่า');
+                return;
+            }
+            window.location.href = '/Account/Checkout';
+        };
     })();
 </script>

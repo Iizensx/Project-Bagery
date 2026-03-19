@@ -1,3 +1,5 @@
+@model List<_66022380.Models.Db.Order>
+
 @{
     ViewBag.Title = "จัดการออเดอร์";
     ViewBag.PageTitle = "จัดการออเดอร์";
@@ -5,33 +7,30 @@
 }
 
 <div class="dashboard-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 class="dashboard-card-title" style="margin: 0;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 class="dashboard-card-title" style="margin:0;">
             <i class="fas fa-shopping-bag"></i> รายการออเดอร์ทั้งหมด
         </h3>
-        <span style="font-size: 13px; color: #888;">
+        <span style="font-size:13px; color:#888;">
             อัปเดตล่าสุด: <span id="lastUpdate"></span>
         </span>
     </div>
 
-  
-    <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+    <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
         <button class="filter-btn active" onclick="filterOrders('all', this)">ทั้งหมด</button>
-        <button class="filter-btn pending"    onclick="filterOrders('Pending', this)">Pending</button>
-        <button class="filter-btn paid"       onclick="filterOrders('Paid', this)">Paid</button>
-        <button class="filter-btn preparing"  onclick="filterOrders('Preparing', this)">Preparing</button>
-        <button class="filter-btn shipped"    onclick="filterOrders('Shipped', this)">Shipped</button>
-        <button class="filter-btn cancelled"  onclick="filterOrders('Cancelled', this)">Cancelled</button>
+        <button class="filter-btn pending" onclick="filterOrders('Pending', this)">Pending</button>
+        <button class="filter-btn paid" onclick="filterOrders('Paid', this)">Paid</button>
+        <button class="filter-btn preparing" onclick="filterOrders('Preparing', this)">Preparing</button>
+        <button class="filter-btn shipped" onclick="filterOrders('Shipped', this)">Shipped</button>
+        <button class="filter-btn completed" onclick="filterOrders('Completed', this)">Completed</button>
+        <button class="filter-btn cancelled" onclick="filterOrders('Cancelled', this)">Cancelled</button>
     </div>
 
-    
-    <div style="margin-bottom: 20px;">
-        <input type="text" id="searchInput" class="form-control"
-               placeholder="🔍 ค้นหา Order ID หรือชื่อลูกค้า..."
+    <div style="margin-bottom:20px;">
+        <input type="text" id="searchInput" class="form-control"     placeholder="🔍 ค้นหา Order ID หรือชื่อลูกค้า..."
                oninput="searchOrders()" />
     </div>
 
-   
     <table class="table table-hover" id="orderTable">
         <thead>
             <tr>
@@ -41,140 +40,96 @@
                 <th>ยอดรวม</th>
                 <th>สถานะออเดอร์</th>
                 <th>สถานะชำระ</th>
+                <th>สลิป</th>
                 <th>การจัดการ</th>
             </tr>
         </thead>
         <tbody id="orderBody">
-            
-            <tr data-status="Paid" data-id="ORD-001" data-customer="สมชาย">
-                <td><strong>ORD-001</strong></td>
-                <td>สมชาย ใจดี</td>
-                <td>
-                    <span style="font-size:12px; color:#555;">
-                        เค้กช็อกโกแลต x1, ครัวซองต์ x2
-                    </span>
-                </td>
-                <td>฿389</td>
-                <td><span class="badge bg-success">Paid</span></td>
-                <td><span class="badge bg-success">Paid</span></td>
-                <td>
-                    <button class="btn btn-sm btn-dashboard primary"
-                            onclick="viewOrder('ORD-001')">
-                        <i class="fas fa-eye"></i> ดู
-                    </button>
-                    <button class="btn btn-sm" style="background:#6c63ff;color:#fff;border:none;border-radius:6px;padding:4px 10px;"
-                            onclick="acceptOrder(this, 'ORD-001')">
-                        รับออเดอร์
-                    </button>
-                </td>
-            </tr>
+            @foreach (var order in Model)
+            {
+                <tr data-status="@order.Status" data-id="ORD-@order.OrderId" data-customer="@order.User?.Username">
+                    <td><strong>ORD-@order.OrderId</strong></td>
+                    <td>@(order.User?.Username ?? "-")</td>
+                    <td>
+                        <span style="font-size:12px; color:#555;">
+                            @string.Join(", ", order.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}"))
+                        </span>
+                    </td>
+                    <td>฿@order.TotalAmount</td>
+                    <td>
+                        @{
+                            var statusClass = order.Status switch
+                            {
+                                "Paid" => "bg-success",
+                                "Preparing" => "bg-info",
+                                "Pending" => "bg-warning text-dark",
+                                "Shipped" => "bg-primary",
+                                "Completed" => "bg-dark",
+                                "Cancelled" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @statusClass">@order.Status</span>
+                    </td>
+                    <td>
+                        @{
+                            var payClass = order.PaymentStatus switch
+                            {
+                                "Paid" => "bg-success",
+                                "PendingVerify" => "bg-warning text-dark",
+                                _ => "bg-secondary"
+                            };
+                        }
+                        <span class="badge @payClass">@(order.PaymentStatus ?? "Pending")</span>
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(order.SlipImagePath))
+                        {
+                            <a href="@order.SlipImagePath" target="_blank">
+                                <img src="@order.SlipImagePath"
+                                     style="width:50px;height:50px;object-fit:cover;border-radius:8px;border:1px solid #eee;">
+                            </a>
+                        }
+                        else
+                        {
+                            <span style="color:#aaa; font-size:12px;">ยังไม่มี</span>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-dashboard primary"                         onclick="viewOrder(@order.OrderId)">
+                            <i class="fas fa-eye"></i> ดู
+                        </button>
 
-           
-            <tr data-status="Preparing" data-id="ORD-002" data-customer="สมชาย">
-                <td><strong>ORD-002</strong></td>
-                <td>สมชาย ใจดี</td>
-                <td>
-                    <span style="font-size:12px; color:#555;">
-                        ครัวซองต์เนยสด x3
-                    </span>
-                </td>
-                <td>฿135</td>
-                <td><span class="badge bg-info">Preparing</span></td>
-                <td><span class="badge bg-success">Paid</span></td>
-                <td>
-                    <button class="btn btn-sm btn-dashboard primary"
-                            onclick="viewOrder('ORD-002')">
-                        <i class="fas fa-eye"></i> ดู
-                    </button>
-                    <button class="btn btn-sm" style="background:#17a2b8;color:#fff;border:none;border-radius:6px;padding:4px 10px;"
-                            onclick="shipOrder(this, 'ORD-002')">
-                        จัดส่งสินค้า
-                    </button>
-                </td>
-            </tr>
-
-            
-            <tr data-status="Pending" data-id="ORD-003" data-customer="มาลี">
-                <td><strong>ORD-003</strong></td>
-                <td>มาลี สวยงาม</td>
-                <td>
-                    <span style="font-size:12px; color:#555;">
-                        ขนมปังกระเทียม x2, เค้กวานิลลา x1
-                    </span>
-                </td>
-                <td>฿415</td>
-                <td><span class="badge bg-warning text-dark">Pending</span></td>
-                <td><span class="badge bg-warning text-dark">Pending</span></td>
-                <td>
-                    <button class="btn btn-sm btn-dashboard primary"
-                            onclick="viewOrder('ORD-003')">
-                        <i class="fas fa-eye"></i> ดู
-                    </button>
-                    <span style="font-size:12px;color:#aaa;">รอชำระเงิน</span>
-                </td>
-            </tr>
-
-           
-            <tr data-status="Shipped" data-id="ORD-004" data-customer="วิชัย">
-                <td><strong>ORD-004</strong></td>
-                <td>วิชัย รักดี</td>
-                <td>
-                    <span style="font-size:12px; color:#555;">
-                        คุกกี้เนย x5
-                    </span>
-                </td>
-                <td>฿600</td>
-                <td><span class="badge bg-primary">Shipped</span></td>
-                <td><span class="badge bg-success">Paid</span></td>
-                <td>
-                    <button class="btn btn-sm btn-dashboard primary"
-                            onclick="viewOrder('ORD-004')">
-                        <i class="fas fa-eye"></i> ดู
-                    </button>
-                    <span style="font-size:12px;color:#aaa;">จัดส่งแล้ว</span>
-                </td>
-            </tr>
-
-            
-            <tr data-status="Cancelled" data-id="ORD-005" data-customer="นภา">
-                <td><strong>ORD-005</strong></td>
-                <td>นภา ฟ้าใส</td>
-                <td>
-                    <span style="font-size:12px; color:#555;">
-                        เค้กช็อกโกแลต x2
-                    </span>
-                </td>
-                <td>฿598</td>
-                <td><span class="badge bg-danger">Cancelled</span></td>
-                <td><span class="badge bg-secondary">Refunded</span></td>
-                <td>
-                    <button class="btn btn-sm btn-dashboard primary"
-                            onclick="viewOrder('ORD-005')">
-                        <i class="fas fa-eye"></i> ดู
-                    </button>
-                </td>
-            </tr>
+                        @if (order.PaymentStatus == "PendingVerify")
+                        {
+                            <button class="btn btn-sm btn-success"                     style="border-radius:6px; padding:4px 10px;"
+                                    onclick="confirmPayment(@order.OrderId, this)">
+                                ยืนยันชำระ
+                            </button>
+                        }
+                        else if (order.Status == "Paid")
+                        {
+                            <button class="btn btn-sm"
+                                    style="background:#6c63ff;color:#fff;border:none;border-radius:6px;padding:4px 10px;"
+                                    onclick="acceptOrder(this, @order.OrderId)">
+                                รับออเดอร์
+                            </button>
+                        }
+                        else if (order.Status == "Preparing")
+                        {
+                            <button class="btn btn-sm"
+                                    style="background:#17a2b8;color:#fff;border:none;border-radius:6px;padding:4px 10px;"
+                                    onclick="shipOrder(this, @order.OrderId)">
+                                จัดส่งสินค้า
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
         </tbody>
-    </table>
 </div>
 
-
-<div id="orderModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-     background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background:#fff; border-radius:12px; padding:30px; width:460px; max-width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-            <h5 style="margin:0; font-weight:600;">
-                <i class="fas fa-receipt"></i> รายละเอียดออเดอร์
-            </h5>
-            <button onclick="closeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888;">&times;</button>
-        </div>
-        <div id="modalContent"></div>
-        <div style="margin-top:20px; text-align:right;">
-            <button class="btn btn-sm btn-secondary" onclick="closeModal()">ปิด</button>
-        </div>
-    </div>
-</div>
-
+@section Styles {
 <style>
     .filter-btn {
         padding: 6px 16px;
@@ -186,42 +141,129 @@
         transition: all 0.2s;
         font-weight: 500;
     }
-    .filter-btn:hover { opacity: 0.8; }
+
     .filter-btn.active {
         background: #4e54c8;
         color: #fff;
         border-color: #4e54c8;
     }
-    .filter-btn.pending  { border-color: #ffc107; color: #856404; }
-    .filter-btn.pending.active  { background:#ffc107; color:#fff; border-color:#ffc107; }
-    .filter-btn.paid     { border-color: #28a745; color: #155724; }
-    .filter-btn.paid.active     { background:#28a745; color:#fff; border-color:#28a745; }
-    .filter-btn.preparing { border-color: #17a2b8; color: #0c5460; }
-    .filter-btn.preparing.active { background:#17a2b8; color:#fff; border-color:#17a2b8; }
-    .filter-btn.shipped  { border-color: #007bff; color: #004085; }
-    .filter-btn.shipped.active  { background:#007bff; color:#fff; border-color:#007bff; }
-    .filter-btn.cancelled { border-color: #dc3545; color: #721c24; }
-    .filter-btn.cancelled.active { background:#dc3545; color:#fff; border-color:#dc3545; }
+
+    .filter-btn.pending {
+        border-color: #ffc107;
+        color: #856404;
+    }
+
+    .filter-btn.pending.active {
+        background: #ffc107;
+        color: #fff;
+        border-color: #ffc107;
+    }
+
+    .filter-btn.paid {
+        border-color: #28a745;
+        color: #155724;
+    }
+
+    .filter-btn.paid.active {
+        background: #28a745;
+        color: #fff;
+        border-color: #28a745;
+    }
+
+    .filter-btn.preparing {
+        border-color: #17a2b8;
+        color: #0c5460;
+    }
+
+    .filter-btn.preparing.active {
+        background: #17a2b8;
+        color: #fff;
+        border-color: #17a2b8;
+    }
+
+    .filter-btn.shipped {
+        border-color: #007bff;
+        color: #004085;
+    }
+
+    .filter-btn.shipped.active {
+        background: #007bff;
+        color: #fff;
+        border-color: #007bff;
+    }
+
+    .filter-btn.cancelled {
+        border-color: #dc3545;
+        color: #721c24;
+    }
+
+    .filter-btn.completed {
+        border-color: #343a40;
+        color: #343a40;
+    }
+
+    .filter-btn.cancelled.active {
+        background: #dc3545;
+        color: #fff;
+        border-color: #dc3545;
+    }
+
+    .filter-btn.completed.active {
+        background: #343a40;
+        color: #fff;
+        border-color: #343a40;
+    }
+
+    #orderModal .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .order-detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .slip-image-container {
+        text-align: center;
+        margin: 1rem 0;
+    }
+    
+    .slip-image-container img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
 </style>
+}
 
+<!-- Modal for Order Details -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">รายละเอียดออเดอร์</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderModalBody">
+                <p class="text-center text-muted">กำลังโหลด...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
 <script>
-    // แสดงเวลาล่าสุด
+    // Global functions for Order Management
     document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('th-TH');
-
-    // ข้อมูลออเดอร์ตัวอย่าง (ใช้แทน data จริงจาก DB)
-    const orderDetails = {
-        'ORD-001': { customer:'สมชาย ใจดี', items:[{name:'เค้กช็อกโกแลต',qty:1,price:299},{name:'ครัวซองต์เนยสด',qty:2,price:45}], total:389, status:'Paid', payment:'Paid', date:'15/03/2568' },
-        'ORD-002': { customer:'สมชาย ใจดี', items:[{name:'ครัวซองต์เนยสด',qty:3,price:45}], total:135, status:'Preparing', payment:'Paid', date:'15/03/2568' },
-        'ORD-003': { customer:'มาลี สวยงาม', items:[{name:'ขนมปังกระเทียม',qty:2,price:65},{name:'เค้กวานิลลา',qty:1,price:320}], total:415, status:'Pending', payment:'Pending', date:'16/03/2568' },
-        'ORD-004': { customer:'วิชัย รักดี',   items:[{name:'คุกกี้เนย',qty:5,price:120}], total:600, status:'Shipped', payment:'Paid', date:'14/03/2568' },
-        'ORD-005': { customer:'นภา ฟ้าใส',     items:[{name:'เค้กช็อกโกแลต',qty:2,price:299}], total:598, status:'Cancelled', payment:'Refunded', date:'13/03/2568' },
-    };
 
     function filterOrders(status, btn) {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const rows = document.querySelectorAll('#orderBody tr');
-        rows.forEach(row => {
+        document.querySelectorAll('#orderBody tr').forEach(row => {
             row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
         });
     }
@@ -235,72 +277,174 @@
         });
     }
 
-    function viewOrder(id) {
-        const o = orderDetails[id];
-        if (!o) return;
-        const statusColor = {Paid:'success',Preparing:'info',Pending:'warning',Shipped:'primary',Cancelled:'danger'};
-        let itemRows = o.items.map(i =>
-            `<tr><td>${i.name}</td><td style="text-align:center;">${i.qty}</td><td style="text-align:right;">฿${i.price * i.qty}</td></tr>`
-        ).join('');
-        document.getElementById('modalContent').innerHTML = `
-            <table style="width:100%;font-size:14px;margin-bottom:12px;">
-                <tr><td style="color:#888;width:120px;">Order ID</td><td><strong>${id}</strong></td></tr>
-                <tr><td style="color:#888;">ลูกค้า</td><td>${o.customer}</td></tr>
-                <tr><td style="color:#888;">วันที่</td><td>${o.date}</td></tr>
-                <tr><td style="color:#888;">สถานะ</td><td><span class="badge bg-${statusColor[o.status]||'secondary'}">${o.status}</span></td></tr>
-                <tr><td style="color:#888;">ชำระเงิน</td><td><span class="badge bg-${o.payment==='Paid'?'success':'warning'} ${o.payment!=='Paid'?'text-dark':''}">${o.payment}</span></td></tr>
-            </table>
-            <hr/>
-            <p style="font-weight:600;margin-bottom:8px;">รายการสินค้า</p>
-            <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                <thead><tr style="border-bottom:1px solid #eee;">
-                    <th style="padding:4px 0;text-align:left;">สินค้า</th>
-                    <th style="text-align:center;">จำนวน</th>
-                    <th style="text-align:right;">รวม</th>
-                </tr></thead>
-                <tbody>${itemRows}</tbody>
-                <tfoot><tr style="border-top:1px solid #eee;font-weight:600;">
-                    <td colspan="2" style="padding-top:8px;">ยอดรวมทั้งหมด</td>
-                    <td style="text-align:right;padding-top:8px;">฿${o.total}</td>
-                </tr></tfoot>
-            </table>
-        `;
-        const modal = document.getElementById('orderModal');
-        modal.style.display = 'flex';
+    async function confirmPayment(orderId, btn) {
+        if (!confirm('ยืนยันการชำระเงินออเดอร์นี้?')) return;
+        btn.disabled = true;
+        btn.textContent = 'กำลังยืนยัน...';
+
+        try {
+            const res = await fetch('/Account/ConfirmPayment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `orderId=${orderId}`
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                alert(data.message);
+                btn.closest('td').innerHTML = '<span style="color:green;font-weight:600;">ยืนยันแล้ว</span>';
+            } else {
+                alert(data.message);
+                btn.disabled = false;
+                btn.textContent = 'ยืนยันชำระ';
+            }
+        } catch (error) {
+            alert('เกิดข้อผิดพลาด: ' + error.message);
+            btn.disabled = false;
+            btn.textContent = 'ยืนยันชำระ';
+        }
     }
 
-    function closeModal() {
-        document.getElementById('orderModal').style.display = 'none';
+    async function acceptOrder(btn, orderId) {
+        if (!confirm(`รับออเดอร์ ORD-${orderId}?`)) return;
+        try {
+            const res = await fetch('/Account/AcceptOrder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `orderId=${orderId}`
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('ยอมรับออเดอร์เรียบร้อย');
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            alert('เกิดข้อผิดพลาด: ' + error.message);
+        }
     }
 
-    function acceptOrder(btn, id) {
-        if (!confirm(`รับออเดอร์ ${id} และเปลี่ยนสถานะเป็น Preparing?`)) return;
-        const row = btn.closest('tr');
-        row.querySelector('.badge.bg-success').textContent = 'Preparing';
-        row.querySelector('.badge.bg-success').className = 'badge bg-info';
-        row.dataset.status = 'Preparing';
-        btn.textContent = 'จัดส่งสินค้า';
-        btn.style.background = '#17a2b8';
-        btn.setAttribute('onclick', `shipOrder(this, '${id}')`);
-        if (orderDetails[id]) orderDetails[id].status = 'Preparing';
-        alert(`รับออเดอร์ ${id} เรียบร้อย! สถานะเปลี่ยนเป็น Preparing`);
+    async function shipOrder(btn, orderId) {
+        if (!confirm(`ยืนยันจัดส่งสินค้า ORD-${orderId}?`)) return;
+        try {
+            const res = await fetch('/Account/ShipOrder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `orderId=${orderId}`
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('จัดส่งสินค้าเรียบร้อย');
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            alert('เกิดข้อผิดพลาด: ' + error.message);
+        }
     }
 
-    function shipOrder(btn, id) {
-        if (!confirm(`ยืนยันจัดส่งสินค้า ${id}?`)) return;
-        const row = btn.closest('tr');
-        row.querySelector('.badge.bg-info').textContent = 'Shipped';
-        row.querySelector('.badge.bg-info').className = 'badge bg-primary';
-        row.dataset.status = 'Shipped';
-        btn.remove();
-        const td = row.querySelector('td:last-child');
-        td.insertAdjacentHTML('beforeend', '<span style="font-size:12px;color:#aaa;">จัดส่งแล้ว</span>');
-        if (orderDetails[id]) orderDetails[id].status = 'Shipped';
-        alert(`จัดส่งออเดอร์ ${id} เรียบร้อย! สถานะเปลี่ยนเป็น Shipped`);
+    async function viewOrder(orderId) {
+        try {
+            const res = await fetch(`/Account/GetOrderDetails?orderId=${orderId}`);
+            const data = await res.json();
+            
+            if (!data.success) {
+                alert('ไม่สามารถโหลดรายละเอียดออเดอร์');
+                return;
+            }
+
+            let html = `
+                <div style="margin-bottom: 1.5rem;">
+                    <h6 style="color: #333; font-weight: 600; margin-bottom: 0.5rem;">ข้อมูลลูกค้า</h6>
+                    <div class="order-detail-item">
+                        <span>ชื่อ:</span>
+                        <strong>${data.customerName || '-'}</strong>
+                    </div>
+                    <div class="order-detail-item">
+                        <span>อีเมล:</span>
+                        <strong>${data.customerEmail || '-'}</strong>
+                    </div>
+                    <div class="order-detail-item">
+                        <span>เบอร์โทร:</span>
+                        <strong>${data.customerPhone || '-'}</strong>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h6 style="color: #333; font-weight: 600; margin-bottom: 0.5rem;">ข้อมูลออเดอร์</h6>
+                    <div class="order-detail-item">
+                        <span>Order ID:</span>
+                        <strong>ORD-${data.orderId}</strong>
+                    </div>
+                    <div class="order-detail-item">
+                        <span>วันที่สั่ง:</span>
+                        <strong>${data.orderDate}</strong>
+                    </div>
+                    <div class="order-detail-item">
+                        <span>สถานะออเดอร์:</span>
+                        <span class="badge ${getStatusBadge(data.status)}">${data.status}</span>
+                    </div>
+                    <div class="order-detail-item">
+                        <span>สถานะชำระ:</span>
+                        <span class="badge ${getPaymentBadge(data.paymentStatus)}">${data.paymentStatus}</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h6 style="color: #333; font-weight: 600; margin-bottom: 0.5rem;">รายการสินค้า</h6>
+                    ${data.items.map(item => `
+                        <div class="order-detail-item">
+                            <span>${item.productName} x${item.quantity}</span>
+                            <strong>฿${(item.subtotal || 0).toLocaleString('th-TH', {minimumFractionDigits: 2})}</strong>
+                        </div>
+                    `).join('')}
+                    <div class="order-detail-item" style="border-top: 2px solid #333; padding-top: 1rem; font-weight: 600;">
+                        <span>ยอดรวมทั้งหมด:</span>
+                        <strong style="color: #ff6b6b;">฿${(data.totalAmount || 0).toLocaleString('th-TH', {minimumFractionDigits: 2})}</strong>
+                    </div>
+                </div>
+            `;
+
+            if (data.slipImagePath) {
+                html += `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h6 style="color: #333; font-weight: 600; margin-bottom: 0.5rem;">สลิปการชำระเงิน</h6>
+                        <div class="slip-image-container">
+                            <img src="${data.slipImagePath}" alt="Slip Image" />
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('orderModalBody').innerHTML = html;
+            const modalEl = document.getElementById('orderModal');
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        } catch (error) {
+            alert('เกิดข้อผิดพลาด: ' + error.message);
+        }
     }
 
-    // ปิด modal เมื่อคลิกพื้นหลัง
-    document.getElementById('orderModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
+    function getStatusBadge(status) {
+        const badges = {
+            'Paid': 'bg-success',
+            'Preparing': 'bg-info',
+            'Pending': 'bg-warning text-dark',
+            'Shipped': 'bg-primary',
+            'Completed': 'bg-dark',
+            'Cancelled': 'bg-danger'
+        };
+        return badges[status] || 'bg-secondary';
+    }
+
+    function getPaymentBadge(status) {
+        const badges = {
+            'Paid': 'bg-success',
+            'PendingVerify': 'bg-warning text-dark',
+            'Pending': 'bg-secondary'
+        };
+        return badges[status] || 'bg-secondary';
+    }
 </script>
+}

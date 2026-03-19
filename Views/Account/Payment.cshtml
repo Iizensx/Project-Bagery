@@ -1,0 +1,268 @@
+@using _66022380.Models.Db
+@model Order
+
+@{
+    ViewData["Title"] = "Payment";
+    Layout = "~/Views/Shared/_Layoutmain.cshtml";
+}
+
+<style>
+    body { background-color: #FDE8E1; }
+
+    .payment-wrap {
+        max-width: 520px;
+        margin: 40px auto;
+        padding: 0 1.5rem 4rem;
+    }
+
+    .payment-card {
+        padding: 2.5rem;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.10);
+        text-align: center;
+    }
+
+    .payment-title {
+        margin-bottom: 0.3rem;
+        color: #111827;
+        font-size: 1.4rem;
+        font-weight: 900;
+    }
+
+    .payment-amount {
+        margin-bottom: 1.5rem;
+        color: #F97316;
+        font-size: 2.5rem;
+        font-weight: 900;
+    }
+
+    .payment-sub {
+        margin-bottom: 1.2rem;
+        color: #6B7280;
+        font-size: 0.9rem;
+    }
+
+    .qr-box {
+        display: inline-block;
+        margin-bottom: 1.5rem;
+        padding: 1.5rem;
+        border: 2px dashed #F97316;
+        border-radius: 16px;
+        background: #f9fafb;
+    }
+
+    .qr-box img {
+        width: 220px;
+        height: 220px;
+    }
+
+    .qr-hint {
+        margin-bottom: 2rem;
+        color: #6B7280;
+        font-size: 0.85rem;
+        line-height: 1.7;
+    }
+
+    .divider {
+        margin: 1.5rem 0;
+        border: none;
+        border-top: 1px solid #F3F4F6;
+    }
+
+    .upload-label {
+        display: block;
+        margin-bottom: 1rem;
+        color: #111827;
+        font-size: 0.9rem;
+        font-weight: 800;
+        text-align: left;
+    }
+
+    .upload-area {
+        position: relative;
+        margin-bottom: 1rem;
+        padding: 2rem;
+        border: 2px dashed #D1D5DB;
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .upload-area:hover {
+        border-color: #F97316;
+        background: #FFF8F3;
+    }
+
+    .upload-area input[type="file"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .upload-icon {
+        margin-bottom: 0.5rem;
+        color: #F97316;
+        font-size: 2rem;
+        font-weight: 900;
+    }
+
+    .upload-text {
+        color: #6B7280;
+        font-size: 0.85rem;
+    }
+
+    #preview-img {
+        display: none;
+        width: 100%;
+        max-height: 200px;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        object-fit: contain;
+    }
+
+    .btn-confirm {
+        width: 100%;
+        padding: 1rem;
+        border: none;
+        border-radius: 14px;
+        background: #F97316;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 8px 20px rgba(249,115,22,0.3);
+    }
+
+    .btn-confirm:hover {
+        background: #ea580c;
+        transform: translateY(-2px);
+    }
+
+    .btn-confirm:disabled {
+        background: #D1D5DB;
+        box-shadow: none;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .status-msg {
+        display: none;
+        margin-top: 1rem;
+        padding: 0.8rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .status-msg.success {
+        background: #F0FDF4;
+        color: #166534;
+    }
+
+    .status-msg.error {
+        background: #FEF2F2;
+        color: #991B1B;
+    }
+</style>
+
+<div class="payment-wrap">
+    <div class="payment-card">
+        <div class="payment-title">ชำระเงินด้วย PromptPay</div>
+        <div class="payment-amount">฿@ViewBag.TotalAmount</div>
+        <div class="payment-sub">Order #ORD-@ViewBag.OrderId</div>
+
+        <div class="qr-box">
+            <img src="data:image/png;base64,@ViewBag.QrBase64" alt="PromptPay QR">
+        </div>
+
+        <div class="qr-hint">
+            สแกน QR ผ่านแอปธนาคาร จากนั้นอัปโหลดสลิปเพื่อส่งให้แอดมินตรวจสอบ
+        </div>
+
+        <hr class="divider">
+
+        <span class="upload-label">อัปโหลดสลิปการชำระเงิน</span>
+
+        <div class="upload-area">
+            <input type="file" id="slip-file" accept="image/*">
+            <div class="upload-icon">QR</div>
+            <div class="upload-text">คลิกเพื่อเลือกรูปสลิป</div>
+        </div>
+
+        <img id="preview-img" alt="Slip preview">
+
+        <button class="btn-confirm" id="btn-confirm" disabled>ยืนยันการชำระเงิน</button>
+        <div class="status-msg" id="status-msg"></div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const orderId = @ViewBag.OrderId;
+    const fileInput = document.getElementById('slip-file');
+    const preview = document.getElementById('preview-img');
+    const btnConfirm = document.getElementById('btn-confirm');
+    const statusMsg = document.getElementById('status-msg');
+
+    fileInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            btnConfirm.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    btnConfirm.addEventListener('click', async function () {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        btnConfirm.disabled = true;
+        btnConfirm.textContent = 'กำลังอัปโหลด...';
+
+        const formData = new FormData();
+        formData.append('orderId', orderId);
+        formData.append('slipImage', file);
+
+        try {
+            const res = await fetch('@Url.Action("UploadSlip", "Account")', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+
+            statusMsg.style.display = 'block';
+
+            if (data.success) {
+                statusMsg.className = 'status-msg success';
+                statusMsg.textContent = data.message;
+                btnConfirm.textContent = 'ส่งสลิปเรียบร้อยแล้ว';
+                setTimeout(() => {
+                    window.location.href = '/Account/Delivery';
+                }, 1200);
+            } else {
+                statusMsg.className = 'status-msg error';
+                statusMsg.textContent = data.message;
+                btnConfirm.disabled = false;
+                btnConfirm.textContent = 'ยืนยันการชำระเงิน';
+            }
+        } catch (e) {
+            statusMsg.style.display = 'block';
+            statusMsg.className = 'status-msg error';
+            statusMsg.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';
+            btnConfirm.disabled = false;
+            btnConfirm.textContent = 'ยืนยันการชำระเงิน';
+        }
+    });
+</script>
+}

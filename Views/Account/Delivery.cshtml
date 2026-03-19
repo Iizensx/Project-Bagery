@@ -1,816 +1,954 @@
+@model _66022380.Models.DeliveryTrackingViewModel
+
 @{
     ViewData["Title"] = "Delivery";
-}
-
-@* 
-    จำลอง status ออเดอร์ — ในระบบจริงดึงจาก DB
-    เปลี่ยน currentStatus เพื่อทดสอบ:
-    "none" | "Preparing" | "Shipped" | "Completed"
-*@
-@{
-    var currentStatus = "Preparing"; @* เปลี่ยนตรงนี้เพื่อทดสอบ *@
-    var hasOrder = currentStatus != "none";
-    var orderId  = "ORD-042";
-    var orderEta = "14:30 น.";
+    Layout = "~/Views/Shared/_Layoutmain.cshtml";
 }
 
 <style>
-    body { background-color: #FDE8E1; }
+    body { background: linear-gradient(180deg, #fde8e1 0%, #fff7f1 55%, #fffaf7 100%); }
 
-    /* ═══════════════════════════════════════
-       HERO
-    ═══════════════════════════════════════ */
+    .del-shell {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 0 1.25rem 4rem;
+    }
+
     .del-hero {
         position: relative;
-        height: 320px;
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d1a08 60%, #4a2800 100%);
-        display: flex; align-items: center; justify-content: center;
-        text-align: center; overflow: hidden;
+        overflow: hidden;
         margin-top: -80px;
+        padding: 8.5rem 0 6.5rem;
+        background: radial-gradient(circle at top left, rgba(249,115,22,0.22), transparent 30%), linear-gradient(135deg, #1b120c 0%, #2d1a08 48%, #5f2d10 100%);
+        border-bottom-left-radius: 34px;
+        border-bottom-right-radius: 34px;
     }
 
-    .del-hero-dots {
-        position: absolute; inset: 0;
-        background-image: radial-gradient(circle, rgba(249,115,22,0.12) 1px, transparent 1px);
-        background-size: 32px 32px;
+    .del-hero::before,
+    .del-hero::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        filter: blur(2px);
     }
 
-    .del-hero-glow {
-        position: absolute; top: 50%; left: 50%;
-        transform: translate(-50%,-50%);
-        width: 500px; height: 300px;
-        background: radial-gradient(ellipse, rgba(249,115,22,0.18) 0%, transparent 70%);
+    .del-hero::before {
+        width: 260px;
+        height: 260px;
+        top: -80px;
+        right: 6%;
     }
 
-    .del-hero-content { position: relative; z-index: 2; }
-
-    .del-hero-badge {
-        display: inline-flex; align-items: center; gap: 8px;
-        background: rgba(249,115,22,0.15);
-        border: 1px solid rgba(249,115,22,0.4);
-        color: #FFB980; font-size: 0.72rem; letter-spacing: 3px;
-        padding: 5px 16px; border-radius: 30px; margin-bottom: 1.2rem;
+    .del-hero::after {
+        width: 180px;
+        height: 180px;
+        bottom: 20px;
+        left: 8%;
     }
 
-    .del-hero-badge::before {
-        content: ''; width: 5px; height: 5px;
-        background: #F97316; border-radius: 50%;
+    .del-hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+        gap: 1.5rem;
+        align-items: end;
     }
 
-    .del-hero h1 {
-        color: #fff; font-size: 3.2rem; font-weight: 900;
-        letter-spacing: -1px; margin: 0 0 0.5rem;
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-bottom: 1rem;
+        padding: 0.45rem 0.9rem;
+        border: 1px solid rgba(255,185,128,0.35);
+        border-radius: 999px;
+        background: rgba(249,115,22,0.14);
+        color: #ffd8b5;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
     }
 
-    .del-hero h1 span { color: #F97316; }
-
-    .del-hero p {
-        color: rgba(255,220,190,0.7); font-size: 1rem; margin: 0;
+    .hero-badge::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #f97316;
+        box-shadow: 0 0 12px rgba(249,115,22,0.6);
     }
 
-    /* ═══════════════════════════════════════
-       TRACKING SECTION
-    ═══════════════════════════════════════ */
-    .tracking-wrap {
-    max-width: 1100px;
-    margin: -60px auto 0;
-    padding: 0 1.5rem;
-    position: relative;
-    z-index: 5;
-}
+    .hero-title {
+        margin: 0 0 0.75rem;
+        color: #fff;
+        font-size: clamp(2.3rem, 5vw, 4rem);
+        font-weight: 900;
+        line-height: 0.96;
+    }
+
+    .hero-title span {
+        color: #ff9a47;
+        display: block;
+    }
+
+    .hero-sub {
+        max-width: 640px;
+        margin: 0;
+        color: rgba(255,236,220,0.76);
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+
+    .hero-side {
+        padding: 1.25rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 22px;
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(14px);
+        color: #fff6ef;
+    }
+
+    .hero-side-label {
+        color: rgba(255,220,190,0.72);
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .hero-side-value {
+        margin-top: 0.35rem;
+        font-size: 1.35rem;
+        font-weight: 900;
+    }
+
+    .hero-side-sub {
+        margin-top: 0.4rem;
+        color: rgba(255,236,220,0.72);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .tabs-wrap {
+        position: relative;
+        z-index: 2;
+        margin-top: -34px;
+    }
+
+    .del-tabs {
+        display: inline-flex;
+        gap: 0.75rem;
+        padding: 0.55rem;
+        border: 1px solid rgba(249,115,22,0.12);
+        border-radius: 20px;
+        background: rgba(255,255,255,0.88);
+        box-shadow: 0 18px 40px rgba(48,27,12,0.09);
+        backdrop-filter: blur(14px);
+    }
+
+    .del-tab {
+        padding: 0.82rem 1.15rem;
+        border-radius: 14px;
+        color: #6b4c3a;
+        font-size: 0.92rem;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .del-tab.active {
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(249,115,22,0.28);
+    }
+
+    .section-block {
+        margin-top: 2rem;
+    }
+
+    .section-title {
+        margin-bottom: 0.35rem;
+        color: #f97316;
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    .section-heading {
+        margin: 0 0 1.4rem;
+        color: #1f2937;
+        font-size: clamp(1.55rem, 3vw, 2.3rem);
+        font-weight: 900;
+        line-height: 1.15;
+    }
 
     .tracking-card {
-        background: #fff;
-        border-radius: 24px;
-        padding: 2.5rem 3rem;
-        box-shadow: 0 24px 64px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06);
-        animation: fadeUp 0.7s ease-out both;
-    }
-
-    @@keyframes fadeUp {
-        from { opacity:0; transform: translateY(30px); }
-        to   { opacity:1; transform: translateY(0); }
+        padding: 2rem;
+        border: 1px solid #f7dccb;
+        border-radius: 28px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,247,241,0.98));
+        box-shadow: 0 24px 60px rgba(76,42,17,0.10);
     }
 
     .tracking-header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 2rem; padding-bottom: 1.2rem;
-        border-bottom: 1px solid #F3F4F6;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 1rem;
+        align-items: start;
+        padding-bottom: 1.3rem;
+        margin-bottom: 1.35rem;
+        border-bottom: 1px solid #f4e3d8;
     }
 
-    .tracking-order-id {
-        font-size: 0.8rem; color: #9CA3AF; margin-bottom: 3px;
-        letter-spacing: 1px; text-transform: uppercase;
+    .track-label {
+        color: #9ca3af;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
 
-    .tracking-order-num {
-        font-size: 1.5rem; font-weight: 800; color: #1a1a1a;
+    .track-order-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.7rem;
+        margin: 0.45rem 0 0.8rem;
     }
 
-    .tracking-eta {
+    .track-order-num {
+        color: #111827;
+        font-size: 1.65rem;
+        font-weight: 900;
+    }
+
+    .track-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.42rem 0.85rem;
+        border-radius: 999px;
+        background: #fff1e8;
+        color: #c2410c;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+    }
+
+    .track-copy {
+        max-width: 680px;
+        color: #4b5563;
+        font-size: 0.95rem;
+        line-height: 1.75;
+    }
+
+    .track-state-box {
+        min-width: 190px;
+        padding: 1rem 1.1rem;
+        border: 1px solid #fde3d1;
+        border-radius: 18px;
+        background: #fffaf6;
         text-align: right;
     }
 
-    .tracking-eta-label {
-        font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase;
-        letter-spacing: 1px;
+    .track-state-value {
+        margin-top: 0.28rem;
+        color: #f97316;
+        font-size: 1.25rem;
+        font-weight: 900;
     }
 
-    .tracking-eta-time {
-        font-size: 1.4rem; font-weight: 800; color: #F97316;
-    }
-
-    /* ─── Steps ─────────────────────────── */
     .steps-row {
         display: grid;
-        grid-template-columns: 1fr 60px 1fr 60px 1fr;
+        grid-template-columns: 1fr 34px 1fr 34px 1fr 34px 1fr 34px 1fr;
         align-items: center;
-        margin-bottom: 0.8rem;
+        margin: 1.1rem 0 1.5rem;
     }
 
     .step-box {
-        display: flex; flex-direction: column;
-        align-items: center; gap: 0.7rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.65rem;
         text-align: center;
     }
 
-    .step-icon-wrap {
-        position: relative;
-        width: 72px; height: 72px;
-    }
-
-    .step-icon-bg {
-        width: 72px; height: 72px;
+    .step-icon {
+        width: 68px;
+        height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #e8e1db;
         border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.8rem;
-        transition: all 0.5s;
-        border: 3px solid #E5E7EB;
-        background: #F9FAFB;
+        background: #f9fafb;
+        color: #9ca3af;
+        font-size: 1.05rem;
+        font-weight: 900;
+        transition: all .25s ease;
     }
 
-    .step-icon-bg.done {
-        background: #FFF3E8;
-        border-color: #F97316;
+    .step-icon.done {
+        border-color: #f97316;
+        background: #fff1e8;
+        color: #ea580c;
     }
 
-    .step-icon-bg.active {
-        background: #F97316;
-        border-color: #F97316;
-        box-shadow: 0 0 0 8px rgba(249,115,22,0.15);
+    .step-icon.active {
+        border-color: #f97316;
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        box-shadow: 0 0 0 8px rgba(249,115,22,0.14);
     }
 
-    /* pulse ring สำหรับ active */
-    .step-icon-bg.active::after {
-        content: '';
-        position: absolute; inset: -8px;
-        border-radius: 50%;
-        border: 2px solid rgba(249,115,22,0.4);
-        animation: pulseRing 1.8s ease-out infinite;
+    .step-name {
+        color: #9ca3af;
+        font-size: 0.84rem;
+        font-weight: 800;
     }
 
-    @@keyframes pulseRing {
-        0%   { transform: scale(0.9); opacity: 0.8; }
-        100% { transform: scale(1.4); opacity: 0; }
+    .step-name.active { color: #111827; }
+    .step-name.done { color: #ea580c; }
+
+    .step-sub {
+        margin-top: -2px;
+        color: #c4c9d4;
+        font-size: 0.72rem;
+        line-height: 1.45;
     }
 
-    .step-label {
-        font-size: 0.85rem; font-weight: 700;
-        color: #9CA3AF;
-        transition: color 0.5s;
-    }
+    .step-sub.active { color: #6b7280; }
 
-    .step-label.done  { color: #F97316; }
-    .step-label.active { color: #1a1a1a; }
-
-    .step-sublabel {
-        font-size: 0.72rem; color: #C4C9D4; margin-top: -4px;
-    }
-
-    .step-sublabel.active { color: #6B7280; }
-
-    /* ─── Connector line ─────────────────── */
-    .step-connector {
-        position: relative; height: 4px;
-        background: #E5E7EB; border-radius: 2px;
+    .step-line {
+        height: 5px;
+        margin-bottom: 42px;
+        border-radius: 999px;
+        background: #ece8e4;
         overflow: hidden;
-        margin-bottom: 40px; /* ชดเชยกับ label */
     }
 
-    .step-connector-fill {
-        position: absolute; top: 0; left: 0;
-        height: 100%; border-radius: 2px;
-        background: linear-gradient(90deg, #F97316, #FFB347);
-        width: 0%;
-        transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    .step-line-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f97316, #fdba74);
     }
 
-    /* fill states */
-    .step-connector-fill.fill-done  { width: 100%; }
-    .step-connector-fill.fill-half  { width: 50%; }
-    .step-connector-fill.fill-anim {
-        width: 0%;
-        animation: fillLine 1.5s ease-out 0.5s forwards;
-    }
+    .step-line-fill.on { width: 100%; }
 
-    @@keyframes fillLine {
-        from { width: 0%; }
-        to   { width: 100%; }
-    }
-
-    /* scooter บนเส้น */
-    .step-connector-scooter {
-        position: absolute; top: -10px;
-        font-size: 1.2rem;
-        animation: scootAnim 2s ease-in-out infinite alternate;
-        display: none;
-    }
-
-    .step-connector-scooter.show { display: block; }
-
-    @@keyframes scootAnim {
-        from { left: 10%; }
-        to   { left: 70%; }
-    }
-
-    /* ─── No order state ─────────────────── */
-    .no-order-wrap {
-        text-align: center; padding: 1.5rem 0 0.5rem;
-    }
-
-    .no-order-icon {
-        font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.4;
-    }
-
-    .no-order-text {
-        color: #9CA3AF; font-size: 1rem; font-weight: 600;
-    }
-
-    .no-order-sub {
-        color: #C4C9D4; font-size: 0.85rem; margin-top: 4px;
-    }
-
-    /* ═══════════════════════════════════════
-       MAIN CONTENT SECTIONS
-    ═══════════════════════════════════════ */
-    .del-section-wrap {
-        max-width: 1100px;
-        margin: 4rem auto 0;
-        padding: 0 1.5rem 4rem;
-    }
-
-    .del-section-title {
-        color: #F97316; font-size: 0.75rem;
-        letter-spacing: 3px; text-transform: uppercase;
-        margin-bottom: 0.5rem; font-weight: 700;
-    }
-
-    .del-section-heading {
-        font-size: 2rem; font-weight: 800;
-        color: #1a1a1a; margin-bottom: 2rem;
-        line-height: 1.2;
-    }
-
-    /* ─── Order flow ─────────────────────── */
-    .flow-grid {
+    .tracking-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem; margin-bottom: 4rem;
-    }
-
-    .flow-card {
-        background: #fff; border-radius: 18px;
-        padding: 1.8rem 1.4rem;
-        border: 1px solid #F3F4F6;
-        text-align: center;
-        transition: all 0.3s;
-        position: relative;
-    }
-
-    .flow-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(249,115,22,0.12);
-        border-color: #F97316;
-    }
-
-    .flow-card::after {
-        content: '→';
-        position: absolute; right: -14px; top: 50%;
-        transform: translateY(-50%);
-        color: #F97316; font-size: 1.2rem; font-weight: 700;
-        z-index: 2;
-    }
-
-    .flow-card:last-child::after { display: none; }
-
-    .flow-num {
-        width: 28px; height: 28px;
-        background: #FFF3E8; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 0.75rem; font-weight: 800; color: #F97316;
-        margin: 0 auto 1rem;
-    }
-
-    .flow-icon { font-size: 2rem; margin-bottom: 0.8rem; }
-
-    .flow-title {
-        font-size: 0.9rem; font-weight: 700;
-        color: #1a1a1a; margin-bottom: 0.3rem;
-    }
-
-    .flow-sub { font-size: 0.78rem; color: #9CA3AF; line-height: 1.5; }
-
-    /* ─── Delivery info cards ────────────── */
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.2rem; margin-bottom: 4rem;
-    }
-
-    .info-card {
-        background: #fff; border-radius: 20px;
-        padding: 2rem 1.8rem;
-        border: 1px solid #F3F4F6;
-        transition: all 0.3s;
-    }
-
-    .info-card:hover {
-        border-color: #F97316;
-        box-shadow: 0 8px 24px rgba(249,115,22,0.10);
-    }
-
-    .info-icon {
-        width: 52px; height: 52px;
-        background: #FFF3E8; border-radius: 14px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.5rem; margin-bottom: 1.2rem;
-    }
-
-    .info-card-title {
-        font-size: 1rem; font-weight: 800;
-        color: #1a1a1a; margin-bottom: 0.8rem;
-    }
-
-    .info-card-body {
-        font-size: 0.85rem; color: #6B7280;
-        line-height: 1.8;
-    }
-
-    .info-tag {
-        display: inline-block;
-        background: #FFF3E8; color: #F97316;
-        font-size: 0.75rem; font-weight: 700;
-        padding: 3px 10px; border-radius: 20px;
-        margin: 2px 2px 0 0;
-    }
-
-    .info-tag.free {
-        background: #F0FDF4; color: #166534;
-    }
-
-    /* ─── Zone map placeholder ───────────── */
-    .zone-section {
-        background: #fff; border-radius: 24px;
-        padding: 2.5rem; margin-bottom: 4rem;
-        border: 1px solid #F3F4F6;
-    }
-
-    .zone-map-placeholder {
-        height: 220px;
-        background: linear-gradient(135deg, #FFF8E7 0%, #FDE8D0 100%);
-        border-radius: 16px;
-        display: flex; align-items: center; justify-content: center;
-        flex-direction: column; gap: 0.8rem;
-        margin-bottom: 1.5rem;
-        border: 2px dashed #F97316;
-        opacity: 0.7;
-    }
-
-    .zone-map-placeholder span { font-size: 2.5rem; }
-    .zone-map-placeholder p { font-size: 0.9rem; color: #9CA3AF; margin: 0; }
-
-    .zone-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-
-    .zone-tag {
-        background: #FFF3E8; color: #7C3A0E;
-        font-size: 0.8rem; font-weight: 600;
-        padding: 6px 14px; border-radius: 20px;
-        border: 1px solid rgba(249,115,22,0.2);
-    }
-
-    /* ─── Contact channels ───────────────── */
-    .contact-section {
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d1a08 100%);
-        border-radius: 24px;
-        padding: 3rem; margin-bottom: 4rem;
-    }
-
-    .contact-section .del-section-title { color: #F97316; }
-    .contact-section .del-section-heading { color: #fff; margin-bottom: 2rem; }
-
-    .contact-channels {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 1rem;
     }
 
-    .channel-card {
-        border-radius: 16px;
-        padding: 1.8rem;
-        text-align: center;
+    .meta-card {
+        padding: 1rem 1.05rem;
+        border: 1px solid #f8dfcf;
+        border-radius: 18px;
+        background: #fffaf7;
+    }
+
+    .meta-label {
+        margin-bottom: 0.35rem;
+        color: #9ca3af;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .meta-value {
+        color: #1f2937;
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.6;
+        word-break: break-word;
+    }
+
+    .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.9rem;
+        margin-top: 1.35rem;
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.92rem 1.35rem;
+        border: none;
+        border-radius: 15px;
+        font-size: 0.92rem;
+        font-weight: 800;
+        text-decoration: none;
         cursor: pointer;
-        transition: all 0.3s;
-        border: 1.5px solid rgba(255,255,255,0.1);
+        transition: transform .18s ease, box-shadow .18s ease;
     }
 
-    .channel-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(249,115,22,0.6);
-        background: rgba(249,115,22,0.1);
+    .action-btn:hover {
+        transform: translateY(-1px);
     }
 
-    .channel-line { background: rgba(0,185,0,0.12); }
-    .channel-web  { background: rgba(249,115,22,0.08); }
-    .channel-tel  { background: rgba(59,130,246,0.08); }
-
-    .channel-icon { font-size: 2.5rem; margin-bottom: 1rem; }
-    .channel-name { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 0.3rem; }
-    .channel-val  { font-size: 0.85rem; color: rgba(255,220,190,0.7); }
-
-    /* ─── Pricing table ──────────────────── */
-    .pricing-section {
-        background: #fff; border-radius: 24px;
-        padding: 2.5rem; margin-bottom: 4rem;
+    .action-btn.primary {
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(249,115,22,0.28);
     }
 
-    .pricing-rows { display: flex; flex-direction: column; gap: 0; }
-
-    .pricing-row {
-        display: flex; justify-content: space-between;
-        align-items: center; padding: 1rem 1.2rem;
-        border-radius: 12px; transition: background 0.2s;
+    .action-btn.success {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(34,197,94,0.22);
     }
 
-    .pricing-row:hover { background: #FFF8F3; }
-    .pricing-row + .pricing-row { border-top: 1px solid #F3F4F6; }
-
-    .pricing-range { font-size: 0.9rem; color: #4B5563; font-weight: 600; }
-    .pricing-fee   { font-size: 0.9rem; font-weight: 800; }
-    .pricing-fee.free { color: #22C55E; }
-    .pricing-fee.paid { color: #F97316; }
-
-    /* ═══════════════════════════════════════
-       RESPONSIVE
-    ═══════════════════════════════════════ */
-    @@media (max-width: 900px) {
-        .flow-grid  { grid-template-columns: repeat(2,1fr); }
-        .info-grid  { grid-template-columns: 1fr 1fr; }
-        .contact-channels { grid-template-columns: 1fr; }
-        .flow-card::after { display: none; }
+    .action-btn.secondary {
+        background: #fff;
+        color: #7c2d12;
+        border: 1px solid #f2c7ab;
     }
 
-    @@media (max-width: 600px) {
-        .tracking-card { padding: 1.8rem 1.4rem; }
-        .steps-row { grid-template-columns: 1fr 40px 1fr 40px 1fr; }
-        .step-icon-bg { width: 56px; height: 56px; font-size: 1.4rem; }
-        .del-hero h1 { font-size: 2.2rem; }
-        .flow-grid { grid-template-columns: 1fr; }
-        .info-grid { grid-template-columns: 1fr; }
-        .del-section-heading { font-size: 1.5rem; }
-        .tracking-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-        .tracking-eta { text-align: left; }
+    .delivery-actions-panel {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 1rem;
+        margin-top: 1.4rem;
+    }
+
+    .delivery-card {
+        padding: 1.15rem 1.2rem;
+        border-radius: 20px;
+        border: 1px solid #f7dccb;
+        background: #fffaf7;
+    }
+
+    .delivery-card strong {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: #111827;
+        font-size: 1rem;
+    }
+
+    .delivery-card p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.9rem;
+        line-height: 1.65;
+    }
+
+    .history-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .history-card {
+        padding: 1.3rem 1.35rem;
+        border: 1px solid #f7dccb;
+        border-radius: 22px;
+        background: rgba(255,255,255,0.95);
+        box-shadow: 0 16px 38px rgba(60,30,8,0.06);
+    }
+
+    .history-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: start;
+        margin-bottom: 0.8rem;
+    }
+
+    .history-order-num {
+        color: #111827;
+        font-size: 1.08rem;
+        font-weight: 900;
+    }
+
+    .history-time {
+        color: #9ca3af;
+        font-size: 0.82rem;
+    }
+
+    .history-pill-row {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: end;
+    }
+
+    .history-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.36rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        font-weight: 800;
+    }
+
+    .history-pill.status { background: #fff1e8; color: #c2410c; }
+    .history-pill.payment { background: #eef8ff; color: #1d4ed8; }
+    .history-pill.active { background: #ecfdf3; color: #15803d; }
+
+    .history-body {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 0.95fr;
+        gap: 1rem;
+    }
+
+    .history-label {
+        margin-bottom: 0.2rem;
+        color: #9ca3af;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .history-value {
+        color: #374151;
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1.65;
+    }
+
+    .empty-history {
+        padding: 1.7rem;
+        border: 1px dashed #f2c7ab;
+        border-radius: 22px;
+        background: rgba(255,255,255,0.7);
+        color: #9ca3af;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .info-card {
+        padding: 1.45rem;
+        border: 1px solid #f7dccb;
+        border-radius: 22px;
+        background: rgba(255,255,255,0.94);
+    }
+
+    .info-kicker {
+        color: #f97316;
+        font-size: 0.8rem;
+        font-weight: 900;
+    }
+
+    .info-card h3 {
+        margin: 0.6rem 0 0.45rem;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .info-card p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.9rem;
+        line-height: 1.7;
+    }
+
+    .no-order {
+        padding: 2rem;
+        border: 1px dashed #f2c7ab;
+        border-radius: 24px;
+        background: rgba(255,255,255,0.82);
+        text-align: center;
+    }
+
+    .no-order-title {
+        color: #6b7280;
+        font-size: 1.1rem;
+        font-weight: 900;
+    }
+
+    .no-order-copy {
+        margin: 0.45rem auto 0;
+        max-width: 580px;
+        color: #9ca3af;
+        font-size: 0.92rem;
+        line-height: 1.75;
+    }
+
+    .modal-panel {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(60,30,8,0.18);
+    }
+
+    .modal-header.custom {
+        border-bottom: none;
+        background: linear-gradient(135deg, #fff7f1, #fff);
+        padding: 1.15rem 1.3rem 0.5rem;
+    }
+
+    .modal-body.custom {
+        padding: 0.7rem 1.3rem 1.35rem;
+    }
+
+    .contact-help {
+        display: grid;
+        gap: 0.8rem;
+        margin-top: 0.8rem;
+    }
+
+    .contact-help-item {
+        padding: 0.95rem 1rem;
+        border: 1px solid #f7dccb;
+        border-radius: 16px;
+        background: #fffaf7;
+    }
+
+    .contact-help-label {
+        color: #9ca3af;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .contact-help-value {
+        margin-top: 0.25rem;
+        color: #111827;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    @@media (max-width: 980px) {
+        .del-hero-grid,
+        .delivery-actions-panel,
+        .history-body,
+        .tracking-grid,
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tracking-header {
+            grid-template-columns: 1fr;
+        }
+
+        .track-state-box {
+            text-align: left;
+        }
+    }
+
+    @@media (max-width: 760px) {
+        .steps-row {
+            grid-template-columns: 1fr 18px 1fr 18px 1fr 18px 1fr 18px 1fr;
+        }
+
+        .step-icon {
+            width: 54px;
+            height: 54px;
+            font-size: 0.92rem;
+        }
+
+        .tracking-card,
+        .history-card,
+        .info-card {
+            padding: 1.2rem;
+        }
+
+        .hero-side {
+            display: none;
+        }
+
+        .del-tabs {
+            display: grid;
+            width: 100%;
+        }
+
+        .history-head {
+            flex-direction: column;
+        }
+
+        .history-pill-row {
+            justify-content: start;
+        }
     }
 </style>
 
+@{
+    string StepClass(int step)
+    {
+        if (Model.TrackingStage == step) return "active";
+        return Model.TrackingStage > step ? "done" : "";
+    }
 
-@* ─── HERO ─────────────────────────────────────────── *@
-<div class="del-hero">
-    <div class="del-hero-dots"></div>
-    <div class="del-hero-glow"></div>
-    <div class="del-hero-content">
-        <div class="del-hero-badge">จัดส่งด่วน · ภายใน 30 นาที</div>
-        <h1>BAGERY <span>Delivery</span></h1>
-        <p>ติดตามออเดอร์ & ข้อมูลการจัดส่งทั้งหมด</p>
+    string FillClass(int step)
+    {
+        return Model.TrackingStage > step ? "on" : "";
+    }
+}
+
+<section class="del-hero">
+    <div class="del-shell">
+        <div class="del-hero-grid">
+            <div>
+                <div class="hero-badge">Live Order Tracking</div>
+                <h1 class="hero-title">BAGERY <span>Delivery</span></h1>
+                <p class="hero-sub">ติดตามออเดอร์ล่าสุดของคุณจากฐานข้อมูลจริง, ปิดงานหลังรับสินค้า, และดูประวัติการสั่งซื้อย้อนหลังได้ในหน้าเดียว</p>
+            </div>
+            <div class="hero-side">
+                <div class="hero-side-label">สถานะล่าสุด</div>
+                <div class="hero-side-value">@(Model.HasOrder ? Model.StatusTitle : "ยังไม่มีออเดอร์ค้างอยู่")</div>
+                <div class="hero-side-sub">เมื่อออเดอร์อยู่ในสถานะ “ระหว่างจัดส่ง” ระบบจะแสดงปุ่ม “ได้รับออเดอร์แล้ว” และ “แจ้งปัญหา” ให้ทันที</div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 
+<div class="del-shell">
+    <div class="tabs-wrap">
+        <div class="del-tabs">
+            <a class="del-tab active" href="#tracking-section">ติดตามออเดอร์</a>
+            <a class="del-tab" href="#history-section">ประวัติการสั่งซื้อ</a>
+        </div>
+    </div>
 
-@* ─── TRACKING CARD ────────────────────────────────── *@
-<div class="tracking-wrap">
-    <div class="tracking-card">
+    <section class="section-block" id="tracking-section">
+        <div class="section-title">Tracking</div>
+        <h2 class="section-heading">การ์ดติดตามออเดอร์ล่าสุด</h2>
 
-        @if (hasOrder)
+        @if (Model.HasOrder)
         {
-            <div class="tracking-header">
-                <div>
-                    <div class="tracking-order-id">ออเดอร์ของท่าน</div>
-                    <div class="tracking-order-num">#@orderId</div>
+            <div class="tracking-card">
+                <div class="tracking-header">
+                    <div>
+                        <div class="track-label">Current Order</div>
+                        <div class="track-order-row">
+                            <div class="track-order-num">#@Model.OrderNumber</div>
+                            <div class="track-pill">@Model.StatusTitle</div>
+                        </div>
+                        <div class="track-copy">@Model.StatusMessage</div>
+                    </div>
+                    <div class="track-state-box">
+                        <div class="track-label">Current State</div>
+                        <div class="track-state-value">@Model.EtaText</div>
+                    </div>
                 </div>
-                <div class="tracking-eta">
-                    <div class="tracking-eta-label">คาดว่าจะถึง</div>
-                    <div class="tracking-eta-time">~@orderEta</div>
+
+                <div class="steps-row">
+                    <div class="step-box">
+                        <div class="step-icon @StepClass(1)">1</div>
+                        <div class="step-name @StepClass(1)">Pending</div>
+                        <div class="step-sub @(Model.TrackingStage == 1 ? "active" : "")">สร้างออเดอร์แล้ว</div>
+                    </div>
+                    <div class="step-line"><div class="step-line-fill @FillClass(1)"></div></div>
+                    <div class="step-box">
+                        <div class="step-icon @StepClass(2)">2</div>
+                        <div class="step-name @StepClass(2)">Paid</div>
+                        <div class="step-sub @(Model.TrackingStage == 2 ? "active" : "")">ยืนยันการชำระเงิน</div>
+                    </div>
+                    <div class="step-line"><div class="step-line-fill @FillClass(2)"></div></div>
+                    <div class="step-box">
+                        <div class="step-icon @StepClass(3)">3</div>
+                        <div class="step-name @StepClass(3)">Preparing</div>
+                        <div class="step-sub @(Model.TrackingStage == 3 ? "active" : "")">ร้านกำลังเตรียมสินค้า</div>
+                    </div>
+                    <div class="step-line"><div class="step-line-fill @FillClass(3)"></div></div>
+                    <div class="step-box">
+                        <div class="step-icon @StepClass(4)">4</div>
+                        <div class="step-name @StepClass(4)">Shipped</div>
+                        <div class="step-sub @(Model.TrackingStage == 4 ? "active" : "")">อยู่ระหว่างจัดส่ง</div>
+                    </div>
+                    <div class="step-line"><div class="step-line-fill @FillClass(4)"></div></div>
+                    <div class="step-box">
+                        <div class="step-icon @StepClass(5)">5</div>
+                        <div class="step-name @StepClass(5)">Completed</div>
+                        <div class="step-sub @(Model.TrackingStage == 5 ? "active" : "")">ปิดออเดอร์แล้ว</div>
+                    </div>
                 </div>
+
+                <div class="tracking-grid">
+                    <div class="meta-card">
+                        <div class="meta-label">Payment Status</div>
+                        <div class="meta-value">@Model.PaymentStatus</div>
+                    </div>
+                    <div class="meta-card">
+                        <div class="meta-label">Created At</div>
+                        <div class="meta-value">@Model.CreatedAtText</div>
+                    </div>
+                    <div class="meta-card">
+                        <div class="meta-label">Order Items</div>
+                        <div class="meta-value">@Model.ItemSummary</div>
+                    </div>
+                    <div class="meta-card">
+                        <div class="meta-label">Delivery Address</div>
+                        <div class="meta-value">@Model.DeliveryAddress</div>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    @if (Model.ShowPaymentAction)
+                    {
+                        <a class="action-btn primary" href="@Model.PaymentUrl">ไปหน้าชำระเงินและอัปโหลดสลิป</a>
+                    }
+                </div>
+
+                @if (Model.ShowDeliveryActions)
+                {
+                    <div class="delivery-actions-panel">
+                        <div class="delivery-card">
+                            <strong>ออเดอร์นี้อยู่ระหว่างจัดส่งแล้ว</strong>
+                            <p>เมื่อได้รับสินค้าเรียบร้อยแล้ว สามารถกด “ได้รับออเดอร์แล้ว” เพื่อสิ้นสุดขั้นตอนและย้ายรายการนี้ไปยังประวัติการสั่งซื้อได้ทันที</p>
+                            <div class="action-row">
+                                <button type="button" class="action-btn success" onclick="completeOrder(@Model.OrderId)">ได้รับออเดอร์แล้ว</button>
+                                <button type="button" class="action-btn secondary" data-bs-toggle="modal" data-bs-target="#problemModal">แจ้งปัญหา</button>
+                            </div>
+                        </div>
+                        <div class="delivery-card">
+                            <strong>ต้องการความช่วยเหลือ?</strong>
+                            <p>ถ้ามีสินค้าไม่ครบ, ได้รับของล่าช้า, หรือสินค้าเสียหาย สามารถกดแจ้งปัญหาเพื่อดูช่องทางติดต่อพนักงานได้ทันที</p>
+                        </div>
+                    </div>
+                }
             </div>
-
-            @* ─── Steps ─── *@
-            <div class="steps-row">
-
-                @* Step 1: กำลังจัดออเดอร์ *@
-                <div class="step-box">
-                    <div class="step-icon-wrap">
-                        <div class="step-icon-bg @(currentStatus == "Preparing" ? "active" : "done")">
-                            @(currentStatus == "Preparing" ? "📦" : "✅")
-                        </div>
-                    </div>
-                    <div class="step-label @(currentStatus == "Preparing" ? "active" : "done")">
-                        กำลังจัดออเดอร์
-                    </div>
-                    <div class="step-sublabel @(currentStatus == "Preparing" ? "active" : "")">
-                        @(currentStatus == "Preparing" ? "กำลังดำเนินการ..." : "เสร็จแล้ว")
-                    </div>
-                </div>
-
-                @* Connector 1 *@
-                <div class="step-connector">
-                    @if (currentStatus == "Preparing")
-                    {
-                        <div class="step-connector-fill fill-anim"></div>
-                        <div class="step-connector-scooter show">🛵</div>
-                    }
-                    else
-                    {
-                        <div class="step-connector-fill fill-done"></div>
-                    }
-                </div>
-
-                @* Step 2: กำลังจัดส่ง *@
-                <div class="step-box">
-                    <div class="step-icon-wrap">
-                        <div class="step-icon-bg @(currentStatus == "Shipped" ? "active" : (currentStatus == "Completed" ? "done" : ""))">
-                            @(currentStatus == "Shipped" ? "🛵" : (currentStatus == "Completed" ? "✅" : "🛵"))
-                        </div>
-                    </div>
-                    <div class="step-label @(currentStatus == "Shipped" ? "active" : (currentStatus == "Completed" ? "done" : ""))">
-                        กำลังจัดส่ง
-                    </div>
-                    <div class="step-sublabel @(currentStatus == "Shipped" ? "active" : "")">
-                        @(currentStatus == "Shipped" ? "กำลังมาหาท่าน!" : (currentStatus == "Completed" ? "เสร็จแล้ว" : "รอดำเนินการ"))
-                    </div>
-                </div>
-
-                @* Connector 2 *@
-                <div class="step-connector">
-                    @if (currentStatus == "Shipped")
-                    {
-                        <div class="step-connector-fill fill-anim"></div>
-                        <div class="step-connector-scooter show">🛵</div>
-                    }
-                    else if (currentStatus == "Completed")
-                    {
-                        <div class="step-connector-fill fill-done"></div>
-                    }
-                    else
-                    {
-                        <div class="step-connector-fill"></div>
-                    }
-                </div>
-
-                @* Step 3: ได้รับของ *@
-                <div class="step-box">
-                    <div class="step-icon-wrap">
-                        <div class="step-icon-bg @(currentStatus == "Completed" ? "done" : "")">
-                            @(currentStatus == "Completed" ? "✅" : "🏠")
-                        </div>
-                    </div>
-                    <div class="step-label @(currentStatus == "Completed" ? "done" : "")">
-                        ได้รับของแล้ว
-                    </div>
-                    <div class="step-sublabel">
-                        @(currentStatus == "Completed" ? "ขอบคุณที่ใช้บริการ!" : "รอรับสินค้า")
-                    </div>
-                </div>
-
-            </div>
-
-            @if (currentStatus == "Shipped")
-            {
-                <div style="text-align:center; margin-top:0.8rem;
-                            background:#FFF3E8; border-radius:12px; padding:0.9rem;
-                            color:#9a4500; font-size:0.88rem; font-weight:600;">
-                    🛵 &nbsp;ไรเดอร์กำลังมาหาท่าน — กรุณาเตรียมรับสินค้า
-                </div>
-            }
         }
         else
         {
-            @* ─── No Order ─── *@
-            <div class="steps-row" style="opacity:0.4;">
-                <div class="step-box">
-                    <div class="step-icon-bg"><span>📦</span></div>
-                    <div class="step-label">กำลังจัดออเดอร์</div>
+            <div class="no-order">
+                <div class="no-order-title">ตอนนี้ยังไม่มีออเดอร์ที่ต้องติดตาม</div>
+                <div class="no-order-copy">หากคุณกด “ได้รับออเดอร์แล้ว” รายการจะถูกย้ายไปอยู่ในประวัติการสั่งซื้อด้านล่าง ส่วนออเดอร์ใหม่ที่สร้างขึ้นจะกลับมาแสดงในการ์ดติดตามอัตโนมัติ</div>
+                <div class="action-row" style="justify-content:center;">
+                    <a class="action-btn primary" asp-controller="Account" asp-action="Menu">ไปเลือกสินค้า</a>
                 </div>
-                <div class="step-connector"><div class="step-connector-fill"></div></div>
-                <div class="step-box">
-                    <div class="step-icon-bg"><span>🛵</span></div>
-                    <div class="step-label">กำลังจัดส่ง</div>
-                </div>
-                <div class="step-connector"><div class="step-connector-fill"></div></div>
-                <div class="step-box">
-                    <div class="step-icon-bg"><span>🏠</span></div>
-                    <div class="step-label">ได้รับของแล้ว</div>
-                </div>
-            </div>
-
-            <div class="no-order-wrap">
-                <div class="no-order-icon">🛍️</div>
-                <div class="no-order-text">ตอนนี้ยังไม่มีออเดอร์</div>
-                <div class="no-order-sub">เริ่มสั่งสินค้าเพื่อติดตามการจัดส่ง</div>
-                <a asp-controller="Account" asp-action="Menu"
-                   style="display:inline-block; margin-top:1.2rem;
-                          background:#F97316; color:#fff;
-                          padding:0.75rem 2rem; border-radius:25px;
-                          font-weight:700; text-decoration:none; font-size:0.9rem;
-                          box-shadow: 0 8px 20px rgba(249,115,22,0.3);">
-                    🥐 &nbsp;ดูเมนูสั่งซื้อ
-                </a>
             </div>
         }
+    </section>
 
-    </div>
-</div>
+    <section class="section-block" id="history-section">
+        <div class="section-title">History</div>
+        <h2 class="section-heading">ประวัติการสั่งซื้อ</h2>
 
+        @if (Model.OrderHistory.Any())
+        {
+            <div class="history-grid">
+                @foreach (var order in Model.OrderHistory)
+                {
+                    <div class="history-card">
+                        <div class="history-head">
+                            <div>
+                                <div class="history-order-num">#@order.OrderNumber</div>
+                                <div class="history-time">@order.CreatedAtText</div>
+                            </div>
+                            <div class="history-pill-row">
+                                <div class="history-pill status">@order.OrderStatus</div>
+                                <div class="history-pill payment">@order.PaymentStatus</div>
+                                @if (order.IsActive)
+                                {
+                                    <div class="history-pill active">กำลังติดตามอยู่</div>
+                                }
+                            </div>
+                        </div>
 
-@* ─── MAIN SECTIONS ────────────────────────────────── *@
-<div class="del-section-wrap">
-
-    @* ── How it works ── *@
-    <div style="margin-top:3rem;">
-        <p class="del-section-title">How it works</p>
-        <h2 class="del-section-heading">วิธีสั่งซื้อ & รับสินค้า</h2>
-
-        <div class="flow-grid">
-            <div class="flow-card">
-                <div class="flow-num">1</div>
-                <div class="flow-icon">🛒</div>
-                <div class="flow-title">เลือกสินค้า</div>
-                <div class="flow-sub">เลือกเมนูที่ชอบ กด Add to Cart แล้วไปหน้า Checkout</div>
+                        <div class="history-body">
+                            <div>
+                                <div class="history-label">รายการสินค้า</div>
+                                <div class="history-value">@order.ItemSummary</div>
+                            </div>
+                            <div>
+                                <div class="history-label">ยอดรวม</div>
+                                <div class="history-value">฿@order.TotalAmount</div>
+                            </div>
+                            <div>
+                                <div class="history-label">ที่อยู่จัดส่ง</div>
+                                <div class="history-value">@order.DeliveryAddress</div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
-            <div class="flow-card">
-                <div class="flow-num">2</div>
-                <div class="flow-icon">💳</div>
-                <div class="flow-title">ชำระเงิน</div>
-                <div class="flow-sub">โอนเงิน / QR Code / PromptPay รับสลิปยืนยันทันที</div>
-            </div>
-            <div class="flow-card">
-                <div class="flow-num">3</div>
-                <div class="flow-icon">👨‍🍳</div>
-                <div class="flow-title">จัดเตรียม</div>
-                <div class="flow-sub">ทีมงานเริ่มอบและแพ็คสินค้าสดใหม่ให้ท่าน</div>
-            </div>
-            <div class="flow-card">
-                <div class="flow-num">4</div>
-                <div class="flow-icon">🛵</div>
-                <div class="flow-title">จัดส่งถึงบ้าน</div>
-                <div class="flow-sub">ไรเดอร์รับสินค้าและจัดส่งภายใน 30 นาที</div>
-            </div>
-        </div>
-    </div>
+        }
+        else
+        {
+            <div class="empty-history">ยังไม่มีประวัติการสั่งซื้อ</div>
+        }
+    </section>
 
-    @* ── Info cards ── *@
-    <div>
-        <p class="del-section-title">Delivery Info</p>
-        <h2 class="del-section-heading">รายละเอียดการจัดส่ง</h2>
+    <section class="section-block">
+        <div class="section-title">Suggestions</div>
+        <h2 class="section-heading">แนะนำให้เก็บอะไรในประวัติการสั่งซื้อบ้าง</h2>
 
         <div class="info-grid">
             <div class="info-card">
-                <div class="info-icon">⏰</div>
-                <div class="info-card-title">เวลาจัดส่ง</div>
-                <div class="info-card-body">
-                    <strong>จันทร์ – ศุกร์</strong><br>08:00 – 20:00 น.<br>
-                    <strong>เสาร์ – อาทิตย์</strong><br>09:00 – 21:00 น.<br><br>
-                    <span class="info-tag">Last order 30 นาทีก่อนปิด</span>
-                </div>
+                <div class="info-kicker">01</div>
+                <h3>เก็บ Snapshot ของรายการสินค้า</h3>
+                <p>ตอนนี้ระบบมี `Orderdetail` อยู่แล้ว ถือว่าดีมาก เพราะช่วยให้ประวัติย้อนหลังไม่เปลี่ยนตามราคาหรือชื่อสินค้าปัจจุบัน</p>
             </div>
             <div class="info-card">
-                <div class="info-icon">⚡</div>
-                <div class="info-card-title">ระยะเวลาจัดส่ง</div>
-                <div class="info-card-body">
-                    โดยเฉลี่ย <strong>20–35 นาที</strong><br>
-                    ขึ้นอยู่กับระยะทางและสภาพจราจร<br><br>
-                    <span class="info-tag">Rush Hour อาจช้ากว่าปกติ</span>
-                </div>
+                <div class="info-kicker">02</div>
+                <h3>เพิ่มเวลาแต่ละขั้นตอน</h3>
+                <p>ถ้าอนาคตเพิ่ม `PaidAt`, `PreparedAt`, `ShippedAt`, `CompletedAt` จะทำให้ติดตาม SLA และดูประวัติละเอียดขึ้นมาก</p>
             </div>
             <div class="info-card">
-                <div class="info-icon">📍</div>
-                <div class="info-card-title">การแพ็คสินค้า</div>
-                <div class="info-card-body">
-                    กล่องกันกระแทกพิเศษ<br>
-                    รักษาอุณหภูมิระหว่างส่ง<br>
-                    แพ็คสด ไม่เปลี่ยนรูปทรง<br><br>
-                    <span class="info-tag">ปลอดภัย 100%</span>
-                </div>
+                <div class="info-kicker">03</div>
+                <h3>เก็บเหตุผลการแจ้งปัญหา</h3>
+                <p>ถ้าคุณอยากต่อยอดจริง แนะนำสร้างตาราง issue หรือ ticket แยกจาก order เพื่อเก็บปัญหา, รูป, และสถานะการแก้ไขของพนักงาน</p>
             </div>
         </div>
-    </div>
-
-    @* ── Zone ── *@
-    <div class="zone-section">
-        <p class="del-section-title">Delivery Zone</p>
-        <h2 class="del-section-heading" style="margin-bottom:1.5rem;">โซนที่จัดส่งได้</h2>
-
-        <div class="zone-map-placeholder">
-            <span>🗺️</span>
-            <p>แผนที่โซนจัดส่ง — ใส่ Google Maps Embed ตรงนี้</p>
-        </div>
-
-        <div class="zone-tags">
-            <span class="zone-tag">📍 บางกอกน้อย</span>
-            <span class="zone-tag">📍 บางกอกใหญ่</span>
-            <span class="zone-tag">📍 ธนบุรี</span>
-            <span class="zone-tag">📍 คลองสาน</span>
-            <span class="zone-tag">📍 ราษฎร์บูรณะ</span>
-            <span class="zone-tag">📍 จอมทอง</span>
-            <span class="zone-tag">📍 ตลิ่งชัน</span>
-            <span class="zone-tag">📍 ทวีวัฒนา</span>
-            <span class="zone-tag">📍 หนองแขม</span>
-        </div>
-    </div>
-
-    @* ── Pricing ── *@
-    <div class="pricing-section">
-        <p class="del-section-title">Delivery Fee</p>
-        <h2 class="del-section-heading" style="margin-bottom:1.5rem;">ค่าจัดส่ง</h2>
-
-        <div class="pricing-rows">
-            <div class="pricing-row">
-                <div class="pricing-range">3 ออเดอร์แรก (สมาชิกใหม่)</div>
-                <div class="pricing-fee free">ฟรี 🎉</div>
-            </div>
-            <div class="pricing-row">
-                <div class="pricing-range">สั่งครบ 300 บาทขึ้นไป</div>
-                <div class="pricing-fee free">ฟรี</div>
-            </div>
-            <div class="pricing-row">
-                <div class="pricing-range">ระยะ 0 – 3 กม.</div>
-                <div class="pricing-fee paid">20 บาท</div>
-            </div>
-            <div class="pricing-row">
-                <div class="pricing-range">ระยะ 3 – 7 กม.</div>
-                <div class="pricing-fee paid">35 บาท</div>
-            </div>
-            <div class="pricing-row">
-                <div class="pricing-range">ระยะ 7 – 12 กม.</div>
-                <div class="pricing-fee paid">50 บาท</div>
-            </div>
-            <div class="pricing-row">
-                <div class="pricing-range">มากกว่า 12 กม.</div>
-                <div class="pricing-fee paid">ติดต่อสอบถาม</div>
-            </div>
-        </div>
-    </div>
-
-    @* ── Contact channels ── *@
-    <div class="contact-section">
-        <p class="del-section-title">Order Channel</p>
-        <h2 class="del-section-heading">ช่องทางสั่งซื้อ</h2>
-
-        <div class="contact-channels">
-            <div class="channel-card channel-line">
-                <div class="channel-icon">💬</div>
-                <div class="channel-name">LINE Official</div>
-                <div class="channel-val">@@BAGERY</div>
-                <div style="margin-top:1rem;">
-                    <span style="background:rgba(0,185,0,0.25); color:#4ade80;
-                                 font-size:0.75rem; padding:4px 12px; border-radius:20px; font-weight:700;">
-                        เปิด 08:00–21:00
-                    </span>
-                </div>
-            </div>
-            <div class="channel-card channel-web">
-                <div class="channel-icon">🌐</div>
-                <div class="channel-name">สั่งผ่านเว็บไซต์</div>
-                <div class="channel-val">bagery.com</div>
-                <div style="margin-top:1rem;">
-                    <a asp-controller="Account" asp-action="Menu"
-                       style="background:#F97316; color:#fff; font-size:0.78rem;
-                              padding:5px 14px; border-radius:20px; font-weight:700;
-                              text-decoration:none; display:inline-block;">
-                        สั่งเลย →
-                    </a>
-                </div>
-            </div>
-            <div class="channel-card channel-tel">
-                <div class="channel-icon">📞</div>
-                <div class="channel-name">โทรสั่ง</div>
-                <div class="channel-val">02-XXX-XXXX</div>
-                <div style="margin-top:1rem;">
-                    <span style="background:rgba(59,130,246,0.2); color:#93c5fd;
-                                 font-size:0.75rem; padding:4px 12px; border-radius:20px; font-weight:700;">
-                        09:00–18:00
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    </section>
 </div>
+
+<div class="modal fade" id="problemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-panel">
+            <div class="modal-header custom">
+                <div>
+                    <div class="section-title" style="margin-bottom:0.35rem;">Support</div>
+                    <h5 class="modal-title" style="margin:0; font-weight:900; color:#111827;">ติดต่อพนักงาน</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body custom">
+                <p style="margin:0; color:#6b7280; line-height:1.75;">หากมีปัญหาเกี่ยวกับออเดอร์นี้ กรุณาติดต่อพนักงานผ่านช่องทางด้านล่างได้ทันที</p>
+                <div class="contact-help">
+                    <div class="contact-help-item">
+                        <div class="contact-help-label">โทรศัพท์</div>
+                        <div class="contact-help-value">0942133222</div>
+                    </div>
+                    <div class="contact-help-item">
+                        <div class="contact-help-label">LINE</div>
+                        <div class="contact-help-value">@@bageryDB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    async function completeOrder(orderId) {
+        if (!confirm(`ยืนยันว่าได้รับออเดอร์ ORD-${orderId} แล้ว?`)) return;
+
+        try {
+            const res = await fetch('/Account/CompleteOrder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                },
+                body: `orderId=${orderId}`
+            });
+
+            const data = await res.json();
+            alert(data.message);
+
+            if (data.success) {
+                window.location.reload();
+            }
+        } catch (err) {
+            alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+        }
+    }
+</script>
+}

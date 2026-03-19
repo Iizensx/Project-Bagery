@@ -583,7 +583,14 @@
                             <div class="product-price">@product.Price บาท</div>
                             <div class="stock-badge">คงเหลือ: @(product.Stock1 ?? 0)</div>
                             <button class="btn-details" onclick="showProductDetails('@product.ProductName', '@(product.Description ?? "ไม่มีรายละเอียด")', @product.Price, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=600', @(product.Stock1 ?? 0))">รายละเอียด</button>
-                            <button class="btn-order" onclick="addToCart('@product.ProductName', @product.Price)">สั่งเลย</button>
+                            @if (product.Stock1 <= 0)
+                            {
+                                <button class="btn-order" style="background: #ccc; color: #666; cursor: not-allowed;" disabled>สินค้าหมด</button>
+                            }
+                            else
+                            {
+                                <button class="btn-order" onclick="addToCart('@product.ProductName', @product.Price)">สั่งเลย</button>
+                            }
                         </div>
                     </div>
                 }

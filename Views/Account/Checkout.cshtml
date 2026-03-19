@@ -1,0 +1,287 @@
+@{
+    ViewData["Title"] = "ชำระเงิน";
+    Layout = "~/Views/Shared/_Layoutmain.cshtml";
+}
+
+<div class="container mt-5 pt-5">
+    <div class="row">
+        <!-- Section 1: Cart Items & Subtotal -->
+        <div class="col-md-8">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">รายการสินค้า</h4>
+                </div>
+                <div class="card-body">
+                    <div id="checkout-items-container">
+                        <!-- Items will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Delivery Address -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">ที่อยู่จัดส่ง</h4>
+                </div>
+                <div class="card-body">
+                    <div id="address-list" class="list-group">
+                        <!-- Addresses will be injected here -->
+                        <p class="text-center text-muted">กำลังโหลดที่อยู่...</p>
+                    </div>
+                    <div class="mt-3">
+                        <a href="/Account/Profile" class="btn btn-outline-primary btn-sm">จัดการที่อยู่</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Promotions & Summary -->
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">ส่วนลด & สรุปยอด</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">โปรโมชั่น</label>
+                        <select id="promo-select" class="form-select">
+                            <option value="">ไม่ใช้โปรโมชั่น</option>
+                        </select>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>ยอดรวมสินค้า:</span>
+                        <span id="subtotal-amount">0 บาท</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>ส่วนลด:</span>
+                        <span id="discount-amount">0 บาท</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 font-weight-bold h5">
+                        <span>ยอดรวมสุทธิ:</span>
+                        <span id="total-amount" class="text-primary">0 บาท</span>
+                    </div>
+
+                    <button id="confirm-order-btn" class="btn btn-primary w-100 mt-3 py-2 fw-bold" disabled>
+                        ยืนยันการสั่งซื้อ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .address-item {
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid #eee;
+        margin-bottom: 10px;
+        border-radius: 8px;
+    }
+    .address-item:hover {
+        background-color: #f8f9fa;
+    }
+    .address-item.active {
+        border-color: #0d6efd;
+        background-color: #e7f1ff;
+    }
+    .checkout-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .checkout-item:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    let cart = JSON.parse(localStorage.getItem('bakeryCart')) || [];
+    let userId = 0;
+    let selectedAddressId = null;
+    let selectedPromoId = null;
+    let subtotal = 0;
+    let discount = 0;
+    let total = 0;
+    let availablePromos = [];
+
+    if (cart.length === 0) {
+        alert('ตะกร้าว่างเปล่า');
+        window.location.href = '/Account/Menu';
+        return;
+    }
+
+    // 1. Load Cart Data
+    const container = document.getElementById('checkout-items-container');
+    subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    container.innerHTML = cart.map(item => `
+        <div class="checkout-item">
+            <div>
+                <h6 class="mb-0">${item.name}</h6>
+                <small class="text-muted">จำนวน: ${item.quantity} x ${item.price} บาท</small>
+            </div>
+            <span class="fw-bold">${item.price * item.quantity} บาท</span>
+        </div>
+    `).join('');
+
+    document.getElementById('subtotal-amount').innerText = subtotal + ' บาท';
+    updateTotal();
+
+    // 2. Load User Info & Data
+    try {
+        const userRes = await fetch('/Account/GetCurrentUser');
+        const userData = await userRes.json();
+        
+        if (!userData.success || userData.userId <= 0) {
+            alert('กรุณาเข้าสู่ระบบก่อนชำระเงิน');
+            window.location.href = '/Account/Login';
+            return;
+        }
+        
+        userId = userData.userId;
+
+        // Fetch Addresses
+        const addrRes = await fetch(`/Account/GetUserAddresses?userId=${userId}`);
+        const addrData = await addrRes.json();
+        const addrList = document.getElementById('address-list');
+        
+        if (addrData.success && addrData.addresses.length > 0) {
+            addrList.innerHTML = addrData.addresses.map(addr => `
+                <div class="list-group-item address-item p-3" data-id="${addr.addressId}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="mb-1 fw-bold">${addr.addressLine}</p>
+                            <small class="text-muted">${addr.district}, ${addr.province} ${addr.postalCode}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add Click Event
+            document.querySelectorAll('.address-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.address-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    selectedAddressId = item.dataset.id;
+                    checkValidity();
+                });
+            });
+        } else {
+            addrList.innerHTML = '<p class="text-center text-muted">ไม่พบข้อมูลที่อยู่ กรุณาเพิ่มที่อยู่ใหม่</p>';
+        }
+
+        // Fetch Promotions
+        try {
+            const promoRes = await fetch(`/Account/GetUserPromos?userId=${userId}`);
+            if (promoRes.ok) {
+                const promoData = await promoRes.json();
+                const promoSelect = document.getElementById('promo-select');
+                
+                if (promoData.success && promoData.promos && promoData.promos.length > 0) {
+                    availablePromos = promoData.promos;
+                    promoData.promos.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.promotionId;
+                        opt.innerText = `${p.promotionName} (${p.discountValue} ${p.discountType === 'Percent' || p.discountType === 'Percentage' ? '%' : 'บาท'})`;
+                        promoSelect.appendChild(opt);
+                    });
+                }
+            } else {
+                console.error('Failed to fetch promotions: ', promoRes.status);
+            }
+        } catch (promoErr) {
+            console.error('Promotion error:', promoErr);
+        }
+    } catch (e) {
+        console.error(e);
+        alert('เกิดข้อผิดพลาดในการดึงข้อมูล');
+    }
+
+    // Promo Change Logic
+    document.getElementById('promo-select').addEventListener('change', (e) => {
+        selectedPromoId = e.target.value;
+        const promo = availablePromos.find(p => p.promotionId == selectedPromoId);
+        
+        if (promo) {
+            if (promo.discountType === 'Percent' || promo.discountType === 'Percentage') {
+                discount = (subtotal * promo.discountValue) / 100;
+            } else {
+                discount = promo.discountValue;
+            }
+        } else {
+            discount = 0;
+            selectedPromoId = null;
+        }
+        
+        updateTotal();
+    });
+
+    function updateTotal() {
+        total = Math.max(0, subtotal - discount);
+        document.getElementById('discount-amount').innerText = '-' + discount.toFixed(2) + ' บาท';
+        document.getElementById('total-amount').innerText = total.toFixed(2) + ' บาท';
+    }
+
+    function checkValidity() {
+        const btn = document.getElementById('confirm-order-btn');
+        if (selectedAddressId && cart.length > 0) {
+            btn.disabled = false;
+        } else {
+            btn.disabled = true;
+        }
+    }
+
+    // Confirm Order Logic
+    document.getElementById('confirm-order-btn').addEventListener('click', async () => {
+        if (!selectedAddressId) {
+            alert('กรุณาเลือกที่อยู่จัดส่ง');
+            return;
+        }
+
+        const confirmBtn = document.getElementById('confirm-order-btn');
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = 'กำลังประมวลผล...';
+
+        const orderData = {
+            userId: userId,
+            addressId: parseInt(selectedAddressId),
+            promotionId: selectedPromoId ? parseInt(selectedPromoId) : null,
+            items: cart.map(item => ({
+                productName: item.name,
+                price: item.price,
+                quantity: item.quantity
+            })),
+            totalAmount: total
+        };
+
+        try {
+            const res = await fetch('/Account/CreateOrder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                localStorage.removeItem('bakeryCart');
+                window.location.href = `/Account/Payment?orderId=${data.orderId}`;
+            } else {
+                alert(data.message || 'เกิดข้อผิดพลาดในการสั่งซื้อ');
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = 'ยืนยันการสั่งซื้อ';
+            }
+        } catch (e) {
+            alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = 'ยืนยันการสั่งซื้อ';
+        }
+    });
+});
+</script>

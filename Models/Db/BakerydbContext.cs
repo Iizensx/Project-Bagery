@@ -26,6 +26,8 @@ public partial class BakerydbContext : DbContext
 
     public virtual DbSet<Promotion> Promotions { get; set; }
 
+    public virtual DbSet<UserPromotion> UserPromotions { get; set; }
+
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<Stock> Stocks { get; set; }
@@ -85,7 +87,7 @@ public partial class BakerydbContext : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime");
             entity.Property(e => e.PaymentStatus).HasMaxLength(50);
-            entity.Property(e => e.Status).HasColumnType("enum('Pending','Paid','Shipped','Cancelled')");
+            entity.Property(e => e.Status).HasColumnType("enum('Pending','Paid','Preparing','Shipped','Completed','Cancelled')");
             entity.Property(e => e.TotalAmount).HasPrecision(10, 2);
 
             entity.HasOne(d => d.Address).WithMany(p => p.Orders)
@@ -179,6 +181,28 @@ public partial class BakerydbContext : DbContext
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
                 .HasConstraintName("user_ibfk_1");
+        });
+
+        modelBuilder.Entity<UserPromotion>(entity =>
+        {
+            entity.HasKey(e => new { e.UserId, e.PromotionId }).HasName("PRIMARY");
+
+            entity.ToTable("user_promotion");
+
+            entity.HasIndex(e => e.PromotionId, "PromotionId");
+
+            entity.HasIndex(e => e.UserId, "UserId");
+
+            entity.Property(e => e.IsUsed).HasDefaultValueSql("'0'");
+            entity.Property(e => e.UsedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Promotion).WithMany()
+                .HasForeignKey(d => d.PromotionId)
+                .HasConstraintName("user_promotion_ibfk_2");
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("user_promotion_ibfk_1");
         });
 
         OnModelCreatingPartial(modelBuilder);
