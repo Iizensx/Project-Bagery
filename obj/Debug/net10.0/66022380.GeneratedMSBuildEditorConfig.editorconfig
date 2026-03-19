@@ -19,113 +19,113 @@ build_property.TargetFrameworkIdentifier = .NETCoreApp
 build_property.TargetFrameworkVersion = v10.0
 build_property.RootNamespace = _66022380
 build_property.RootNamespace = _66022380
-build_property.ProjectDir = C:\Users\Annie\Downloads\66022380-CRUD ครบแล้ว\Project-Bagery\
+build_property.ProjectDir = C:\Users\thana\Downloads\โค้ด\Project-Bagery\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 9.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = C:\Users\Annie\Downloads\66022380-CRUD ครบแล้ว\Project-Bagery
+build_property.MSBuildProjectDirectory = C:\Users\thana\Downloads\โค้ด\Project-Bagery
 build_property._RazorSourceGeneratorDebug = 
 build_property.EffectiveAnalysisLevelStyle = 10.0
 build_property.EnableCodeStyleSeverity = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Account/Delivery.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Account/Delivery.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxEZWxpdmVyeS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Account/Home.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Account/Home.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxIb21lLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Account/lab10.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Account/lab10.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxsYWIxMC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Account/Login.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Account/Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Account/Menu.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Account/Menu.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxNZW51LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Account/Profile.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Account/Profile.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxQcm9maWxlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Account/Signup.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Account/Signup.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxTaWdudXAuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Account/Test1.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Account/Test1.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxUZXN0MS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/admin/Dashbordadmin.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/admin/Dashbordadmin.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcYWRtaW5cRGFzaGJvcmRhZG1pbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/admin/Member.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/admin/Member.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcYWRtaW5cTWVtYmVyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/admin/Order.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/admin/Order.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcYWRtaW5cT3JkZXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/admin/Stock.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/admin/Stock.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcYWRtaW5cU3RvY2suY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Home/Index.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Home/lab8.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Home/lab8.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxsYWI4LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Home/Privacy.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Shared/Error.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Shared/_AdminLayout.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Shared/_AdminLayout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9BZG1pbkxheW91dC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Shared/_CartDrawer.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Shared/_CartDrawer.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9DYXJ0RHJhd2VyLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Shared/_Dashbordnavbar.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Shared/_Dashbordnavbar.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9EYXNoYm9yZG5hdmJhci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Shared/_Footer.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Shared/_Footer.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Gb290ZXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Shared/_Layoutmain.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Shared/_Layoutmain.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXRtYWluLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Shared/_Navbar.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Shared/_Navbar.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9OYXZiYXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/Shared/_ValidationScriptsPartial.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/_ViewImports.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/_ViewImports.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/Annie/Downloads/66022380-CRUD ครบแล้ว/Project-Bagery/Views/_ViewStart.cshtml]
+[C:/Users/thana/Downloads/โค้ด/Project-Bagery/Views/_ViewStart.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 

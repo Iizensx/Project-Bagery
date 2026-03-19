@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\Project-Bagery\\66022380.csproj": {}
+    "C:\\Users\\thana\\Downloads\\โค้ด\\Project-Bagery\\66022380.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\Project-Bagery\\66022380.csproj": {
+    "C:\\Users\\thana\\Downloads\\โค้ด\\Project-Bagery\\66022380.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\Project-Bagery\\66022380.csproj",
+        "projectUniqueName": "C:\\Users\\thana\\Downloads\\โค้ด\\Project-Bagery\\66022380.csproj",
         "projectName": "66022380",
-        "projectPath": "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\Project-Bagery\\66022380.csproj",
-        "packagesPath": "C:\\Users\\Annie\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Annie\\Downloads\\66022380-CRUD ครบแล้ว\\Project-Bagery\\obj\\",
+        "projectPath": "C:\\Users\\thana\\Downloads\\โค้ด\\Project-Bagery\\66022380.csproj",
+        "packagesPath": "C:\\Users\\thana\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\thana\\Downloads\\โค้ด\\Project-Bagery\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Annie\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\thana\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -84,7 +84,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.104/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.102/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
