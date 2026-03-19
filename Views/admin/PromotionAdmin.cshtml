@@ -1,0 +1,660 @@
+@using _66022380.Models
+@using _66022380.Models.Db
+@model AdminPromotionViewModel
+
+@{
+    ViewBag.Title = "จัดการโปรโมชั่น";
+    ViewBag.PageTitle = "จัดการโปรโมชั่น";
+    Layout = "_AdminLayout";
+
+    string PromoTypeText(string discountType) => discountType == "Percent" ? "%" : "บาท";
+}
+
+<style>
+    .promo-shell {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .promo-card {
+        background: #fff;
+        border: 1px solid #e9eef5;
+        border-radius: 26px;
+        padding: 1.5rem;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.05);
+    }
+
+    .promo-hero {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #111827 0%, #4c1d95 55%, #f97316 140%);
+        color: #fff;
+    }
+
+    .promo-hero::before,
+    .promo-hero::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .promo-hero::before {
+        width: 220px;
+        height: 220px;
+        top: -70px;
+        right: -40px;
+    }
+
+    .promo-hero::after {
+        width: 150px;
+        height: 150px;
+        left: 12%;
+        bottom: -65px;
+    }
+
+    .promo-hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .promo-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        background: rgba(249,115,22,0.16);
+        color: #fed7aa;
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .promo-title {
+        margin: 1rem 0 0.7rem;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        line-height: 0.98;
+    }
+
+    .promo-copy {
+        max-width: 720px;
+        color: rgba(255,255,255,0.8);
+        line-height: 1.75;
+        margin: 0;
+        font-size: 0.96rem;
+    }
+
+    .promo-side {
+        padding: 1.15rem;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.09);
+        backdrop-filter: blur(10px);
+    }
+
+    .promo-side-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .promo-side-value {
+        margin-top: 0.45rem;
+        font-size: 2rem;
+        font-weight: 900;
+    }
+
+    .promo-side-copy {
+        margin-top: 0.35rem;
+        color: rgba(255,255,255,0.76);
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+
+    .promo-alert {
+        padding: 0.9rem 1rem;
+        border-radius: 14px;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .promo-alert.success {
+        background: #ecfdf3;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .promo-alert.error {
+        background: #fff1f2;
+        color: #be123c;
+        border: 1px solid #fecdd3;
+    }
+
+    .promo-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 0.85fr);
+        gap: 1rem;
+    }
+
+    .section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .section-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.15rem;
+        font-weight: 800;
+    }
+
+    .section-copy {
+        margin: 0.35rem 0 0;
+        color: #64748b;
+        font-size: 0.92rem;
+    }
+
+    .promo-btn {
+        border: none;
+        border-radius: 14px;
+        padding: 0.82rem 1.1rem;
+        font-size: 0.92rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .promo-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .promo-btn.primary {
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(249,115,22,0.2);
+    }
+
+    .promo-btn.secondary {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .promo-btn.ghost {
+        background: #fff;
+        color: #475569;
+        border: 1px solid #dbe3ee;
+    }
+
+    .promo-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .promo-item {
+        padding: 1.15rem;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #fff, #f8fafc);
+        border: 1px solid #e7edf5;
+    }
+
+    .promo-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        align-items: flex-start;
+    }
+
+    .promo-name {
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    .promo-desc {
+        margin-top: 0.4rem;
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.7;
+    }
+
+    .promo-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.8rem;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #c2410c;
+        font-size: 0.82rem;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .promo-stats {
+        margin-top: 0.95rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    .promo-stat {
+        padding: 0.8rem 0.85rem;
+        border-radius: 16px;
+        background: #fff;
+        border: 1px solid #edf2f7;
+    }
+
+    .promo-stat-label {
+        color: #94a3b8;
+        font-size: 0.74rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .promo-stat-value {
+        margin-top: 0.35rem;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    .form-grid .full {
+        grid-column: 1 / -1;
+    }
+
+    .field-label {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: #475569;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .promo-input,
+    .promo-select,
+    .promo-textarea {
+        width: 100%;
+        border: 1px solid #dbe3ee;
+        border-radius: 14px;
+        padding: 0.82rem 0.95rem;
+        font-size: 0.94rem;
+        color: #0f172a;
+        background: #fff;
+    }
+
+    .promo-input:focus,
+    .promo-select:focus,
+    .promo-textarea:focus {
+        outline: none;
+        border-color: #f97316;
+        box-shadow: 0 0 0 4px rgba(249,115,22,0.12);
+    }
+
+    .gift-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .gift-users {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .gift-user {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 18px;
+        background: #f8fafc;
+        border: 1px solid #e5edf5;
+    }
+
+    .gift-user-name {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .gift-user-meta {
+        margin-top: 0.25rem;
+        color: #64748b;
+        font-size: 0.88rem;
+    }
+
+    .gift-actions {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .pagination-bar {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .pagination-status {
+        color: #64748b;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .empty-state {
+        padding: 2rem;
+        border-radius: 18px;
+        text-align: center;
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px dashed #cbd5e1;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 1100px) {
+        .promo-grid,
+        .promo-hero-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .promo-card {
+            padding: 1rem;
+        }
+
+        .form-grid,
+        .promo-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid .full {
+            grid-column: auto;
+        }
+
+        .gift-user,
+        .gift-toolbar,
+        .pagination-bar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+
+<div class="promo-shell">
+    <section class="promo-card promo-hero">
+        <div class="promo-hero-grid">
+            <div>
+                <div class="promo-kicker"><i class="fas fa-stars"></i> Promotion Center</div>
+                <h2 class="promo-title">โปรโมชั่นและการแจกสิทธิ์ให้สมาชิก</h2>
+                <p class="promo-copy">จัดการโปรโมชั่นในระบบได้จากหน้านี้ทั้งหมด เพิ่มส่วนลดแบบเปอร์เซ็นต์หรือจำนวนเงินบาท และแจกสิทธิ์ให้ลูกค้าเป็นรายคนหรือทุกคนในระบบได้ทันที</p>
+            </div>
+            <div class="promo-side">
+                <div class="promo-side-label">โปรโมชั่นทั้งหมด</div>
+                <div class="promo-side-value">@Model.Promotions.Count รายการ</div>
+                <div class="promo-side-copy">มีสมาชิกในระบบ @Model.Users.Count คน และสามารถแจกโปรทีละคนหรือแบบทั้งระบบได้ในส่วนด้านล่าง</div>
+            </div>
+        </div>
+    </section>
+
+    @if (TempData["PromotionSuccess"] != null)
+    {
+        <div class="promo-alert success">@TempData["PromotionSuccess"]</div>
+    }
+
+    @if (TempData["PromotionError"] != null)
+    {
+        <div class="promo-alert error">@TempData["PromotionError"]</div>
+    }
+
+    <section class="promo-grid">
+        <div class="promo-card">
+            <div class="section-head">
+                <div>
+                    <h3 class="section-title">โปรโมชั่นในระบบ</h3>
+                    <p class="section-copy">ดูรายละเอียดส่วนลดและจำนวนคนที่ได้รับ/ใช้โปรแต่ละรายการ</p>
+                </div>
+            </div>
+
+            @if (Model.Promotions.Any())
+            {
+                <div class="promo-list">
+                    @foreach (var promo in Model.Promotions)
+                    {
+                        var giftedCount = Model.PromotionGiftCounts.TryGetValue(promo.PromotionId, out var assigned) ? assigned : 0;
+                        var usedCount = Model.PromotionUsageCounts.TryGetValue(promo.PromotionId, out var used) ? used : 0;
+                        <div class="promo-item">
+                            <div class="promo-top">
+                                <div>
+                                    <div class="promo-name">@promo.PromotionName</div>
+                                    <div class="promo-desc">@(string.IsNullOrWhiteSpace(promo.Description) ? "ยังไม่มีรายละเอียดโปรโมชั่น" : promo.Description)</div>
+                                </div>
+                                <div class="promo-badge">ลด @promo.DiscountValue.ToString("0.##") @PromoTypeText(promo.DiscountType)</div>
+                            </div>
+
+                            <div class="promo-stats">
+                                <div class="promo-stat">
+                                    <div class="promo-stat-label">Promotion ID</div>
+                                    <div class="promo-stat-value">#@promo.PromotionId</div>
+                                </div>
+                                <div class="promo-stat">
+                                    <div class="promo-stat-label">แจกแล้ว</div>
+                                    <div class="promo-stat-value">@giftedCount คน</div>
+                                </div>
+                                <div class="promo-stat">
+                                    <div class="promo-stat-label">ถูกใช้แล้ว</div>
+                                    <div class="promo-stat-value">@usedCount คน</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">ยังไม่มีโปรโมชั่นในระบบ เริ่มจากฟอร์มด้านขวาเพื่อสร้างโปรโมชั่นแรกได้เลย</div>
+            }
+        </div>
+
+        <div class="promo-card">
+            <div class="section-head">
+                <div>
+                    <h3 class="section-title">เพิ่มโปรโมชั่น</h3>
+                    <p class="section-copy">เลือกรูปแบบส่วนลดได้ว่าจะเป็นเปอร์เซ็นต์หรือจำนวนเงินบาท</p>
+                </div>
+            </div>
+
+            <form asp-action="SavePromotion" asp-controller="Account" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="promotionId" value="0" />
+
+                <div class="form-grid">
+                    <div class="full">
+                        <label class="field-label">ชื่อโปรโมชั่น</label>
+                        <input class="promo-input" type="text" name="promotionName" required />
+                    </div>
+                    <div>
+                        <label class="field-label">ประเภทส่วนลด</label>
+                        <select class="promo-select" name="discountType" required>
+                            <option value="Percent">เปอร์เซ็นต์ (%)</option>
+                            <option value="Baht">จำนวนเงินบาท</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">มูลค่าส่วนลด</label>
+                        <input class="promo-input" type="number" name="discountValue" min="1" step="0.01" required />
+                    </div>
+                    <div class="full">
+                        <label class="field-label">รายละเอียด</label>
+                        <textarea class="promo-textarea" name="description" rows="4"></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <button type="submit" class="promo-btn primary">บันทึกโปรโมชั่น</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="promo-card">
+        <div class="section-head">
+            <div>
+                <h3 class="section-title">แจกโปรโมชั่นให้สมาชิก</h3>
+                <p class="section-copy">แสดงรายชื่อครั้งละ 7 คน ถ้ามากกว่านั้นสามารถกดดูหน้าถัดไปได้ หรือเลือกแจกให้ทุกคนในระบบในครั้งเดียว</p>
+            </div>
+        </div>
+
+        @if (Model.Promotions.Any() && Model.Users.Any())
+        {
+            <div class="gift-toolbar">
+                <div style="min-width: 280px;">
+                    <label class="field-label">เลือกโปรโมชั่นที่ต้องการแจก</label>
+                    <select id="giftPromotionSelect" class="promo-select">
+                        @foreach (var promo in Model.Promotions)
+                        {
+                            <option value="@promo.PromotionId">@promo.PromotionName - ลด @promo.DiscountValue.ToString("0.##") @PromoTypeText(promo.DiscountType)</option>
+                        }
+                    </select>
+                </div>
+                <form asp-action="GiftPromotionToAll" asp-controller="Account" method="post" onsubmit="return syncGiftPromotionForAll();">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="giftPromotionAllInput" name="promotionId" value="0" />
+                    <button type="submit" class="promo-btn primary">กิ๊ฟให้ทุกคน</button>
+                </form>
+            </div>
+
+            <div id="giftUsersList" class="gift-users">
+                @foreach (var user in Model.Users)
+                {
+                    <div class="gift-user gift-user-row">
+                        <div>
+                            <div class="gift-user-name">@user.Username</div>
+                            <div class="gift-user-meta">User ID: @user.UserId | Email: @(string.IsNullOrWhiteSpace(user.Email) ? "-" : user.Email)</div>
+                        </div>
+                        <div class="gift-actions">
+                            <form asp-action="GiftPromotion" asp-controller="Account" method="post" onsubmit="return syncGiftPromotionForUser(this);">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="promotionId" value="0" class="gift-promotion-id-input" />
+                                <input type="hidden" name="userId" value="@user.UserId" />
+                                <button type="submit" class="promo-btn secondary">กิ๊ฟให้คนนี้</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="pagination-bar">
+                <div id="giftPaginationStatus" class="pagination-status">หน้า 1 / 1</div>
+                <div class="gift-actions">
+                    <button id="giftPrevBtn" type="button" class="promo-btn ghost">ย้อนกลับ</button>
+                    <button id="giftNextBtn" type="button" class="promo-btn ghost">หน้าถัดไป</button>
+                </div>
+            </div>
+        }
+        else if (!Model.Promotions.Any())
+        {
+            <div class="empty-state">ยังไม่มีโปรโมชั่นสำหรับแจก กรุณาเพิ่มโปรโมชั่นก่อน</div>
+        }
+        else
+        {
+            <div class="empty-state">ยังไม่มีสมาชิกในระบบสำหรับรับโปรโมชั่น</div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        function syncGiftPromotionForUser(form) {
+            const promotionId = document.getElementById('giftPromotionSelect')?.value || '0';
+            const input = form.querySelector('.gift-promotion-id-input');
+            if (input) input.value = promotionId;
+            return promotionId !== '0';
+        }
+
+        function syncGiftPromotionForAll() {
+            const promotionId = document.getElementById('giftPromotionSelect')?.value || '0';
+            const input = document.getElementById('giftPromotionAllInput');
+            if (input) input.value = promotionId;
+            return promotionId !== '0' && confirm('ยืนยันการกิ๊ฟโปรโมชั่นนี้ให้ผู้ใช้ทุกคนใช่หรือไม่?');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const rows = Array.from(document.querySelectorAll('.gift-user-row'));
+            const prevBtn = document.getElementById('giftPrevBtn');
+            const nextBtn = document.getElementById('giftNextBtn');
+            const status = document.getElementById('giftPaginationStatus');
+            const pageSize = 7;
+            let currentPage = 1;
+
+            function renderGiftUsers() {
+                if (!rows.length) return;
+
+                const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                rows.forEach(row => row.style.display = 'none');
+
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, rows.length);
+                rows.slice(startIndex, endIndex).forEach(row => row.style.display = 'flex');
+
+                if (status) {
+                    status.textContent = `แสดง ${startIndex + 1}-${endIndex} จาก ${rows.length} คน | หน้า ${currentPage} / ${totalPages}`;
+                }
+
+                if (prevBtn) prevBtn.disabled = currentPage === 1;
+                if (nextBtn) nextBtn.disabled = currentPage === totalPages;
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function () {
+                    if (currentPage > 1) {
+                        currentPage -= 1;
+                        renderGiftUsers();
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function () {
+                    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+                    if (currentPage < totalPages) {
+                        currentPage += 1;
+                        renderGiftUsers();
+                    }
+                });
+            }
+
+            renderGiftUsers();
+        });
+    </script>
+}

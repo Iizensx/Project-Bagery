@@ -4,248 +4,723 @@
     ViewBag.Title = "จัดการออเดอร์";
     ViewBag.PageTitle = "จัดการออเดอร์";
     Layout = "_AdminLayout";
+
+    var totalOrders = Model.Count;
+    var pendingOrders = Model.Count(o => o.Status == "Pending");
+    var paidOrders = Model.Count(o => o.Status == "Paid");
+    var preparingOrders = Model.Count(o => o.Status == "Preparing");
+    var shippedOrders = Model.Count(o => o.Status == "Shipped");
+    var completedOrders = Model.Count(o => o.Status == "Completed");
+    var pendingVerifyOrders = Model.Count(o => o.PaymentStatus == "PendingVerify");
+    var totalRevenue = Model
+        .Where(o => o.Status == "Paid" || o.Status == "Preparing" || o.Status == "Shipped" || o.Status == "Completed")
+        .Sum(o => o.TotalAmount ?? 0);
+
+    string OrderStatusClass(string? status) => status switch
+    {
+        "Pending" => "warning",
+        "Paid" => "success",
+        "Preparing" => "info",
+        "Shipped" => "primary",
+        "Completed" => "dark",
+        "Cancelled" => "danger",
+        _ => "muted"
+    };
+
+    string PaymentStatusClass(string? status) => status switch
+    {
+        "Paid" => "success",
+        "PendingVerify" => "warning",
+        "Pending" => "muted",
+        _ => "muted"
+    };
 }
 
-<div class="dashboard-card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 class="dashboard-card-title" style="margin:0;">
-            <i class="fas fa-shopping-bag"></i> รายการออเดอร์ทั้งหมด
-        </h3>
-        <span style="font-size:13px; color:#888;">
-            อัปเดตล่าสุด: <span id="lastUpdate"></span>
-        </span>
-    </div>
-
-    <div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
-        <button class="filter-btn active" onclick="filterOrders('all', this)">ทั้งหมด</button>
-        <button class="filter-btn pending" onclick="filterOrders('Pending', this)">Pending</button>
-        <button class="filter-btn paid" onclick="filterOrders('Paid', this)">Paid</button>
-        <button class="filter-btn preparing" onclick="filterOrders('Preparing', this)">Preparing</button>
-        <button class="filter-btn shipped" onclick="filterOrders('Shipped', this)">Shipped</button>
-        <button class="filter-btn completed" onclick="filterOrders('Completed', this)">Completed</button>
-        <button class="filter-btn cancelled" onclick="filterOrders('Cancelled', this)">Cancelled</button>
-    </div>
-
-    <div style="margin-bottom:20px;">
-        <input type="text" id="searchInput" class="form-control"     placeholder="🔍 ค้นหา Order ID หรือชื่อลูกค้า..."
-               oninput="searchOrders()" />
-    </div>
-
-    <table class="table table-hover" id="orderTable">
-        <thead>
-            <tr>
-                <th>Order ID</th>
-                <th>ลูกค้า</th>
-                <th>รายการ</th>
-                <th>ยอดรวม</th>
-                <th>สถานะออเดอร์</th>
-                <th>สถานะชำระ</th>
-                <th>สลิป</th>
-                <th>การจัดการ</th>
-            </tr>
-        </thead>
-        <tbody id="orderBody">
-            @foreach (var order in Model)
-            {
-                <tr data-status="@order.Status" data-id="ORD-@order.OrderId" data-customer="@order.User?.Username">
-                    <td><strong>ORD-@order.OrderId</strong></td>
-                    <td>@(order.User?.Username ?? "-")</td>
-                    <td>
-                        <span style="font-size:12px; color:#555;">
-                            @string.Join(", ", order.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}"))
-                        </span>
-                    </td>
-                    <td>฿@order.TotalAmount</td>
-                    <td>
-                        @{
-                            var statusClass = order.Status switch
-                            {
-                                "Paid" => "bg-success",
-                                "Preparing" => "bg-info",
-                                "Pending" => "bg-warning text-dark",
-                                "Shipped" => "bg-primary",
-                                "Completed" => "bg-dark",
-                                "Cancelled" => "bg-danger",
-                                _ => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @statusClass">@order.Status</span>
-                    </td>
-                    <td>
-                        @{
-                            var payClass = order.PaymentStatus switch
-                            {
-                                "Paid" => "bg-success",
-                                "PendingVerify" => "bg-warning text-dark",
-                                _ => "bg-secondary"
-                            };
-                        }
-                        <span class="badge @payClass">@(order.PaymentStatus ?? "Pending")</span>
-                    </td>
-                    <td>
-                        @if (!string.IsNullOrEmpty(order.SlipImagePath))
-                        {
-                            <a href="@order.SlipImagePath" target="_blank">
-                                <img src="@order.SlipImagePath"
-                                     style="width:50px;height:50px;object-fit:cover;border-radius:8px;border:1px solid #eee;">
-                            </a>
-                        }
-                        else
-                        {
-                            <span style="color:#aaa; font-size:12px;">ยังไม่มี</span>
-                        }
-                    </td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary"                         onclick="viewOrder(@order.OrderId)">
-                            <i class="fas fa-eye"></i> ดู
-                        </button>
-
-                        @if (order.PaymentStatus == "PendingVerify")
-                        {
-                            <button class="btn btn-sm btn-success"                     style="border-radius:6px; padding:4px 10px;"
-                                    onclick="confirmPayment(@order.OrderId, this)">
-                                ยืนยันชำระ
-                            </button>
-                        }
-                        else if (order.Status == "Paid")
-                        {
-                            <button class="btn btn-sm"
-                                    style="background:#6c63ff;color:#fff;border:none;border-radius:6px;padding:4px 10px;"
-                                    onclick="acceptOrder(this, @order.OrderId)">
-                                รับออเดอร์
-                            </button>
-                        }
-                        else if (order.Status == "Preparing")
-                        {
-                            <button class="btn btn-sm"
-                                    style="background:#17a2b8;color:#fff;border:none;border-radius:6px;padding:4px 10px;"
-                                    onclick="shipOrder(this, @order.OrderId)">
-                                จัดส่งสินค้า
-                            </button>
-                        }
-                    </td>
-                </tr>
-            }
-        </tbody>
-</div>
-
-@section Styles {
 <style>
+    .order-shell {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .hero-card {
+        position: relative;
+        overflow: hidden;
+        padding: 1.8rem;
+        border-radius: 28px;
+        background: linear-gradient(135deg, #111827 0%, #1e293b 48%, #2563eb 130%);
+        color: #fff;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    .hero-card::before,
+    .hero-card::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+    }
+
+    .hero-card::before {
+        width: 210px;
+        height: 210px;
+        top: -60px;
+        right: -30px;
+    }
+
+    .hero-card::after {
+        width: 150px;
+        height: 150px;
+        left: 12%;
+        bottom: -60px;
+    }
+
+    .hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        background: rgba(59,130,246,0.16);
+        color: #dbeafe;
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .hero-title {
+        margin: 1rem 0 0.7rem;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        line-height: 0.98;
+    }
+
+    .hero-copy {
+        max-width: 760px;
+        color: rgba(255,255,255,0.78);
+        line-height: 1.75;
+        font-size: 0.96rem;
+        margin: 0;
+    }
+
+    .hero-panel {
+        padding: 1.15rem;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    .hero-panel-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .hero-panel-value {
+        margin-top: 0.45rem;
+        font-size: 1.95rem;
+        font-weight: 900;
+    }
+
+    .hero-panel-copy {
+        margin-top: 0.35rem;
+        color: rgba(255,255,255,0.75);
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .stat-card,
+    .content-card {
+        background: #fff;
+        border-radius: 24px;
+        border: 1px solid #e9eef5;
+        box-shadow: 0 18px 46px rgba(15, 23, 42, 0.05);
+    }
+
+    .stat-card {
+        padding: 1.25rem;
+    }
+
+    .stat-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        align-items: start;
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        font-size: 1.2rem;
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+        margin-top: 0.55rem;
+        color: #0f172a;
+        font-size: 2rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .stat-sub {
+        margin-top: 0.35rem;
+        color: #94a3b8;
+        font-size: 0.88rem;
+    }
+
+    .content-card {
+        padding: 1.35rem;
+    }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .card-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.12rem;
+        font-weight: 800;
+    }
+
+    .card-copy {
+        margin: 0.35rem 0 0;
+        color: #64748b;
+        font-size: 0.92rem;
+    }
+
+    .mini-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.72rem;
+        border-radius: 999px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+
+    .filter-wrap {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
     .filter-btn {
-        padding: 6px 16px;
-        border: 1.5px solid #ddd;
-        border-radius: 20px;
+        padding: 0.62rem 1rem;
+        border: 1px solid #dbe3ee;
+        border-radius: 999px;
         background: #fff;
         cursor: pointer;
-        font-size: 13px;
-        transition: all 0.2s;
-        font-weight: 500;
+        font-size: 0.85rem;
+        font-weight: 800;
+        transition: all .18s ease;
     }
 
     .filter-btn.active {
-        background: #4e54c8;
+        background: #1d4ed8;
+        border-color: #1d4ed8;
         color: #fff;
-        border-color: #4e54c8;
+        box-shadow: 0 10px 18px rgba(29,78,216,0.16);
     }
 
-    .filter-btn.pending {
-        border-color: #ffc107;
-        color: #856404;
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
     }
 
-    .filter-btn.pending.active {
-        background: #ffc107;
+    .search-input {
+        width: 100%;
+        max-width: 360px;
+        border: 1px solid #dbe3ee;
+        border-radius: 14px;
+        padding: 0.82rem 0.95rem;
+        font-size: 0.94rem;
+        color: #0f172a;
+        background: #fff;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+    }
+
+    .update-text {
+        color: #94a3b8;
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    .order-table-wrap {
+        overflow-x: auto;
+    }
+
+    .order-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.85rem;
+    }
+
+    .order-table th {
+        padding: 0 0.75rem 0.35rem;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .order-row {
+        background: #f8fafc;
+        box-shadow: inset 0 0 0 1px #e5edf5;
+    }
+
+    .order-row td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .order-row td:first-child {
+        border-top-left-radius: 18px;
+        border-bottom-left-radius: 18px;
+    }
+
+    .order-row td:last-child {
+        border-top-right-radius: 18px;
+        border-bottom-right-radius: 18px;
+    }
+
+    .order-code {
+        color: #0f172a;
+        font-weight: 900;
+    }
+
+    .customer-name {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .item-list {
+        color: #64748b;
+        font-size: 0.88rem;
+        line-height: 1.6;
+        min-width: 220px;
+    }
+
+    .money {
+        color: #0f172a;
+        font-weight: 900;
+        white-space: nowrap;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .status-chip.warning { background: #fff7ed; color: #c2410c; }
+    .status-chip.success { background: #ecfdf3; color: #15803d; }
+    .status-chip.info { background: #eff6ff; color: #2563eb; }
+    .status-chip.primary { background: #eef2ff; color: #4338ca; }
+    .status-chip.dark { background: #e5e7eb; color: #111827; }
+    .status-chip.danger { background: #fff1f2; color: #be123c; }
+    .status-chip.muted { background: #f1f5f9; color: #475569; }
+
+    .slip-thumb {
+        width: 54px;
+        height: 54px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 10px 18px rgba(15,23,42,0.08);
+    }
+
+    .action-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        min-width: 180px;
+    }
+
+    .order-btn {
+        border: none;
+        border-radius: 12px;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.83rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease;
+        white-space: nowrap;
+    }
+
+    .order-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .order-btn.primary {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .order-btn.success {
+        background: #16a34a;
         color: #fff;
-        border-color: #ffc107;
+        box-shadow: 0 10px 18px rgba(34,197,94,0.16);
     }
 
-    .filter-btn.paid {
-        border-color: #28a745;
-        color: #155724;
-    }
-
-    .filter-btn.paid.active {
-        background: #28a745;
+    .order-btn.indigo {
+        background: #4f46e5;
         color: #fff;
-        border-color: #28a745;
+        box-shadow: 0 10px 18px rgba(79,70,229,0.16);
     }
 
-    .filter-btn.preparing {
-        border-color: #17a2b8;
-        color: #0c5460;
-    }
-
-    .filter-btn.preparing.active {
-        background: #17a2b8;
+    .order-btn.info {
+        background: #0891b2;
         color: #fff;
-        border-color: #17a2b8;
+        box-shadow: 0 10px 18px rgba(8,145,178,0.16);
     }
 
-    .filter-btn.shipped {
-        border-color: #007bff;
-        color: #004085;
+    .quick-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
     }
 
-    .filter-btn.shipped.active {
-        background: #007bff;
-        color: #fff;
-        border-color: #007bff;
+    .quick-card {
+        padding: 1.1rem;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #fff, #f8fafc);
+        border: 1px solid #e9eef5;
     }
 
-    .filter-btn.cancelled {
-        border-color: #dc3545;
-        color: #721c24;
+    .quick-kicker {
+        color: #2563eb;
+        font-size: 0.76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    .filter-btn.completed {
-        border-color: #343a40;
-        color: #343a40;
+    .quick-card h4 {
+        margin: 0.55rem 0 0.45rem;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
     }
 
-    .filter-btn.cancelled.active {
-        background: #dc3545;
-        color: #fff;
-        border-color: #dc3545;
+    .quick-card p {
+        margin: 0;
+        color: #64748b;
+        line-height: 1.7;
+        font-size: 0.9rem;
     }
 
-    .filter-btn.completed.active {
-        background: #343a40;
-        color: #fff;
-        border-color: #343a40;
+    .empty-cell {
+        color: #94a3b8;
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    #orderModal .modal-content {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15,23,42,0.18);
+    }
+
+    #orderModal .modal-header {
+        border-bottom: none;
+        background: linear-gradient(180deg, #eff6ff, #fff);
+        padding: 1.2rem 1.3rem 0.7rem;
     }
 
     #orderModal .modal-body {
-        max-height: 70vh;
+        max-height: 72vh;
         overflow-y: auto;
+        padding: 0.6rem 1.3rem 1.3rem;
     }
-    
+
     .order-detail-item {
         display: flex;
         justify-content: space-between;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #eee;
+        gap: 1rem;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid #eef2f7;
     }
-    
+
     .slip-image-container {
         text-align: center;
         margin: 1rem 0;
     }
-    
+
     .slip-image-container img {
         max-width: 100%;
-        max-height: 400px;
-        border-radius: 8px;
-        border: 1px solid #ddd;
+        max-height: 420px;
+        border-radius: 12px;
+        border: 1px solid #dbe3ee;
+    }
+
+    @@media (max-width: 1200px) {
+        .stats-grid,
+        .quick-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .hero-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .stats-grid,
+        .quick-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-card,
+        .stat-card,
+        .content-card {
+            padding: 1rem;
+        }
+
+        .toolbar {
+            align-items: flex-start;
+        }
     }
 </style>
-}
 
-<!-- Modal for Order Details -->
+<div class="order-shell">
+    <section class="hero-card">
+        <div class="hero-grid">
+            <div>
+                <div class="hero-kicker"><i class="fas fa-layer-group"></i> Order Control Center</div>
+                <h2 class="hero-title">จัดการออเดอร์ทั้งหมดในระบบ</h2>
+                <p class="hero-copy">ดูสถานะออเดอร์แบบรวม, เช็กสลิปที่รอยืนยัน, กดรับออเดอร์, เปลี่ยนเป็นกำลังเตรียม และอัปเดตเป็นจัดส่งจากหน้าเดียวได้ทันที เหมาะสำหรับใช้เป็นหน้าหลักของฝั่งแอดมินระหว่างทำงานจริง</p>
+            </div>
+            <div class="hero-panel">
+                <div class="hero-panel-label">ยอดรวมออเดอร์ที่มีมูลค่าแล้ว</div>
+                <div class="hero-panel-value">@totalRevenue.ToString("N2") บาท</div>
+                <div class="hero-panel-copy">ตอนนี้มีออเดอร์ทั้งหมด @totalOrders รายการ และมีรายการรอตรวจสลิปอีก @pendingVerifyOrders รายการ</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-top">
+                <div>
+                    <div class="stat-label">ออเดอร์ทั้งหมด</div>
+                    <div class="stat-value">@totalOrders</div>
+                    <div class="stat-sub">รายการในระบบทั้งหมด</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-bag-shopping"></i></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div>
+                    <div class="stat-label">รอชำระ / รอตรวจ</div>
+                    <div class="stat-value">@pendingOrders / @pendingVerifyOrders</div>
+                    <div class="stat-sub">งานที่ควรรีบเช็กก่อนเดินออเดอร์</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-wallet"></i></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div>
+                    <div class="stat-label">กำลังเตรียม / จัดส่ง</div>
+                    <div class="stat-value">@preparingOrders / @shippedOrders</div>
+                    <div class="stat-sub">งานที่อยู่ใน flow fulfillment</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-truck-fast"></i></div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-top">
+                <div>
+                    <div class="stat-label">ชำระแล้ว / ปิดงาน</div>
+                    <div class="stat-value">@paidOrders / @completedOrders</div>
+                    <div class="stat-sub">ออเดอร์ที่ผ่านการชำระและเสร็จสิ้น</div>
+                </div>
+                <div class="stat-icon"><i class="fas fa-circle-check"></i></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-card">
+        <div class="card-head">
+            <div>
+                <h3 class="card-title">รายการออเดอร์ทั้งหมด</h3>
+                <p class="card-copy">ค้นหาและกรองตามสถานะเพื่อจัดการออเดอร์ได้เร็วขึ้น</p>
+            </div>
+            <span class="mini-pill">Live Update <span id="lastUpdate" style="margin-left:6px;"></span></span>
+        </div>
+
+        <div class="filter-wrap">
+            <button class="filter-btn active" onclick="filterOrders('all', this)">ทั้งหมด</button>
+            <button class="filter-btn" onclick="filterOrders('Pending', this)">Pending</button>
+            <button class="filter-btn" onclick="filterOrders('Paid', this)">Paid</button>
+            <button class="filter-btn" onclick="filterOrders('Preparing', this)">Preparing</button>
+            <button class="filter-btn" onclick="filterOrders('Shipped', this)">Shipped</button>
+            <button class="filter-btn" onclick="filterOrders('Completed', this)">Completed</button>
+            <button class="filter-btn" onclick="filterOrders('Cancelled', this)">Cancelled</button>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" id="searchInput" class="search-input" placeholder="ค้นหา Order ID หรือชื่อลูกค้า..." oninput="searchOrders()" />
+            <div class="update-text">อัปเดตล่าสุดโดยอิงเวลาบนเครื่องแอดมิน</div>
+        </div>
+
+        <div class="order-table-wrap">
+            <table class="order-table" id="orderTable">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>ลูกค้า</th>
+                        <th>รายการสินค้า</th>
+                        <th>ยอดรวม</th>
+                        <th>สถานะออเดอร์</th>
+                        <th>สถานะชำระเงิน</th>
+                        <th>สลิป</th>
+                        <th>จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="orderBody">
+                    @foreach (var order in Model)
+                    {
+                        <tr class="order-row"
+                            data-status="@order.Status"
+                            data-id="ORD-@order.OrderId"
+                            data-customer="@(order.User?.Username ?? "")">
+                            <td><div class="order-code">ORD-@order.OrderId</div></td>
+                            <td><div class="customer-name">@(order.User?.Username ?? "-")</div></td>
+                            <td>
+                                <div class="item-list">
+                                    @string.Join(", ", order.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}"))
+                                </div>
+                            </td>
+                            <td><div class="money">@((order.TotalAmount ?? 0).ToString("N2")) บาท</div></td>
+                            <td><span class="status-chip @OrderStatusClass(order.Status)">@order.Status</span></td>
+                            <td><span class="status-chip @PaymentStatusClass(order.PaymentStatus)">@((order.PaymentStatus ?? "Pending"))</span></td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(order.SlipImagePath))
+                                {
+                                    <a href="@order.SlipImagePath" target="_blank">
+                                        <img src="@order.SlipImagePath" alt="Slip" class="slip-thumb" />
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="empty-cell">ยังไม่มี</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-group">
+                                    <button class="order-btn primary" onclick="viewOrder(@order.OrderId)">
+                                        <i class="fas fa-eye"></i> ดู
+                                    </button>
+
+                                    @if (order.PaymentStatus == "PendingVerify")
+                                    {
+                                        <button class="order-btn success" onclick="confirmPayment(@order.OrderId, this)">
+                                            ยืนยันชำระ
+                                        </button>
+                                    }
+                                    else if (order.Status == "Paid")
+                                    {
+                                        <button class="order-btn indigo" onclick="acceptOrder(this, @order.OrderId)">
+                                            รับออเดอร์
+                                        </button>
+                                    }
+                                    else if (order.Status == "Preparing")
+                                    {
+                                        <button class="order-btn info" onclick="shipOrder(this, @order.OrderId)">
+                                            จัดส่งสินค้า
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="quick-grid">
+        <div class="quick-card">
+            <div class="quick-kicker">Step 1</div>
+            <h4>ตรวจสลิปให้เร็ว</h4>
+            <p>ออเดอร์ที่มี `PendingVerify` คือคอขวดสำคัญ ถ้ายืนยันช้า flow ทั้งร้านจะช้าตามไปด้วย</p>
+        </div>
+        <div class="quick-card">
+            <div class="quick-kicker">Step 2</div>
+            <h4>กดรับออเดอร์หลังชำระ</h4>
+            <p>เมื่อออเดอร์เป็น `Paid` แล้ว ให้กดรับเพื่อเปลี่ยนเป็น `Preparing` และส่งงานให้ฝั่งเตรียมสินค้า</p>
+        </div>
+        <div class="quick-card">
+            <div class="quick-kicker">Step 3</div>
+            <h4>ปิดงานอย่างต่อเนื่อง</h4>
+            <p>หลังจัดส่งแล้ว ลูกค้าจะเห็นสถานะในหน้า Delivery และสามารถยืนยันรับสินค้าเพื่อย้ายเข้า history ได้</p>
+        </div>
+    </section>
+</div>
+
 <div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">รายละเอียดออเดอร์</h5>
+                <h5 class="modal-title" style="font-weight:900;color:#0f172a;">รายละเอียดออเดอร์</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="orderModalBody">
@@ -257,28 +732,40 @@
 
 @section Scripts {
 <script>
-    // Global functions for Order Management
     document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('th-TH');
 
     function filterOrders(status, btn) {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+
         document.querySelectorAll('#orderBody tr').forEach(row => {
-            row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+            const matchStatus = status === 'all' || row.dataset.status === status;
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const id = row.dataset.id?.toLowerCase() || '';
+            const customer = row.dataset.customer?.toLowerCase() || '';
+            const matchQuery = !query || id.includes(query) || customer.includes(query);
+            row.style.display = matchStatus && matchQuery ? '' : 'none';
         });
     }
 
     function searchOrders() {
-        const q = document.getElementById('searchInput').value.toLowerCase();
-        document.querySelectorAll('#orderBody tr').forEach(row => {
-            const id = row.dataset.id?.toLowerCase() || '';
-            const cust = row.dataset.customer?.toLowerCase() || '';
-            row.style.display = (id.includes(q) || cust.includes(q)) ? '' : 'none';
-        });
+        const activeBtn = document.querySelector('.filter-btn.active');
+        const activeStatus = activeBtn ? activeBtn.textContent.trim() : 'ทั้งหมด';
+        const map = {
+            'ทั้งหมด': 'all',
+            'Pending': 'Pending',
+            'Paid': 'Paid',
+            'Preparing': 'Preparing',
+            'Shipped': 'Shipped',
+            'Completed': 'Completed',
+            'Cancelled': 'Cancelled'
+        };
+        filterOrders(map[activeStatus] || 'all', activeBtn || document.querySelector('.filter-btn'));
     }
 
     async function confirmPayment(orderId, btn) {
-        if (!confirm('ยืนยันการชำระเงินออเดอร์นี้?')) return;
+        if (!confirm('ยืนยันการชำระเงินออเดอร์นี้ใช่หรือไม่?')) return;
+
         btn.disabled = true;
         btn.textContent = 'กำลังยืนยัน...';
 
@@ -292,7 +779,7 @@
 
             if (data.success) {
                 alert(data.message);
-                btn.closest('td').innerHTML = '<span style="color:green;font-weight:600;">ยืนยันแล้ว</span>';
+                location.reload();
             } else {
                 alert(data.message);
                 btn.disabled = false;
@@ -306,7 +793,7 @@
     }
 
     async function acceptOrder(btn, orderId) {
-        if (!confirm(`รับออเดอร์ ORD-${orderId}?`)) return;
+        if (!confirm(`รับออเดอร์ ORD-${orderId} ใช่หรือไม่?`)) return;
         try {
             const res = await fetch('/Account/AcceptOrder', {
                 method: 'POST',
@@ -315,7 +802,7 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert('ยอมรับออเดอร์เรียบร้อย');
+                alert('รับออเดอร์เรียบร้อย');
                 location.reload();
             } else {
                 alert(data.message);
@@ -326,7 +813,7 @@
     }
 
     async function shipOrder(btn, orderId) {
-        if (!confirm(`ยืนยันจัดส่งสินค้า ORD-${orderId}?`)) return;
+        if (!confirm(`ยืนยันจัดส่งสินค้า ORD-${orderId} ใช่หรือไม่?`)) return;
         try {
             const res = await fetch('/Account/ShipOrder', {
                 method: 'POST',
@@ -349,68 +836,47 @@
         try {
             const res = await fetch(`/Account/GetOrderDetails?orderId=${orderId}`);
             const data = await res.json();
-            
+
             if (!data.success) {
                 alert('ไม่สามารถโหลดรายละเอียดออเดอร์');
                 return;
             }
 
             let html = `
-                <div style="margin-bottom: 1.5rem;">
-                    <h6 style="color: #333; font-weight: 600; margin-bottom: 0.5rem;">ข้อมูลลูกค้า</h6>
-                    <div class="order-detail-item">
-                        <span>ชื่อ:</span>
-                        <strong>${data.customerName || '-'}</strong>
-                    </div>
-                    <div class="order-detail-item">
-                        <span>อีเมล:</span>
-                        <strong>${data.customerEmail || '-'}</strong>
-                    </div>
-                    <div class="order-detail-item">
-                        <span>เบอร์โทร:</span>
-                        <strong>${data.customerPhone || '-'}</strong>
-                    </div>
+                <div style="margin-bottom:1.4rem;">
+                    <h6 style="color:#0f172a;font-weight:900;margin-bottom:0.6rem;">ข้อมูลลูกค้า</h6>
+                    <div class="order-detail-item"><span>ชื่อ</span><strong>${data.customerName || '-'}</strong></div>
+                    <div class="order-detail-item"><span>อีเมล</span><strong>${data.customerEmail || '-'}</strong></div>
+                    <div class="order-detail-item"><span>เบอร์โทร</span><strong>${data.customerPhone || '-'}</strong></div>
                 </div>
 
-                <div style="margin-bottom: 1.5rem;">
-                    <h6 style="color: #333; font-weight: 600; margin-bottom: 0.5rem;">ข้อมูลออเดอร์</h6>
-                    <div class="order-detail-item">
-                        <span>Order ID:</span>
-                        <strong>ORD-${data.orderId}</strong>
-                    </div>
-                    <div class="order-detail-item">
-                        <span>วันที่สั่ง:</span>
-                        <strong>${data.orderDate}</strong>
-                    </div>
-                    <div class="order-detail-item">
-                        <span>สถานะออเดอร์:</span>
-                        <span class="badge ${getStatusBadge(data.status)}">${data.status}</span>
-                    </div>
-                    <div class="order-detail-item">
-                        <span>สถานะชำระ:</span>
-                        <span class="badge ${getPaymentBadge(data.paymentStatus)}">${data.paymentStatus}</span>
-                    </div>
+                <div style="margin-bottom:1.4rem;">
+                    <h6 style="color:#0f172a;font-weight:900;margin-bottom:0.6rem;">ข้อมูลออเดอร์</h6>
+                    <div class="order-detail-item"><span>Order ID</span><strong>ORD-${data.orderId}</strong></div>
+                    <div class="order-detail-item"><span>วันที่สั่ง</span><strong>${data.orderDate}</strong></div>
+                    <div class="order-detail-item"><span>สถานะออเดอร์</span><span class="status-chip ${getStatusBadge(data.status)}">${data.status}</span></div>
+                    <div class="order-detail-item"><span>สถานะชำระเงิน</span><span class="status-chip ${getPaymentBadge(data.paymentStatus)}">${data.paymentStatus}</span></div>
                 </div>
 
-                <div style="margin-bottom: 1.5rem;">
-                    <h6 style="color: #333; font-weight: 600; margin-bottom: 0.5rem;">รายการสินค้า</h6>
+                <div style="margin-bottom:1.4rem;">
+                    <h6 style="color:#0f172a;font-weight:900;margin-bottom:0.6rem;">รายการสินค้า</h6>
                     ${data.items.map(item => `
                         <div class="order-detail-item">
                             <span>${item.productName} x${item.quantity}</span>
-                            <strong>฿${(item.subtotal || 0).toLocaleString('th-TH', {minimumFractionDigits: 2})}</strong>
+                            <strong>${(item.subtotal || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท</strong>
                         </div>
                     `).join('')}
-                    <div class="order-detail-item" style="border-top: 2px solid #333; padding-top: 1rem; font-weight: 600;">
-                        <span>ยอดรวมทั้งหมด:</span>
-                        <strong style="color: #ff6b6b;">฿${(data.totalAmount || 0).toLocaleString('th-TH', {minimumFractionDigits: 2})}</strong>
+                    <div class="order-detail-item" style="border-top:2px solid #111827;padding-top:1rem;font-weight:900;">
+                        <span>ยอดรวมทั้งหมด</span>
+                        <strong style="color:#2563eb;">${(data.totalAmount || 0).toLocaleString('th-TH', { minimumFractionDigits: 2 })} บาท</strong>
                     </div>
                 </div>
             `;
 
             if (data.slipImagePath) {
                 html += `
-                    <div style="margin-bottom: 1.5rem;">
-                        <h6 style="color: #333; font-weight: 600; margin-bottom: 0.5rem;">สลิปการชำระเงิน</h6>
+                    <div style="margin-bottom:1rem;">
+                        <h6 style="color:#0f172a;font-weight:900;margin-bottom:0.6rem;">สลิปการชำระเงิน</h6>
                         <div class="slip-image-container">
                             <img src="${data.slipImagePath}" alt="Slip Image" />
                         </div>
@@ -419,8 +885,7 @@
             }
 
             document.getElementById('orderModalBody').innerHTML = html;
-            const modalEl = document.getElementById('orderModal');
-            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('orderModal')).show();
         } catch (error) {
             alert('เกิดข้อผิดพลาด: ' + error.message);
         }
@@ -428,23 +893,23 @@
 
     function getStatusBadge(status) {
         const badges = {
-            'Paid': 'bg-success',
-            'Preparing': 'bg-info',
-            'Pending': 'bg-warning text-dark',
-            'Shipped': 'bg-primary',
-            'Completed': 'bg-dark',
-            'Cancelled': 'bg-danger'
+            'Pending': 'warning',
+            'Paid': 'success',
+            'Preparing': 'info',
+            'Shipped': 'primary',
+            'Completed': 'dark',
+            'Cancelled': 'danger'
         };
-        return badges[status] || 'bg-secondary';
+        return badges[status] || 'muted';
     }
 
     function getPaymentBadge(status) {
         const badges = {
-            'Paid': 'bg-success',
-            'PendingVerify': 'bg-warning text-dark',
-            'Pending': 'bg-secondary'
+            'Paid': 'success',
+            'PendingVerify': 'warning',
+            'Pending': 'muted'
         };
-        return badges[status] || 'bg-secondary';
+        return badges[status] || 'muted';
     }
 </script>
 }

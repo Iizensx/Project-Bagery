@@ -190,6 +190,7 @@ public class AccountController : Controller
 
         var orders = _db.Orders
             .Include(o => o.Address)
+            .Include(o => o.Promotion)
             .Include(o => o.Orderdetails)
                 .ThenInclude(d => d.Product)
             .Where(o => o.UserId == userId && o.Status != "Cancelled")
@@ -239,10 +240,121 @@ public class AccountController : Controller
     }
 
     // ─── หน้า Admin ──────────────────────────────────────
-    public IActionResult Dashbordadmin() => View("~/Views/admin/Dashbordadmin.cshtml");
-    public IActionResult Stock() => View("~/Views/admin/Stock.cshtml");
+    public IActionResult Dashbordadmin()
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        var today = DateTime.Today;
+        var monthStart = new DateTime(today.Year, today.Month, 1);
+
+        var orders = _db.Orders
+            .Include(o => o.User)
+            .ToList();
+
+        var stocks = _db.Stocks
+            .Include(s => s.Category)
+            .ToList();
+
+        var paidStatuses = new[] { "Paid", "Preparing", "Shipped", "Completed" };
+
+        var model = new AdminDashboardViewModel
+        {
+            TodayRevenue = orders
+                .Where(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == today && paidStatuses.Contains(o.Status ?? ""))
+                .Sum(o => o.TotalAmount ?? 0),
+            TodayOrders = orders.Count(o => o.OrderDate.HasValue && o.OrderDate.Value.Date == today),
+            PendingVerificationOrders = orders.Count(o => o.PaymentStatus == "PendingVerify"),
+            TotalUsers = _db.Users.Count(),
+            LowStockProducts = stocks.Count(s => (s.Stock1 ?? 0) > 0 && (s.Stock1 ?? 0) <= 10),
+            OutOfStockProducts = stocks.Count(s => (s.Stock1 ?? 0) <= 0),
+            ActivePromotions = _db.Promotions.Count(),
+            CompletedOrders = orders.Count(o => o.Status == "Completed"),
+            PreparingOrders = orders.Count(o => o.Status == "Preparing"),
+            ShippedOrders = orders.Count(o => o.Status == "Shipped"),
+            MonthlyRevenue = Enumerable.Range(0, 6)
+                .Select(offset =>
+                {
+                    var targetMonth = monthStart.AddMonths(-(5 - offset));
+                    var monthOrders = orders.Where(o =>
+                        o.OrderDate.HasValue &&
+                        o.OrderDate.Value.Year == targetMonth.Year &&
+                        o.OrderDate.Value.Month == targetMonth.Month &&
+                        paidStatuses.Contains(o.Status ?? ""));
+
+                    return new AdminDashboardMonthlyRevenueItem
+                    {
+                        Label = targetMonth.ToString("MMM"),
+                        Revenue = monthOrders.Sum(o => o.TotalAmount ?? 0),
+                        Orders = monthOrders.Count()
+                    };
+                })
+                .ToList(),
+            RecentOrders = orders
+                .OrderByDescending(o => o.OrderDate)
+                .ThenByDescending(o => o.OrderId)
+                .Take(6)
+                .Select(o => new AdminDashboardRecentOrderItem
+                {
+                    OrderId = o.OrderId,
+                    CustomerName = string.IsNullOrWhiteSpace(o.User?.Username) ? "-" : o.User.Username,
+                    TotalAmount = o.TotalAmount ?? 0,
+                    Status = string.IsNullOrWhiteSpace(o.Status) ? "-" : o.Status,
+                    PaymentStatus = string.IsNullOrWhiteSpace(o.PaymentStatus) ? "-" : o.PaymentStatus,
+                    OrderDateText = o.OrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "-"
+                })
+                .ToList(),
+            LowStockItems = stocks
+                .Where(s => (s.Stock1 ?? 0) <= 10)
+                .OrderBy(s => s.Stock1 ?? 0)
+                .ThenBy(s => s.ProductName)
+                .Take(6)
+                .Select(s => new AdminDashboardLowStockItem
+                {
+                    ProductId = s.ProductId,
+                    ProductName = s.ProductName,
+                    CategoryName = s.Category?.CategoryName ?? "-",
+                    Stock = s.Stock1 ?? 0
+                })
+                .ToList(),
+            CategorySummaries = stocks
+                .GroupBy(s => s.Category?.CategoryName ?? "ไม่ระบุหมวดหมู่")
+                .Select(g => new AdminDashboardCategoryItem
+                {
+                    CategoryName = g.Key,
+                    ProductCount = g.Count(),
+                    TotalStock = g.Sum(x => x.Stock1 ?? 0)
+                })
+                .OrderByDescending(x => x.ProductCount)
+                .ToList()
+        };
+
+        return View("~/Views/admin/Dashbordadmin.cshtml", model);
+    }
+    public IActionResult Stock()
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        var model = new AdminStockViewModel
+        {
+            Categories = _db.Categories
+                .Include(c => c.Stocks)
+                .OrderBy(c => c.CategoryName)
+                .ToList(),
+            Products = _db.Stocks
+                .Include(s => s.Category)
+                .OrderBy(s => s.ProductName)
+                .ToList()
+        };
+
+        return View("~/Views/admin/Stock.cshtml", model);
+    }
     public IActionResult Order()
     {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
         var orders = _db.Orders
             .Include(o => o.User)
             .Include(o => o.Orderdetails)
@@ -251,6 +363,283 @@ public class AccountController : Controller
             .ToList();
 
         return View("~/Views/admin/Order.cshtml", orders);
+    }
+
+    public IActionResult PromotionAdmin()
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        var promotions = _db.Promotions
+            .OrderByDescending(p => p.PromotionId)
+            .ToList();
+
+        var users = _db.Users
+            .OrderBy(u => u.UserId)
+            .ToList();
+
+        var giftedCounts = _db.UserPromotions
+            .GroupBy(up => up.PromotionId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var usedCounts = _db.UserPromotions
+            .Where(up => up.IsUsed == 1)
+            .GroupBy(up => up.PromotionId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var model = new AdminPromotionViewModel
+        {
+            Promotions = promotions,
+            Users = users,
+            PromotionGiftCounts = giftedCounts,
+            PromotionUsageCounts = usedCounts
+        };
+
+        return View("~/Views/admin/PromotionAdmin.cshtml", model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SaveCategory(int categoryId, string categoryName, string? description)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            TempData["StockError"] = "กรุณากรอกชื่อหมวดหมู่";
+            return RedirectToAction("Stock");
+        }
+
+        if (categoryId > 0)
+        {
+            var category = _db.Categories.FirstOrDefault(c => c.CategoryId == categoryId);
+            if (category == null)
+            {
+                TempData["StockError"] = "ไม่พบหมวดหมู่ที่ต้องการแก้ไข";
+                return RedirectToAction("Stock");
+            }
+
+            category.CategoryName = categoryName.Trim();
+            category.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+            _db.SaveChanges();
+
+            TempData["StockSuccess"] = "อัปเดตหมวดหมู่เรียบร้อย";
+            return RedirectToAction("Stock");
+        }
+
+        _db.Categories.Add(new Category
+        {
+            CategoryName = categoryName.Trim(),
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim()
+        });
+        _db.SaveChanges();
+
+        TempData["StockSuccess"] = "เพิ่มหมวดหมู่ใหม่เรียบร้อย";
+        return RedirectToAction("Stock");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SaveStock(int productId, string productName, string? description, decimal? price, int? stock1, int? categoryId)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        if (string.IsNullOrWhiteSpace(productName))
+        {
+            TempData["StockError"] = "กรุณากรอกชื่อสินค้า";
+            return RedirectToAction("Stock");
+        }
+
+        if (categoryId == null || !_db.Categories.Any(c => c.CategoryId == categoryId))
+        {
+            TempData["StockError"] = "กรุณาเลือกหมวดหมู่สินค้าให้ถูกต้อง";
+            return RedirectToAction("Stock");
+        }
+
+        if (price == null || price < 0)
+        {
+            TempData["StockError"] = "กรุณากรอกราคาสินค้าให้ถูกต้อง";
+            return RedirectToAction("Stock");
+        }
+
+        if (stock1 == null || stock1 < 0)
+        {
+            TempData["StockError"] = "กรุณากรอกจำนวนสต๊อกให้ถูกต้อง";
+            return RedirectToAction("Stock");
+        }
+
+        if (productId > 0)
+        {
+            var product = _db.Stocks.FirstOrDefault(s => s.ProductId == productId);
+            if (product == null)
+            {
+                TempData["StockError"] = "ไม่พบสินค้าที่ต้องการแก้ไข";
+                return RedirectToAction("Stock");
+            }
+
+            product.ProductName = productName.Trim();
+            product.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+            product.Price = price;
+            product.Stock1 = stock1;
+            product.CategoryId = categoryId;
+            _db.SaveChanges();
+
+            TempData["StockSuccess"] = "อัปเดตสินค้าสำเร็จ";
+            return RedirectToAction("Stock");
+        }
+
+        _db.Stocks.Add(new Stock
+        {
+            ProductName = productName.Trim(),
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+            Price = price,
+            Stock1 = stock1,
+            CategoryId = categoryId
+        });
+        _db.SaveChanges();
+
+        TempData["StockSuccess"] = "เพิ่มสินค้าใหม่สำเร็จ";
+        return RedirectToAction("Stock");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SavePromotion(int promotionId, string promotionName, string? description, decimal? discountValue, string discountType)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        if (string.IsNullOrWhiteSpace(promotionName))
+        {
+            TempData["PromotionError"] = "กรุณากรอกชื่อโปรโมชั่น";
+            return RedirectToAction("PromotionAdmin");
+        }
+
+        if (discountValue == null || discountValue <= 0)
+        {
+            TempData["PromotionError"] = "กรุณากรอกมูลค่าส่วนลดให้ถูกต้อง";
+            return RedirectToAction("PromotionAdmin");
+        }
+
+        if (discountType != "Percent" && discountType != "Baht")
+        {
+            TempData["PromotionError"] = "กรุณาเลือกประเภทส่วนลดเป็นเปอร์เซ็นต์หรือบาท";
+            return RedirectToAction("PromotionAdmin");
+        }
+
+        if (promotionId > 0)
+        {
+            var promotion = _db.Promotions.FirstOrDefault(p => p.PromotionId == promotionId);
+            if (promotion == null)
+            {
+                TempData["PromotionError"] = "ไม่พบโปรโมชั่นที่ต้องการแก้ไข";
+                return RedirectToAction("PromotionAdmin");
+            }
+
+            promotion.PromotionName = promotionName.Trim();
+            promotion.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+            promotion.DiscountValue = discountValue.Value;
+            promotion.DiscountType = discountType;
+            _db.SaveChanges();
+
+            TempData["PromotionSuccess"] = "อัปเดตโปรโมชั่นเรียบร้อย";
+            return RedirectToAction("PromotionAdmin");
+        }
+
+        _db.Promotions.Add(new Promotion
+        {
+            PromotionName = promotionName.Trim(),
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+            DiscountValue = discountValue.Value,
+            DiscountType = discountType
+        });
+        _db.SaveChanges();
+
+        TempData["PromotionSuccess"] = "เพิ่มโปรโมชั่นใหม่เรียบร้อย";
+        return RedirectToAction("PromotionAdmin");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult GiftPromotion(int promotionId, int userId)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        var promotion = _db.Promotions.FirstOrDefault(p => p.PromotionId == promotionId);
+        var user = _db.Users.FirstOrDefault(u => u.UserId == userId);
+
+        if (promotion == null || user == null)
+        {
+            TempData["PromotionError"] = "ไม่พบข้อมูลโปรโมชั่นหรือผู้ใช้";
+            return RedirectToAction("PromotionAdmin");
+        }
+
+        var existing = _db.UserPromotions.FirstOrDefault(up => up.PromotionId == promotionId && up.UserId == userId);
+        if (existing == null)
+        {
+            _db.UserPromotions.Add(new UserPromotion
+            {
+                PromotionId = promotionId,
+                UserId = userId,
+                IsUsed = 0,
+                UsedAt = null
+            });
+        }
+        else
+        {
+            existing.IsUsed = 0;
+            existing.UsedAt = null;
+        }
+
+        _db.SaveChanges();
+        TempData["PromotionSuccess"] = $"มอบโปรโมชั่นให้ {user.Username} เรียบร้อย";
+        return RedirectToAction("PromotionAdmin");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult GiftPromotionToAll(int promotionId)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        var promotion = _db.Promotions.FirstOrDefault(p => p.PromotionId == promotionId);
+        if (promotion == null)
+        {
+            TempData["PromotionError"] = "ไม่พบโปรโมชั่นที่ต้องการแจก";
+            return RedirectToAction("PromotionAdmin");
+        }
+
+        var users = _db.Users.Select(u => u.UserId).ToList();
+        var existingMap = _db.UserPromotions
+            .Where(up => up.PromotionId == promotionId)
+            .ToDictionary(up => up.UserId, up => up);
+
+        foreach (var userId in users)
+        {
+            if (existingMap.TryGetValue(userId, out var existing))
+            {
+                existing.IsUsed = 0;
+                existing.UsedAt = null;
+            }
+            else
+            {
+                _db.UserPromotions.Add(new UserPromotion
+                {
+                    PromotionId = promotionId,
+                    UserId = userId,
+                    IsUsed = 0,
+                    UsedAt = null
+                });
+            }
+        }
+
+        _db.SaveChanges();
+        TempData["PromotionSuccess"] = "แจกโปรโมชั่นให้ผู้ใช้ทั้งหมดเรียบร้อย";
+        return RedirectToAction("PromotionAdmin");
     }
 
     // ─── Auth ─────────────────────────────────────────────
@@ -283,68 +672,6 @@ public class AccountController : Controller
 
         return RedirectToAction("Home");
     }
-
-    public IActionResult Lab10(int id = 0)
-    {
-        var check = (from us in _db.Users
-                     where us.UserId == id
-                     select new UserViewModel
-                     {
-                         UserId = us.UserId,
-                         Username = us.Username,
-                         Email = us.Email,
-                         Phone = us.Phone
-                     }).FirstOrDefault();
-        return View(check);
-    }
-
-    [HttpPost]
-    public IActionResult Lab10(UserViewModel model)
-    {
-        if (model.UserId > 0)
-        {
-
-            var user = _db.Users.Find(model.UserId);
-            if (user != null)
-            {
-                user.Username = model.Username;
-                user.Email = model.Email;
-                user.Phone = model.Phone;
-                _db.SaveChanges();
-            }
-        }
-        else
-        {
-            // Add new user
-            var newUser = new User
-            {
-                Username = model.Username,
-                Email = model.Email,
-                Phone = model.Phone,
-                Password = "default123",
-                RoleId = 3
-            };
-            _db.Users.Add(newUser);
-            _db.SaveChanges();
-        }
-
-        return RedirectToAction("Member");
-    }
-
-    public IActionResult Lab10D(String id)
-    {
-        var user = _db.Users.FirstOrDefault(u => u.UserId == int.Parse(id));
-
-        if (user != null)
-        {
-            _db.Users.Remove(user);
-            _db.SaveChanges();
-        }
-
-        return RedirectToAction("Member", "Account");
-    }
-
-
 
     [HttpPost]
     public IActionResult Signup(string username, string email, string phone, string password, string confirmPassword)
@@ -715,11 +1042,24 @@ public class AccountController : Controller
             TotalAmount = h.TotalAmount ?? 0,
             DeliveryAddress = string.IsNullOrWhiteSpace(h.DeliveryAddress) ? "-" : h.DeliveryAddress,
             ItemSummary = string.IsNullOrWhiteSpace(h.ItemSummary) ? "-" : h.ItemSummary,
+            PromotionName = "-",
+            DiscountDisplay = "-",
             IsActive = false
         }).ToList();
 
         if (completedOrders != null && completedOrders.Count > 0)
         {
+            var completedOrderMap = completedOrders.ToDictionary(o => o.OrderId);
+
+            foreach (var item in history.Where(h => h.OrderId > 0))
+            {
+                if (completedOrderMap.TryGetValue(item.OrderId, out var matchedOrder))
+                {
+                    item.PromotionName = matchedOrder.Promotion?.PromotionName?.Trim() ?? "-";
+                    item.DiscountDisplay = BuildDiscountDisplay(matchedOrder.Promotion);
+                }
+            }
+
             var historyOrderIds = history
                 .Where(h => h.OrderId > 0)
                 .Select(h => h.OrderId)
@@ -738,6 +1078,8 @@ public class AccountController : Controller
                     TotalAmount = o.TotalAmount ?? 0,
                     DeliveryAddress = BuildDeliveryAddress(o),
                     ItemSummary = BuildItemSummary(o),
+                    PromotionName = o.Promotion?.PromotionName?.Trim() ?? "-",
+                    DiscountDisplay = BuildDiscountDisplay(o.Promotion),
                     IsActive = false
                 });
 
@@ -849,13 +1191,125 @@ public class AccountController : Controller
         var itemSummary = string.Join(", ", order.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}"));
         return string.IsNullOrWhiteSpace(itemSummary) ? "-" : itemSummary;
     }
+
+    private string BuildDiscountDisplay(Promotion? promotion)
+    {
+        if (promotion == null)
+            return "-";
+
+        return promotion.DiscountType switch
+        {
+            "Percent" => $"{promotion.DiscountValue:0.##}%",
+            "Baht" => $"฿{promotion.DiscountValue:0.##}",
+            _ => $"{promotion.DiscountValue:0.##}"
+        };
+    }
     
 
     // ─── Admin Data ───────────────────────────────────────
     public IActionResult Member()
     {
-        var users = _db.Users.Include(u => u.Role).ToList();
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        ViewBag.Roles = _db.Roles.OrderBy(r => r.RoleId).ToList();
+        var users = _db.Users
+            .Include(u => u.Role)
+            .OrderBy(u => u.UserId)
+            .ToList();
+
         return View("~/Views/admin/Member.cshtml", users);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SaveMember(int userId, string username, string? email, string? phone, string? password, int? roleId)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            TempData["MemberError"] = "กรุณากรอกชื่อผู้ใช้งาน";
+            return RedirectToAction("Member");
+        }
+
+        if (roleId == null || !_db.Roles.Any(r => r.RoleId == roleId))
+        {
+            TempData["MemberError"] = "กรุณาเลือกสิทธิ์ผู้ใช้งานให้ถูกต้อง";
+            return RedirectToAction("Member");
+        }
+
+        if (userId > 0)
+        {
+            var user = _db.Users.FirstOrDefault(u => u.UserId == userId);
+            if (user == null)
+            {
+                TempData["MemberError"] = "ไม่พบข้อมูลผู้ใช้งาน";
+                return RedirectToAction("Member");
+            }
+
+            user.Username = username.Trim();
+            user.Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+            user.Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
+            user.RoleId = roleId;
+
+            if (!string.IsNullOrWhiteSpace(password))
+                user.Password = password.Trim();
+
+            _db.SaveChanges();
+            TempData["MemberSuccess"] = "อัปเดตข้อมูลผู้ใช้งานเรียบร้อย";
+            return RedirectToAction("Member");
+        }
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            TempData["MemberError"] = "การเพิ่มผู้ใช้งานใหม่ต้องกำหนดรหัสผ่าน";
+            return RedirectToAction("Member");
+        }
+
+        var newUser = new User
+        {
+            Username = username.Trim(),
+            Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim(),
+            Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim(),
+            Password = password.Trim(),
+            RoleId = roleId
+        };
+
+        _db.Users.Add(newUser);
+        _db.SaveChanges();
+
+        TempData["MemberSuccess"] = "เพิ่มผู้ใช้งานใหม่เรียบร้อย";
+        return RedirectToAction("Member");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DeleteMember(int userId)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAction("Login");
+
+        var currentAdminId = GetCurrentUserId();
+        if (currentAdminId == userId)
+        {
+            TempData["MemberError"] = "ไม่สามารถลบบัญชีแอดมินที่กำลังใช้งานอยู่ได้";
+            return RedirectToAction("Member");
+        }
+
+        var user = _db.Users.FirstOrDefault(u => u.UserId == userId);
+        if (user == null)
+        {
+            TempData["MemberError"] = "ไม่พบข้อมูลผู้ใช้งาน";
+            return RedirectToAction("Member");
+        }
+
+        _db.Users.Remove(user);
+        _db.SaveChanges();
+
+        TempData["MemberSuccess"] = "ลบผู้ใช้งานเรียบร้อย";
+        return RedirectToAction("Member");
     }
 
     // ─── System ───────────────────────────────────────────
@@ -865,5 +1319,20 @@ public class AccountController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    private int GetCurrentUserId()
+    {
+        var userIdString = HttpContext.Session.GetString("UserId");
+        return int.TryParse(userIdString, out var userId) ? userId : 0;
+    }
+
+    private bool IsCurrentUserAdmin()
+    {
+        var userId = GetCurrentUserId();
+        if (userId <= 0)
+            return false;
+
+        return _db.Users.Any(u => u.UserId == userId && u.RoleId == 1);
     }
 }

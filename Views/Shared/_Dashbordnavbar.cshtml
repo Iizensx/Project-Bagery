@@ -124,6 +124,14 @@
     </div>
 
     <ul class="navbar-menu">
+        <!-- รายงาน & สรุปยอด -->
+        <li class="navbar-item">
+            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashbordadmin" ? "active" : "")" asp-controller="Account" asp-action="Dashbordadmin">
+                <i class="fas fa-chart-bar"></i>
+                <span>รายงาน & สรุปยอด</span>
+            </a>
+        </li>
+
         <!-- จัดการสินค้า & สต๊อก -->
         <li class="navbar-item">
             <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Stock" ? "active" : "")" asp-controller="Account" asp-action="Stock">
@@ -131,6 +139,8 @@
                 <span>จัดการสินค้า & สต๊อก</span>
             </a>
         </li>
+
+            <!-- จัดการคำสั่งซื้อ -->
         <li class="navbar-item">
             <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Order" ? "active" : "")" asp-controller="Account" asp-action="Order">
                 <i class="fas fa-shopping-cart"></i>
@@ -146,13 +156,14 @@
             </a>
         </li>
 
-        <!-- รายงาน & สรุปยอด -->
+
         <li class="navbar-item">
-            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashbordadmin" ? "active" : "")" asp-controller="Account" asp-action="Dashbordadmin">
-                <i class="fas fa-chart-bar"></i>
-                <span>รายงาน & สรุปยอด</span>
+            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "PromotionAdmin" ? "active" : "")" asp-controller="Account" asp-action="PromotionAdmin">
+                <i class="fas fa-gift"></i>
+                <span>จัดการโปรโมชั่น</span>
             </a>
         </li>
+
     </ul>
 
     <div class="navbar-footer">

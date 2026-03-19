@@ -1,366 +1,975 @@
+@using _66022380.Models
+@using _66022380.Models.Db
+@model AdminStockViewModel
+
 @{
-    ViewBag.Title = "จัดการสินค้า & สต๊อก";
-    ViewBag.PageTitle = "จัดการสินค้า & สต๊อก";
+    ViewBag.Title = "จัดการสินค้าและสต๊อก";
+    ViewBag.PageTitle = "จัดการสินค้าและสต๊อก";
     Layout = "_AdminLayout";
+
+    string GetCategoryAccent(string categoryName)
+    {
+        var lower = (categoryName ?? "").ToLower();
+        if (lower.Contains("cake") || lower.Contains("เค้ก")) return "#7c3aed";
+        if (lower.Contains("drink") || lower.Contains("เครื่องดื่ม")) return "#0284c7";
+        if (lower.Contains("bread") || lower.Contains("ขนมปัง")) return "#c2410c";
+        if (lower.Contains("cookie") || lower.Contains("คุกกี้")) return "#ca8a04";
+        return "#f97316";
+    }
+
+    string GetCategoryIcon(string categoryName)
+    {
+        var lower = (categoryName ?? "").ToLower();
+        if (lower.Contains("cake") || lower.Contains("เค้ก")) return "🍰";
+        if (lower.Contains("drink") || lower.Contains("เครื่องดื่ม")) return "🥤";
+        if (lower.Contains("bread") || lower.Contains("ขนมปัง")) return "🥖";
+        if (lower.Contains("cookie") || lower.Contains("คุกกี้")) return "🍪";
+        return "🧁";
+    }
+
+    string GetStockStatus(int stock)
+    {
+        if (stock <= 0) return "หมดสต๊อก";
+        if (stock <= 10) return "ใกล้หมด";
+        return "พร้อมขาย";
+    }
+
+    string GetStockBadgeClass(int stock)
+    {
+        if (stock <= 0) return "danger";
+        if (stock <= 10) return "warning";
+        return "success";
+    }
+
+    var totalProducts = Model.Products.Count;
+    var outOfStock = Model.Products.Count(p => (p.Stock1 ?? 0) <= 0);
+    var lowStock = Model.Products.Count(p => (p.Stock1 ?? 0) > 0 && (p.Stock1 ?? 0) <= 10);
+    var readyStock = Model.Products.Count(p => (p.Stock1 ?? 0) > 10);
 }
 
-@* ─── View 1: หมวดหมู่ ─── *@
-<div id="view-category">
-    <div class="dashboard-card" style="margin-bottom:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 class="dashboard-card-title" style="margin:0;">
-                <i class="fas fa-th-large"></i> หมวดหมู่สินค้า
-            </h3>
-            <div style="display:flex; gap:10px;">
-                <button class="btn btn-dashboard primary" onclick="openAddCategoryModal()">
-                    <i class="fas fa-plus"></i> เพิ่มหมวดหมู่
-                </button>
-                <button onclick="showView('overview')"
-                    style="background:#4e54c8; color:#fff; border:none; border-radius:8px;
-                           padding:8px 18px; font-weight:600; cursor:pointer; font-size:14px;
-                           box-shadow:0 2px 8px rgba(78,84,200,0.3); display:flex; align-items:center; gap:6px;">
-                    <i class="fas fa-chart-bar"></i> ดูสต๊อกภาพรวม
-                </button>
+<style>
+    .stock-shell {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .hero-card {
+        position: relative;
+        overflow: hidden;
+        padding: 1.8rem;
+        border-radius: 28px;
+        background: linear-gradient(135deg, #111827 0%, #1e293b 48%, #f97316 130%);
+        color: #fff;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    .hero-card::before,
+    .hero-card::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+    }
+
+    .hero-card::before {
+        width: 210px;
+        height: 210px;
+        top: -60px;
+        right: -30px;
+    }
+
+    .hero-card::after {
+        width: 150px;
+        height: 150px;
+        left: 12%;
+        bottom: -60px;
+    }
+
+    .hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        background: rgba(249,115,22,0.16);
+        color: #fed7aa;
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .hero-title {
+        margin: 1rem 0 0.7rem;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        line-height: 0.98;
+    }
+
+    .hero-copy {
+        max-width: 760px;
+        color: rgba(255,255,255,0.8);
+        line-height: 1.75;
+        font-size: 0.96rem;
+        margin: 0;
+    }
+
+    .hero-panel {
+        padding: 1.15rem;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    .hero-panel-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .hero-panel-value {
+        margin-top: 0.45rem;
+        font-size: 1.95rem;
+        font-weight: 900;
+    }
+
+    .hero-panel-copy {
+        margin-top: 0.35rem;
+        color: rgba(255,255,255,0.75);
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+
+    .stock-card {
+        background: #fff;
+        border: 1px solid #eef2f7;
+        border-radius: 26px;
+        padding: 1.5rem;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.06);
+    }
+
+    .stock-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .stock-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.4rem;
+        font-weight: 800;
+    }
+
+    .stock-copy {
+        margin: 0.4rem 0 0;
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    .stock-alert {
+        margin-bottom: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 14px;
+        font-weight: 700;
+    }
+
+    .stock-alert.success {
+        background: #ecfdf3;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
+
+    .stock-alert.error {
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        color: #be123c;
+    }
+
+    .stock-btn {
+        border: none;
+        border-radius: 14px;
+        padding: 0.82rem 1.15rem;
+        font-size: 0.92rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .stock-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .stock-btn.primary {
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(249, 115, 22, 0.22);
+    }
+
+    .stock-btn.secondary {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .stock-btn.ghost {
+        background: #fff;
+        color: #475569;
+        border: 1px solid #dbe3ee;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .summary-card {
+        padding: 1.2rem 1.25rem;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #fff, #f8fafc);
+        border: 1px solid #e5edf5;
+    }
+
+    .summary-label {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .summary-value {
+        margin-top: 0.55rem;
+        color: #0f172a;
+        font-size: 2rem;
+        font-weight: 900;
+    }
+
+    .summary-sub {
+        margin-top: 0.3rem;
+        color: #94a3b8;
+        font-size: 0.9rem;
+    }
+
+    .category-grid {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: calc((100% - 5rem) / 6);
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 0.35rem;
+        scroll-snap-type: x proximity;
+        scrollbar-width: thin;
+    }
+
+    .category-grid::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    .category-grid::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
+    }
+
+    .category-card {
+        position: relative;
+        overflow: hidden;
+        padding: 1.25rem;
+        border-radius: 24px;
+        background: #fff;
+        border: 1px solid #edf2f7;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.05);
+        min-width: 0;
+        scroll-snap-align: start;
+    }
+
+    .category-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+
+    .category-icon {
+        width: 56px;
+        height: 56px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        font-size: 1.55rem;
+        background: #fff7ed;
+    }
+
+    .category-name {
+        margin-top: 1rem;
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 800;
+    }
+
+    .category-desc {
+        margin-top: 0.45rem;
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        min-height: 44px;
+    }
+
+    .category-meta {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        align-items: center;
+    }
+
+    .category-count {
+        color: #0f172a;
+        font-size: 1.15rem;
+        font-weight: 900;
+    }
+
+    .category-count-sub {
+        color: #94a3b8;
+        font-size: 0.84rem;
+    }
+
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .stock-search,
+    .stock-select,
+    .stock-input,
+    .stock-textarea {
+        width: 100%;
+        border: 1px solid #dbe3ee;
+        border-radius: 14px;
+        padding: 0.8rem 0.95rem;
+        font-size: 0.94rem;
+        color: #0f172a;
+        background: #fff;
+    }
+
+    .stock-search,
+    .stock-select {
+        min-width: 220px;
+    }
+
+    .stock-search:focus,
+    .stock-select:focus,
+    .stock-input:focus,
+    .stock-textarea:focus {
+        outline: none;
+        border-color: #f97316;
+        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+    }
+
+    .stock-table-wrap {
+        overflow-x: auto;
+    }
+
+    .stock-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.9rem;
+    }
+
+    .stock-table th {
+        padding: 0 0.8rem 0.35rem;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stock-row {
+        background: #f8fafc;
+        box-shadow: inset 0 0 0 1px #e2e8f0;
+    }
+
+    .stock-row td {
+        padding: 1rem 0.8rem;
+        vertical-align: middle;
+    }
+
+    .stock-row td:first-child {
+        border-top-left-radius: 18px;
+        border-bottom-left-radius: 18px;
+    }
+
+    .stock-row td:last-child {
+        border-top-right-radius: 18px;
+        border-bottom-right-radius: 18px;
+    }
+
+    .product-name {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .product-desc {
+        margin-top: 0.28rem;
+        color: #64748b;
+        font-size: 0.88rem;
+        line-height: 1.55;
+    }
+
+    .stock-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.38rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .chip-category {
+        color: #fff;
+    }
+
+    .chip-success {
+        background: #ecfdf3;
+        color: #15803d;
+    }
+
+    .chip-warning {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .chip-danger {
+        background: #fff1f2;
+        color: #be123c;
+    }
+
+    .stock-count {
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .modal-panel {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    .modal-header.custom {
+        border-bottom: none;
+        padding: 1.2rem 1.3rem 0.6rem;
+        background: linear-gradient(180deg, #fff7ed, #fff);
+    }
+
+    .modal-body.custom {
+        padding: 0.5rem 1.3rem 1.3rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    .form-grid .full {
+        grid-column: 1 / -1;
+    }
+
+    .field-label {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: #475569;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .empty-state {
+        padding: 2rem;
+        border-radius: 18px;
+        text-align: center;
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px dashed #cbd5e1;
+        font-weight: 700;
+    }
+
+    .list-footer {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .list-status {
+        color: #64748b;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    @@media (max-width: 1100px) {
+        .summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .hero-grid,
+        .category-grid {
+            grid-auto-columns: calc((100% - 2rem) / 3);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .stock-card {
+            padding: 1rem;
+        }
+
+        .hero-grid,
+        .summary-grid,
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid .full {
+            grid-column: auto;
+        }
+
+        .category-grid {
+            grid-auto-columns: 85%;
+        }
+    }
+</style>
+
+<div class="stock-shell">
+    <section class="hero-card">
+        <div class="hero-grid">
+            <div>
+                <div class="hero-kicker"><i class="fas fa-boxes-stacked"></i> Stock Command</div>
+                <h2 class="hero-title">จัดการสินค้าและสต๊อก</h2>
+                <p class="hero-copy">ดูจำนวนสินค้าจริงในระบบ, จัดหมวดหมู่, เพิ่มรายการใหม่ และอัปเดตสต๊อกได้จากหน้าเดียว เพื่อให้ฝั่งแอดมินเห็นภาพรวมก่อนลงมือแก้ไขข้อมูลในแต่ละส่วน</p>
+            </div>
+            <div class="hero-panel">
+                <div class="hero-panel-label">สินค้าพร้อมขาย / ใกล้หมด</div>
+                <div class="hero-panel-value">@readyStock / @lowStock</div>
+                <div class="hero-panel-copy">ตอนนี้มีสินค้าทั้งหมด @totalProducts รายการ และมีสินค้าหมดสต๊อกอยู่ @outOfStock รายการ</div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div id="category-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:16px; padding:4px 0;">
-        @* Category Card: เค้ก *@
-        <div class="cat-card" onclick="showView('products', 'เค้ก', '🍰')">
-            <div class="cat-icon">🍰</div>
-            <div class="cat-name">เค้ก</div>
-            <div class="cat-count">3 รายการ</div>
-        </div>
-        @* Category Card: คุกกี้ *@
-        <div class="cat-card" onclick="showView('products', 'คุกกี้', '🍪')">
-            <div class="cat-icon">🍪</div>
-            <div class="cat-name">คุกกี้</div>
-            <div class="cat-count">2 รายการ</div>
-        </div>
-        @* Category Card: ขนมปัง *@
-        <div class="cat-card" onclick="showView('products', 'ขนมปัง', '🍞')">
-            <div class="cat-icon">🍞</div>
-            <div class="cat-name">ขนมปัง</div>
-            <div class="cat-count">2 รายการ</div>
-        </div>
-        @* Category Card: เครื่องดื่ม *@
-        <div class="cat-card" onclick="showView('products', 'เครื่องดื่ม', '🥤')">
-            <div class="cat-icon">🥤</div>
-            <div class="cat-name">เครื่องดื่ม</div>
-            <div class="cat-count">2 รายการ</div>
-        </div>
-    </div>
-</div>
-
-@* ─── View 2: สินค้าในหมวด ─── *@
-<div id="view-products" style="display:none;">
-    <div class="dashboard-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <button onclick="showView('category')"
-                    style="background:none; border:1.5px solid #ccc; border-radius:8px;
-                           padding:6px 14px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
-                    <i class="fas fa-arrow-left"></i> หมวดหมู่
-                </button>
-                <h3 class="dashboard-card-title" style="margin:0;">
-                    <span id="cat-icon-title"></span>
-                    <span id="cat-name-title"></span>
-                </h3>
+    <div class="stock-card">
+        <div class="stock-header">
+            <div>
+                <h2 class="stock-title"><i class="fas fa-boxes-stacked"></i> จัดการสินค้าและสต๊อก</h2>
+                <p class="stock-copy">หน้าจอนี้เชื่อมกับฐานข้อมูลจริง สามารถเพิ่มหมวดหมู่ เพิ่มสินค้า และแก้ไขข้อมูลสินค้าได้ทันที</p>
             </div>
-            <div style="display:flex; gap:10px;">
-                <button onclick="showView('overview')"
-                    style="background:#f0f0ff; color:#4e54c8; border:1.5px solid #4e54c8; border-radius:8px;
-                           padding:6px 14px; cursor:pointer; font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px;">
-                    <i class="fas fa-chart-bar"></i> ดูสต๊อกภาพรวม
+            <div class="toolbar-right">
+                <button type="button" class="stock-btn ghost" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openCategoryModal()">
+                    <i class="fas fa-folder-plus"></i> เพิ่มหมวดหมู่
                 </button>
-                <button class="btn btn-dashboard primary" onclick="alert('เพิ่มสินค้าในหมวดนี้')">
+                <button type="button" class="stock-btn primary" data-bs-toggle="modal" data-bs-target="#stockModal" onclick="openStockModal()">
                     <i class="fas fa-plus"></i> เพิ่มสินค้า
                 </button>
             </div>
         </div>
 
-        <div style="margin-bottom:16px;">
-            <input type="text" class="form-control" placeholder="🔍 ค้นหาสินค้าในหมวดนี้..." />
-        </div>
-
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>รหัสสินค้า</th>
-                    <th>ชื่อสินค้า</th>
-                    <th>ราคา</th>
-                    <th>สต๊อก</th>
-                    <th>สถานะ</th>
-                    <th>การกระทำ</th>
-                </tr>
-            </thead>
-            <tbody id="product-tbody">
-            </tbody>
-        </table>
-    </div>
-</div>
-
-@* ─── View 3: สต๊อกภาพรวม ─── *@
-<div id="view-overview" style="display:none;">
-    <div class="dashboard-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
-            <h3 class="dashboard-card-title" style="margin:0;">
-                <i class="fas fa-chart-bar"></i> สต๊อกภาพรวม — ทุกหมวดหมู่
-            </h3>
-            <button onclick="showView('category')"
-                style="background:none; border:1.5px solid #ccc; border-radius:8px;
-                       padding:6px 14px; cursor:pointer; font-size:13px; display:flex; align-items:center; gap:6px;">
-                <i class="fas fa-arrow-left"></i> กลับหมวดหมู่
-            </button>
-        </div>
-
-        @* Summary Cards *@
-        <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:24px;">
-            <div class="summary-card" style="border-left:4px solid #28a745;">
-                <div class="summary-num" style="color:#28a745;">7</div>
-                <div class="summary-label">สินค้าทั้งหมด</div>
-            </div>
-            <div class="summary-card" style="border-left:4px solid #dc3545;">
-                <div class="summary-num" style="color:#dc3545;">1</div>
-                <div class="summary-label">หมดสต๊อก</div>
-            </div>
-            <div class="summary-card" style="border-left:4px solid #ffc107;">
-                <div class="summary-num" style="color:#ffc107;">2</div>
-                <div class="summary-label">ใกล้หมด</div>
-            </div>
-            <div class="summary-card" style="border-left:4px solid #17a2b8;">
-                <div class="summary-num" style="color:#17a2b8;">4</div>
-                <div class="summary-label">มีจำหน่าย</div>
-            </div>
-        </div>
-
-        <div style="margin-bottom:16px;">
-            <input type="text" class="form-control" placeholder="🔍 ค้นหาสินค้าทั้งหมด..." />
-        </div>
-
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>รหัสสินค้า</th>
-                    <th>ชื่อสินค้า</th>
-                    <th>หมวดหมู่</th>
-                    <th>ราคา</th>
-                    <th>สต๊อก</th>
-                    <th>สถานะ</th>
-                    <th>การกระทำ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>PRD-001</td><td>เค้กช็อกโกแลต</td>
-                    <td><span class="badge" style="background:#f3f0ff;color:#6c5ce7;">🍰 เค้ก</span></td>
-                    <td>฿299</td>
-                    <td><span class="badge bg-danger">0</span></td>
-                    <td><span class="badge bg-warning text-dark">หมดสต๊อก</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>PRD-002</td><td>เค้กวานิลลา</td>
-                    <td><span class="badge" style="background:#f3f0ff;color:#6c5ce7;">🍰 เค้ก</span></td>
-                    <td>฿320</td>
-                    <td><span class="badge bg-success">15</span></td>
-                    <td><span class="badge bg-success">มีจำหน่าย</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>PRD-003</td><td>คุกกี้เนย</td>
-                    <td><span class="badge" style="background:#fff5e6;color:#e67e22;">🍪 คุกกี้</span></td>
-                    <td>฿120</td>
-                    <td><span class="badge bg-success">50</span></td>
-                    <td><span class="badge bg-success">มีจำหน่าย</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>PRD-004</td><td>ขนมปังกระเทียม</td>
-                    <td><span class="badge" style="background:#fff8e1;color:#c0392b;">🍞 ขนมปัง</span></td>
-                    <td>฿65</td>
-                    <td><span class="badge bg-warning text-dark">8</span></td>
-                    <td><span class="badge bg-info">ใกล้หมด</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>PRD-005</td><td>ขนมปังโฮลวีต</td>
-                    <td><span class="badge" style="background:#fff8e1;color:#c0392b;">🍞 ขนมปัง</span></td>
-                    <td>฿85</td>
-                    <td><span class="badge bg-warning text-dark">5</span></td>
-                    <td><span class="badge bg-info">ใกล้หมด</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>PRD-006</td><td>ชาเย็น</td>
-                    <td><span class="badge" style="background:#e8f8ff;color:#0984e3;">🥤 เครื่องดื่ม</span></td>
-                    <td>฿60</td>
-                    <td><span class="badge bg-success">100</span></td>
-                    <td><span class="badge bg-success">มีจำหน่าย</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>PRD-007</td><td>กาแฟลาเต้</td>
-                    <td><span class="badge" style="background:#e8f8ff;color:#0984e3;">🥤 เครื่องดื่ม</span></td>
-                    <td>฿80</td>
-                    <td><span class="badge bg-success">100</span></td>
-                    <td><span class="badge bg-success">มีจำหน่าย</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-@* ─── Modal เพิ่มหมวดหมู่ ─── *@
-<div id="modal-addcat" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-     background:rgba(0,0,0,0.45); z-index:9999; justify-content:center; align-items:center;">
-    <div style="background:#fff; border-radius:14px; padding:32px; width:400px; max-width:90%; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h5 style="margin:0; font-weight:600;"><i class="fas fa-plus-circle"></i> เพิ่มหมวดหมู่ใหม่</h5>
-            <button onclick="closeAddCategoryModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888;">&times;</button>
-        </div>
-        <div style="margin-bottom:14px;">
-            <label style="font-size:13px; font-weight:600; margin-bottom:6px; display:block;">ชื่อหมวดหมู่</label>
-            <input type="text" id="new-cat-name" class="form-control" placeholder="เช่น ของหวาน, ไอศกรีม..." />
-        </div>
-        <div style="margin-bottom:20px;">
-            <label style="font-size:13px; font-weight:600; margin-bottom:6px; display:block;">ไอคอน (Emoji)</label>
-            <input type="text" id="new-cat-icon" class="form-control" placeholder="เช่น 🍩" maxlength="4" />
-        </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button class="btn btn-secondary btn-sm" onclick="closeAddCategoryModal()">ยกเลิก</button>
-            <button class="btn btn-dashboard primary btn-sm" onclick="addCategory()">บันทึก</button>
-        </div>
-    </div>
-</div>
-
-<style>
-    .cat-card {
-        background: #fff;
-        border: 1.5px solid #ececec;
-        border-radius: 14px;
-        padding: 28px 16px 20px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.18s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-    .cat-card:hover {
-        border-color: #4e54c8;
-        box-shadow: 0 6px 20px rgba(78,84,200,0.15);
-        transform: translateY(-3px);
-    }
-    .cat-icon { font-size: 40px; margin-bottom: 10px; }
-    .cat-name { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 4px; }
-    .cat-count { font-size: 12px; color: #999; }
-
-    .summary-card {
-        background: #fff;
-        border-radius: 10px;
-        padding: 16px 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .summary-num { font-size: 28px; font-weight: 700; }
-    .summary-label { font-size: 12px; color: #888; margin-top: 2px; }
-</style>
-
-<script>
-    const productData = {
-        'เค้ก': [
-            { id:'PRD-001', name:'เค้กช็อกโกแลต', price:'฿299', stock:0,  status:'หมดสต๊อก', badgeClass:'bg-warning text-dark', stockClass:'bg-danger' },
-            { id:'PRD-002', name:'เค้กวานิลลา',    price:'฿320', stock:15, status:'มีจำหน่าย', badgeClass:'bg-success',             stockClass:'bg-success' },
-            { id:'PRD-008', name:'เค้กมะม่วง',     price:'฿350', stock:10, status:'มีจำหน่าย', badgeClass:'bg-success',             stockClass:'bg-success' },
-        ],
-        'คุกกี้': [
-            { id:'PRD-003', name:'คุกกี้เนย',            price:'฿120', stock:50, status:'มีจำหน่าย', badgeClass:'bg-success', stockClass:'bg-success' },
-            { id:'PRD-009', name:'คุกกี้ช็อกโกแลตชิพ',  price:'฿150', stock:45, status:'มีจำหน่าย', badgeClass:'bg-success', stockClass:'bg-success' },
-        ],
-        'ขนมปัง': [
-            { id:'PRD-004', name:'ขนมปังกระเทียม', price:'฿65', stock:8,  status:'ใกล้หมด',   badgeClass:'bg-info',              stockClass:'bg-warning text-dark' },
-            { id:'PRD-005', name:'ขนมปังโฮลวีต',   price:'฿85', stock:5,  status:'ใกล้หมด',   badgeClass:'bg-info',              stockClass:'bg-warning text-dark' },
-        ],
-        'เครื่องดื่ม': [
-            { id:'PRD-006', name:'ชาเย็น',    price:'฿60', stock:100, status:'มีจำหน่าย', badgeClass:'bg-success', stockClass:'bg-success' },
-            { id:'PRD-007', name:'กาแฟลาเต้', price:'฿80', stock:100, status:'มีจำหน่าย', badgeClass:'bg-success', stockClass:'bg-success' },
-        ],
-    };
-
-    function showView(view, catName, catIcon) {
-        document.getElementById('view-category').style.display = 'none';
-        document.getElementById('view-products').style.display  = 'none';
-        document.getElementById('view-overview').style.display  = 'none';
-
-        if (view === 'category') {
-            document.getElementById('view-category').style.display = 'block';
-        } else if (view === 'products') {
-            document.getElementById('cat-icon-title').textContent = catIcon + ' ';
-            document.getElementById('cat-name-title').textContent = catName;
-            const tbody = document.getElementById('product-tbody');
-            const items = productData[catName] || [];
-            tbody.innerHTML = items.map(p => `
-                <tr>
-                    <td>${p.id}</td>
-                    <td>${p.name}</td>
-                    <td>${p.price}</td>
-                    <td><span class="badge ${p.stockClass}">${p.stock}</span></td>
-                    <td><span class="badge ${p.badgeClass}">${p.status}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข ${p.name}')">แก้ไข</button>
-                        <button class="btn btn-sm btn-dashboard danger"  onclick="alert('ลบ ${p.name}')">ลบ</button>
-                    </td>
-                </tr>
-            `).join('');
-            document.getElementById('view-products').style.display = 'block';
-        } else if (view === 'overview') {
-            document.getElementById('view-overview').style.display = 'block';
+        @if (TempData["StockSuccess"] != null)
+        {
+            <div class="stock-alert success">@TempData["StockSuccess"]</div>
         }
-    }
 
-    function openAddCategoryModal() {
-        document.getElementById('modal-addcat').style.display = 'flex';
-    }
-    function closeAddCategoryModal() {
-        document.getElementById('modal-addcat').style.display = 'none';
-    }
-    function addCategory() {
-        const name = document.getElementById('new-cat-name').value.trim();
-        const icon = document.getElementById('new-cat-icon').value.trim() || '📦';
-        if (!name) { alert('กรุณากรอกชื่อหมวดหมู่'); return; }
-        const grid = document.getElementById('category-grid');
-        const card = document.createElement('div');
-        card.className = 'cat-card';
-        card.innerHTML = `<div class="cat-icon">${icon}</div><div class="cat-name">${name}</div><div class="cat-count">0 รายการ</div>`;
-        card.onclick = () => showView('products', name, icon);
-        grid.appendChild(card);
-        productData[name] = [];
-        closeAddCategoryModal();
-        document.getElementById('new-cat-name').value = '';
-        document.getElementById('new-cat-icon').value = '';
-    }
-    document.getElementById('modal-addcat').addEventListener('click', function(e) {
-        if (e.target === this) closeAddCategoryModal();
-    });
-</script>
+        @if (TempData["StockError"] != null)
+        {
+            <div class="stock-alert error">@TempData["StockError"]</div>
+        }
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">สินค้าทั้งหมด</div>
+                <div class="summary-value">@totalProducts</div>
+                <div class="summary-sub">จำนวนสินค้าทุกหมวด</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">หมดสต๊อก</div>
+                <div class="summary-value" style="color:#dc2626;">@outOfStock</div>
+                <div class="summary-sub">ควรเติมสินค้าโดยด่วน</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">ใกล้หมด</div>
+                <div class="summary-value" style="color:#ea580c;">@lowStock</div>
+                <div class="summary-sub">เหลือน้อยกว่า 10 ชิ้น</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">พร้อมขาย</div>
+                <div class="summary-value" style="color:#16a34a;">@readyStock</div>
+                <div class="summary-sub">มีสต๊อกเพียงพอ</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stock-card">
+        <div class="stock-header">
+            <div>
+                <h3 class="stock-title" style="font-size:1.2rem;">หมวดหมู่สินค้า</h3>
+                <p class="stock-copy">ดึงข้อมูลจากตาราง `category` จริง และใช้เป็นตัวเชื่อมกับสินค้าในระบบ แสดงได้ 6 การ์ดต่อเฟรม แล้วเลื่อนขวาเพื่อดูต่อได้</p>
+            </div>
+        </div>
+
+        @if (Model.Categories.Any())
+        {
+            <div class="category-grid">
+                @foreach (var category in Model.Categories)
+                {
+                    var accent = GetCategoryAccent(category.CategoryName);
+                    var icon = GetCategoryIcon(category.CategoryName);
+
+                    <div class="category-card">
+                        <div class="category-top">
+                            <div class="category-icon" style="background:@($"{accent}18");">@icon</div>
+                            <button type="button"
+                                    class="stock-btn ghost"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#categoryModal"
+                                    onclick="openCategoryModal(@category.CategoryId, '@category.CategoryName', '@(category.Description ?? "")')">
+                                แก้ไข
+                            </button>
+                        </div>
+                        <div class="category-name">@category.CategoryName</div>
+                        <div class="category-desc">@(string.IsNullOrWhiteSpace(category.Description) ? "ยังไม่มีรายละเอียดหมวดหมู่" : category.Description)</div>
+                        <div class="category-meta">
+                            <div>
+                                <div class="category-count">@category.Stocks.Count</div>
+                                <div class="category-count-sub">รายการสินค้า</div>
+                            </div>
+                            <span class="stock-chip chip-category" style="background:@accent;">@icon @category.CategoryName</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">ยังไม่มีหมวดหมู่ในระบบ เริ่มต้นด้วยการเพิ่มหมวดหมู่แรกก่อน</div>
+        }
+    </div>
+
+    <div class="stock-card">
+        <div class="stock-header">
+            <div>
+                <h3 class="stock-title" style="font-size:1.2rem;">รายการสินค้า</h3>
+                <p class="stock-copy">ดูสต๊อกจริง ค้นหา แยกตามหมวดหมู่ และกดแก้ไขสินค้าแต่ละรายการได้ทันที</p>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <input id="stockSearch" class="stock-search" type="text" placeholder="ค้นหาชื่อสินค้า..." />
+                <select id="categoryFilter" class="stock-select">
+                    <option value="all">ทุกหมวดหมู่</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                </select>
+            </div>
+            <div class="toolbar-right">
+                <button type="button" class="stock-btn secondary" data-bs-toggle="modal" data-bs-target="#stockModal" onclick="openStockModal()">
+                    <i class="fas fa-plus"></i> เพิ่มสินค้าใหม่
+                </button>
+            </div>
+        </div>
+
+        @if (Model.Products.Any())
+        {
+            <div class="stock-table-wrap">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 90px;">ID</th>
+                            <th>สินค้า</th>
+                            <th style="width: 170px;">หมวดหมู่</th>
+                            <th style="width: 120px;">ราคา</th>
+                            <th style="width: 120px;">สต๊อก</th>
+                            <th style="width: 160px;">สถานะ</th>
+                            <th style="width: 130px;">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody">
+                        @foreach (var product in Model.Products)
+                        {
+                            var stockCount = product.Stock1 ?? 0;
+                            var categoryName = product.Category?.CategoryName ?? "ไม่ระบุหมวดหมู่";
+                            var accent = GetCategoryAccent(categoryName);
+                            var statusClass = GetStockBadgeClass(stockCount);
+                            var statusText = GetStockStatus(stockCount);
+                            <tr class="stock-row stock-filter-row"
+                                data-search="@($"{product.ProductName} {product.Description} {categoryName}".ToLower())"
+                                data-category-id="@product.CategoryId">
+                                <td><span class="user-id-badge">#@product.ProductId</span></td>
+                                <td>
+                                    <div class="product-name">@product.ProductName</div>
+                                    <div class="product-desc">@(string.IsNullOrWhiteSpace(product.Description) ? "ไม่มีรายละเอียดสินค้า" : product.Description)</div>
+                                </td>
+                                <td>
+                                    <span class="stock-chip chip-category" style="background:@accent;">@GetCategoryIcon(categoryName) @categoryName</span>
+                                </td>
+                                <td class="stock-count">@((product.Price ?? 0).ToString("0.00")) บาท</td>
+                                <td><span class="stock-chip chip-@statusClass">@stockCount ชิ้น</span></td>
+                                <td><span class="stock-chip chip-@statusClass">@statusText</span></td>
+                                <td>
+                                    <button type="button"
+                                            class="stock-btn ghost"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#stockModal"
+                                            onclick="openStockModal(@product.ProductId, '@product.ProductName', '@(product.Description ?? "")', '@((product.Price ?? 0).ToString("0.##"))', '@(product.Stock1 ?? 0)', '@(product.CategoryId ?? 0)')">
+                                        แก้ไข
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="list-footer">
+                <div id="stockListStatus" class="list-status">กำลังแสดงรายการสินค้า</div>
+                <div class="toolbar-right">
+                    <button id="stockPrevBtn" type="button" class="stock-btn secondary">ย้อนกลับ</button>
+                    <button id="stockNextBtn" type="button" class="stock-btn secondary">ถัดไป</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">ยังไม่มีสินค้าในระบบ เริ่มต้นด้วยการเพิ่มสินค้ารายการแรกได้เลย</div>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-panel">
+            <div class="modal-header custom">
+                <div>
+                    <div class="field-label" style="margin-bottom:0.35rem;">Category</div>
+                    <h5 class="modal-title" id="categoryModalTitle" style="margin:0; font-weight:900; color:#0f172a;">เพิ่มหมวดหมู่</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body custom">
+                <form asp-action="SaveCategory" asp-controller="Account" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="categoryIdInput" name="categoryId" value="0" />
+
+                    <div class="form-grid">
+                        <div class="full">
+                            <label class="field-label">ชื่อหมวดหมู่</label>
+                            <input id="categoryNameInput" class="stock-input" type="text" name="categoryName" required />
+                        </div>
+                        <div class="full">
+                            <label class="field-label">รายละเอียด</label>
+                            <textarea id="categoryDescriptionInput" class="stock-textarea" name="description" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-right" style="margin-top:1rem;">
+                        <button type="submit" class="stock-btn primary">บันทึกหมวดหมู่</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="stockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-panel">
+            <div class="modal-header custom">
+                <div>
+                    <div class="field-label" style="margin-bottom:0.35rem;">Product</div>
+                    <h5 class="modal-title" id="stockModalTitle" style="margin:0; font-weight:900; color:#0f172a;">เพิ่มสินค้า</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body custom">
+                <form asp-action="SaveStock" asp-controller="Account" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="productIdInput" name="productId" value="0" />
+
+                    <div class="form-grid">
+                        <div class="full">
+                            <label class="field-label">ชื่อสินค้า</label>
+                            <input id="productNameInput" class="stock-input" type="text" name="productName" required />
+                        </div>
+                        <div>
+                            <label class="field-label">หมวดหมู่</label>
+                            <select id="productCategoryInput" class="stock-select" name="categoryId" required>
+                                <option value="">เลือกหมวดหมู่</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.CategoryId">@category.CategoryName</option>
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">ราคา</label>
+                            <input id="productPriceInput" class="stock-input" type="number" step="0.01" min="0" name="price" required />
+                        </div>
+                        <div>
+                            <label class="field-label">จำนวนสต๊อก</label>
+                            <input id="productStockInput" class="stock-input" type="number" min="0" name="stock1" required />
+                        </div>
+                        <div class="full">
+                            <label class="field-label">รายละเอียดสินค้า</label>
+                            <textarea id="productDescriptionInput" class="stock-textarea" name="description" rows="4"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-right" style="margin-top:1rem;">
+                        <button type="submit" class="stock-btn primary">บันทึกสินค้า</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openCategoryModal(categoryId = 0, categoryName = '', description = '') {
+            document.getElementById('categoryModalTitle').textContent = categoryId > 0 ? 'แก้ไขหมวดหมู่' : 'เพิ่มหมวดหมู่';
+            document.getElementById('categoryIdInput').value = categoryId;
+            document.getElementById('categoryNameInput').value = categoryName;
+            document.getElementById('categoryDescriptionInput').value = description;
+        }
+
+        function openStockModal(productId = 0, productName = '', description = '', price = '', stock = '', categoryId = '') {
+            document.getElementById('stockModalTitle').textContent = productId > 0 ? 'แก้ไขสินค้า' : 'เพิ่มสินค้า';
+            document.getElementById('productIdInput').value = productId;
+            document.getElementById('productNameInput').value = productName;
+            document.getElementById('productDescriptionInput').value = description;
+            document.getElementById('productPriceInput').value = price;
+            document.getElementById('productStockInput').value = stock;
+            document.getElementById('productCategoryInput').value = categoryId;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('stockSearch');
+            const categoryFilter = document.getElementById('categoryFilter');
+            const rows = Array.from(document.querySelectorAll('.stock-filter-row'));
+            const prevBtn = document.getElementById('stockPrevBtn');
+            const nextBtn = document.getElementById('stockNextBtn');
+            const listStatus = document.getElementById('stockListStatus');
+            const pageSize = 10;
+            let currentPage = 1;
+
+            function getFilteredRows() {
+                const keyword = (searchInput?.value || '').trim().toLowerCase();
+                const categoryId = categoryFilter?.value || 'all';
+
+                return rows.filter(row => {
+                    const haystack = row.getAttribute('data-search') || '';
+                    const rowCategoryId = row.getAttribute('data-category-id') || '';
+                    const matchKeyword = !keyword || haystack.includes(keyword);
+                    const matchCategory = categoryId === 'all' || rowCategoryId === categoryId;
+
+                    return matchKeyword && matchCategory;
+                });
+            }
+
+            function renderStockRows() {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                rows.forEach(row => {
+                    row.style.display = 'none';
+                });
+
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, filteredRows.length);
+
+                filteredRows.slice(startIndex, endIndex).forEach(row => {
+                    row.style.display = '';
+                });
+
+                if (listStatus) {
+                    listStatus.textContent = filteredRows.length
+                        ? `แสดง ${startIndex + 1}-${endIndex} จาก ${filteredRows.length} รายการ`
+                        : 'ไม่พบรายการสินค้าตามเงื่อนไขที่เลือก';
+                }
+
+                if (prevBtn) prevBtn.disabled = currentPage === 1;
+                if (nextBtn) nextBtn.disabled = currentPage === totalPages || filteredRows.length === 0;
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    currentPage = 1;
+                    renderStockRows();
+                });
+            }
+
+            if (categoryFilter) {
+                categoryFilter.addEventListener('change', function () {
+                    currentPage = 1;
+                    renderStockRows();
+                });
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function () {
+                    if (currentPage > 1) {
+                        currentPage -= 1;
+                        renderStockRows();
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function () {
+                    const totalPages = Math.max(1, Math.ceil(getFilteredRows().length / pageSize));
+                    if (currentPage < totalPages) {
+                        currentPage += 1;
+                        renderStockRows();
+                    }
+                });
+            }
+
+            renderStockRows();
+        });
+    </script>
+}

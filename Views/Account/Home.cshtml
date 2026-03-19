@@ -8,6 +8,15 @@
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
+    main .container {
+        width: min(1280px, calc(100% - 2rem));
+        max-width: 1280px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
     /* ─── Hero Banner ─────────────────────────────── */
     .hero-banner-wrap {
         position: relative;
@@ -526,6 +535,10 @@
     }
 
     @@media (max-width: 768px) {
+        main .container {
+            width: calc(100% - 1.5rem);
+        }
+
         .hero-content { padding: 0 2rem; padding-bottom: 5rem; max-width: 100%; }
         .hero-title   { font-size: 2.2rem; }
         .scroll-hint  { display: none; }
@@ -541,6 +554,250 @@
         .btn-hero-primary, .btn-hero-secondary { padding: 0.75rem 1.6rem; font-size: 0.88rem; }
         .features-float { bottom: -280px; }
         .hero-spacer    { height: 320px; }
+    }
+    .home-extra-section {
+        margin: 0 0 3rem;
+    }
+
+    .home-extra-grid {
+        display: grid;
+        grid-template-columns: 0.95fr 1.05fr;
+        gap: 1.2rem;
+    }
+
+    .home-panel {
+        background: #fff;
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid #F3E5DA;
+        box-shadow: 0 10px 32px rgba(15,23,42,0.06);
+    }
+
+    .home-panel.dark {
+        background: linear-gradient(135deg, #1a1a1a 0%, #2b1809 58%, #5d2b10 120%);
+        color: #fff;
+    }
+
+    .home-kicker {
+        color: #F97316;
+        font-size: 0.78rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-bottom: 0.8rem;
+    }
+
+    .home-panel.dark .home-kicker {
+        color: #FDBA74;
+    }
+
+    .home-heading {
+        color: #1a1a1a;
+        font-size: 2rem;
+        font-weight: 900;
+        line-height: 1.2;
+        margin-bottom: 1rem;
+    }
+
+    .home-panel.dark .home-heading {
+        color: #fff;
+    }
+
+    .home-text {
+        color: #6B7280;
+        line-height: 1.85;
+        font-size: 0.96rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .home-panel.dark .home-text {
+        color: rgba(255,232,214,0.78);
+    }
+
+    .home-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .home-stat-box {
+        background: #FFF8F3;
+        border: 1px solid #FDE3D1;
+        border-radius: 18px;
+        padding: 1rem;
+    }
+
+    .home-panel.dark .home-stat-box {
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(255,255,255,0.08);
+    }
+
+    .home-stat-value {
+        color: #F97316;
+        font-size: 1.3rem;
+        font-weight: 900;
+        margin-bottom: 0.2rem;
+    }
+
+    .home-panel.dark .home-stat-value {
+        color: #FDBA74;
+    }
+
+    .home-stat-label {
+        color: #6B7280;
+        font-size: 0.84rem;
+        line-height: 1.55;
+    }
+
+    .home-panel.dark .home-stat-label {
+        color: rgba(255,232,214,0.74);
+    }
+
+    .step-grid-home,
+    .review-grid-home,
+    .faq-grid-home {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .step-grid-home {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .step-card-home,
+    .review-card-home,
+    .faq-card-home {
+        background: #fff;
+        border-radius: 22px;
+        padding: 1.4rem;
+        border: 1px solid #F3E5DA;
+        box-shadow: 0 8px 22px rgba(15,23,42,0.05);
+    }
+
+    .step-num-home {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #FFF3E8;
+        color: #F97316;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        margin-bottom: 0.9rem;
+    }
+
+    .step-title-home,
+    .faq-question-home {
+        color: #1a1a1a;
+        font-size: 1rem;
+        font-weight: 800;
+        margin-bottom: 0.45rem;
+    }
+
+    .step-text-home,
+    .faq-answer-home {
+        color: #6B7280;
+        line-height: 1.75;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .review-grid-home {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .review-stars-home {
+        color: #F59E0B;
+        letter-spacing: 2px;
+        margin-bottom: 0.9rem;
+    }
+
+    .review-copy-home {
+        color: #4B5563;
+        line-height: 1.8;
+        font-size: 0.93rem;
+        margin-bottom: 1rem;
+    }
+
+    .review-meta-home {
+        color: #1a1a1a;
+        font-weight: 800;
+    }
+
+    .review-role-home {
+        color: #9CA3AF;
+        font-size: 0.84rem;
+    }
+
+    .cta-home {
+        background: linear-gradient(135deg, #fff 0%, #fff7f1 100%);
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid #F3E5DA;
+        box-shadow: 0 10px 32px rgba(15,23,42,0.06);
+        margin-bottom: 3rem;
+    }
+
+    .cta-home-grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 1.2rem;
+        align-items: center;
+    }
+
+    .cta-home-metrics {
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .cta-home-metric {
+        background: #fff;
+        border-radius: 18px;
+        padding: 1rem;
+        border: 1px solid #F3E5DA;
+    }
+
+    .cta-home-metric strong {
+        display: block;
+        color: #F97316;
+        font-size: 1.05rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .faq-grid-home {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @@media (max-width: 1100px) {
+        .home-extra-grid,
+        .cta-home-grid,
+        .step-grid-home,
+        .review-grid-home,
+        .faq-grid-home {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @@media (max-width: 900px) {
+        .home-extra-grid,
+        .cta-home-grid,
+        .step-grid-home,
+        .review-grid-home,
+        .faq-grid-home {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .home-panel,
+        .cta-home {
+            padding: 1.5rem;
+        }
+
+        .home-stat-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
@@ -724,6 +981,173 @@
             <div class="col-md-6">
                 <img src="https://img.freepik.com/free-photo/delicious-cake-with-fruits_23-2150727500.jpg"
                      alt="Cake" class="highlight-img">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container home-extra-section">
+    <div class="home-extra-grid">
+        <div class="home-panel dark">
+            <div class="home-kicker">Why BAGERY</div>
+            <h3 class="home-heading">ร้านที่ไม่ได้ขายแค่ขนม แต่ขายช่วงเวลาที่อยากกลับมาซ้ำ</h3>
+            <p class="home-text">
+                ตั้งแต่ครัวซองต์หอมเนยยามเช้าไปจนถึงเค้กวันพิเศษ เราออกแบบทุกเมนูให้เหมาะกับการกินจริงในชีวิตประจำวัน
+                ทั้งสั่งทานเอง สั่งฝากเพื่อน หรือสั่งเซอร์ไพรส์คนสำคัญก็ยังดูดีและอร่อยเหมือนเดิม
+            </p>
+            <div class="home-stat-grid">
+                <div class="home-stat-box">
+                    <div class="home-stat-value">30 นาที</div>
+                    <div class="home-stat-label">เวลาจัดส่งในโซนหลักของร้าน</div>
+                </div>
+                <div class="home-stat-box">
+                    <div class="home-stat-value">10+ ปี</div>
+                    <div class="home-stat-label">ประสบการณ์สูตรเบเกอรี่ที่พัฒนาต่อเนื่อง</div>
+                </div>
+                <div class="home-stat-box">
+                    <div class="home-stat-value">ทุกวัน</div>
+                    <div class="home-stat-label">อบสดใหม่ก่อนเปิดร้านทุกเช้า</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-panel">
+            <div class="home-kicker">Best For</div>
+            <h3 class="home-heading">BAGERY เหมาะกับวันธรรมดา และก็ดีพอสำหรับวันพิเศษ</h3>
+            <p class="home-text">
+                ถ้าคุณกำลังหาขนมเช้าแบบหยิบง่าย ของฝากที่ดูดี หรือเค้กสำหรับโอกาสสำคัญ หน้าแรกควรตอบได้ทันทีว่าร้านนี้ครบพอ
+                เราเลยจัดเมนู, โปรโมชั่น และ flow การสั่งซื้อให้ตัดสินใจง่ายที่สุดตั้งแต่ครั้งแรกที่เข้ามา
+            </p>
+            <div class="home-stat-grid">
+                <div class="home-stat-box">
+                    <div class="home-stat-value">Morning Set</div>
+                    <div class="home-stat-label">เมนูเหมาะกับมื้อเช้าก่อนเริ่มวัน</div>
+                </div>
+                <div class="home-stat-box">
+                    <div class="home-stat-value">Gift Ready</div>
+                    <div class="home-stat-label">ขนมและเค้กที่เหมาะสำหรับสั่งฝาก</div>
+                </div>
+                <div class="home-stat-box">
+                    <div class="home-stat-value">Trackable</div>
+                    <div class="home-stat-label">ติดตามออเดอร์และประวัติการซื้อได้</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container home-extra-section">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="section-title" style="margin-top:0;">สั่งง่ายใน 4 ขั้นตอน</h2>
+        <a asp-controller="Account" asp-action="Delivery" class="view-all">ไปหน้าติดตามออเดอร์ →</a>
+    </div>
+    <div class="step-grid-home">
+        <div class="step-card-home">
+            <div class="step-num-home">1</div>
+            <div class="step-title-home">เลือกเมนูที่ชอบ</div>
+            <p class="step-text-home">เข้าเมนู, ดูรายละเอียด, แล้วเพิ่มรายการที่อยากได้ลงตะกร้าได้ทันที</p>
+        </div>
+        <div class="step-card-home">
+            <div class="step-num-home">2</div>
+            <div class="step-title-home">ชำระเงินผ่าน PromptPay</div>
+            <p class="step-text-home">ระบบสร้างออเดอร์จริง พร้อมหน้า QR และอัปโหลดสลิปได้ใน flow เดียว</p>
+        </div>
+        <div class="step-card-home">
+            <div class="step-num-home">3</div>
+            <div class="step-title-home">รอร้านยืนยัน</div>
+            <p class="step-text-home">หลังตรวจสลิปและยืนยัน ระบบจะเปลี่ยนสถานะเป็น Paid แล้วเริ่มเตรียมสินค้า</p>
+        </div>
+        <div class="step-card-home">
+            <div class="step-num-home">4</div>
+            <div class="step-title-home">ติดตามจนได้รับของ</div>
+            <p class="step-text-home">ดูสถานะ Preparing, Shipped และยืนยันรับสินค้าได้จากหน้า Delivery</p>
+        </div>
+    </div>
+</div>
+
+<div class="container home-extra-section">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 class="section-title" style="margin-top:0;">ลูกค้าพูดถึง BAGERY</h2>
+        <span class="view-all" style="pointer-events:none;">รีวิวสั้น ๆ จากประสบการณ์จริง</span>
+    </div>
+    <div class="review-grid-home">
+        <div class="review-card-home">
+            <div class="review-stars-home">★★★★★</div>
+            <p class="review-copy-home">“ครัวซองต์กรอบนอกนุ่มในมาก สั่งช่วงเช้าคือยังอุ่นอยู่เลย รู้สึกว่าร้านใส่ใจทั้งรสชาติและแพ็กเกจจริง ๆ”</p>
+            <div class="review-meta-home">Thanaporn</div>
+            <div class="review-role-home">สั่งประจำช่วงมื้อเช้า</div>
+        </div>
+        <div class="review-card-home">
+            <div class="review-stars-home">★★★★★</div>
+            <p class="review-copy-home">“ชอบที่ระบบติดตามออเดอร์ดูง่าย หลังโอนแล้วก็เห็นสถานะต่อเนื่อง ไม่ต้องทักถามร้านหลายรอบ”</p>
+            <div class="review-meta-home">Mink</div>
+            <div class="review-role-home">ลูกค้าที่สั่งเค้กวันเกิด</div>
+        </div>
+        <div class="review-card-home">
+            <div class="review-stars-home">★★★★★</div>
+            <p class="review-copy-home">“โปรโมชั่นกับการส่งฟรีช่วงแรกช่วยให้ตัดสินใจลองร้านนี้ง่ายมาก พอลองแล้วก็กลับมาซื้อซ้ำจริง”</p>
+            <div class="review-meta-home">ปราย</div>
+            <div class="review-role-home">ลูกค้าใหม่ที่กลายเป็นขาประจำ</div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="cta-home">
+        <div class="cta-home-grid">
+            <div>
+                <div class="home-kicker">Ready To Order</div>
+                <h3 class="home-heading">ถ้าหิวตอนนี้ เลือกเมนูแล้วไปต่อที่ checkout ได้เลย</h3>
+                <p class="home-text">
+                    หน้า Home ที่ดีควรพาคนไปขั้นตอนถัดไปได้ทันที เราเลยใส่ทางลัดไว้ให้ครบทั้งดูเมนู, ไป checkout และไปติดตามออเดอร์
+                    สำหรับคนที่กำลังรอของอยู่แล้ว
+                </p>
+                <div class="hero-actions">
+                    <a asp-controller="Account" asp-action="Menu" class="btn-highlight">ดูเมนูทั้งหมด</a>
+                    <a asp-controller="Account" asp-action="Checkout" class="btn-hero-secondary" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a;">ไปที่ Checkout</a>
+                    <a asp-controller="Account" asp-action="Delivery" class="btn-hero-secondary" style="background:#fff;color:#1a1a1a;border-color:#E5E7EB;">ติดตามออเดอร์</a>
+                </div>
+            </div>
+            <div class="cta-home-metrics">
+                <div class="cta-home-metric">
+                    <strong>เมนูยอดนิยม</strong>
+                    ครัวซองต์, ชีสเค้ก, เค้กช็อกโกแลต และเมนูเซ็ตมื้อเช้า
+                </div>
+                <div class="cta-home-metric">
+                    <strong>ชำระเงินง่าย</strong>
+                    รองรับ PromptPay QR และอัปโหลดสลิปในหน้าเดียว
+                </div>
+                <div class="cta-home-metric">
+                    <strong>ติดตามต่อได้</strong>
+                    ดูสถานะออเดอร์ย้อนหลังและยืนยันรับสินค้าได้จากหน้า Delivery
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="home-panel" style="margin-bottom:3rem;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="section-title" style="margin-top:0;">คำถามที่ลูกค้ามักสงสัย</h2>
+            <span class="view-all" style="pointer-events:none;">ตอบไว้ก่อนเพื่อช่วยให้ตัดสินใจง่ายขึ้น</span>
+        </div>
+        <div class="faq-grid-home">
+            <div class="faq-card-home">
+                <div class="faq-question-home">ต้องสมัครสมาชิกก่อนสั่งไหม?</div>
+                <p class="faq-answer-home">ถ้าอยากใช้โปรสมาชิก, ติดตามออเดอร์ และเก็บประวัติการสั่งซื้อ แนะนำให้สมัครก่อนเพื่อใช้งานได้ครบที่สุด</p>
+            </div>
+            <div class="faq-card-home">
+                <div class="faq-question-home">ชำระเงินได้ทางไหน?</div>
+                <p class="faq-answer-home">ตอนนี้หน้า Payment รองรับ PromptPay QR และอัปโหลดสลิปเพื่อให้แอดมินตรวจสอบและยืนยันการชำระเงิน</p>
+            </div>
+            <div class="faq-card-home">
+                <div class="faq-question-home">หลังโอนแล้วดูสถานะตรงไหน?</div>
+                <p class="faq-answer-home">ไปที่หน้า Delivery เพื่อดูสถานะตั้งแต่ PendingVerify, Paid, Preparing, Shipped จนถึงรับของเรียบร้อย</p>
+            </div>
+            <div class="faq-card-home">
+                <div class="faq-question-home">ถ้าได้รับของแล้วมีปัญหาทำยังไง?</div>
+                <p class="faq-answer-home">ในหน้า Delivery จะมีปุ่มแจ้งปัญหาเมื่อออเดอร์อยู่ระหว่างจัดส่ง พร้อมช่องทางติดต่อร้านโดยตรง</p>
             </div>
         </div>
     </div>

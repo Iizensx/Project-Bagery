@@ -1,63 +1,789 @@
-@model List<_66022380.Models.Db.User>
+@using _66022380.Models.Db
+@model List<User>
 
 @{
     ViewBag.Title = "จัดการผู้ใช้งาน";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var roles = ViewBag.Roles as List<Role> ?? new List<Role>();
 }
 
-<div class="dashboard-card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 class="dashboard-card-title" style="margin: 0;">
-            <i class="fas fa-users"></i> รายชื่อผู้ใช้งาน
-        </h3>
-        <a asp-action="Lab10" asp-controller="Account" class="btn btn-success btn-sm">
-            <i class="fas fa-plus"></i> เพิ่มผู้ใช้งาน
-        </a>
+<style>
+    .member-shell {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .hero-card {
+        position: relative;
+        overflow: hidden;
+        padding: 1.8rem;
+        border-radius: 28px;
+        background: linear-gradient(135deg, #111827 0%, #1e293b 48%, #f97316 130%);
+        color: #fff;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    .hero-card::before,
+    .hero-card::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+    }
+
+    .hero-card::before {
+        width: 210px;
+        height: 210px;
+        top: -60px;
+        right: -30px;
+    }
+
+    .hero-card::after {
+        width: 150px;
+        height: 150px;
+        left: 12%;
+        bottom: -60px;
+    }
+
+    .hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        background: rgba(249,115,22,0.16);
+        color: #fed7aa;
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .hero-title {
+        margin: 1rem 0 0.7rem;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        line-height: 0.98;
+    }
+
+    .hero-copy {
+        max-width: 760px;
+        color: rgba(255,255,255,0.8);
+        line-height: 1.75;
+        font-size: 0.96rem;
+        margin: 0;
+    }
+
+    .hero-panel {
+        padding: 1.15rem;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    .hero-panel-label {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .hero-panel-value {
+        margin-top: 0.45rem;
+        font-size: 1.95rem;
+        font-weight: 900;
+    }
+
+    .hero-panel-copy {
+        margin-top: 0.35rem;
+        color: rgba(255,255,255,0.75);
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+
+    .member-card {
+        background: #fff;
+        border-radius: 24px;
+        padding: 1.5rem;
+        border: 1px solid #eef2f7;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+    }
+
+    .member-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .member-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.35rem;
+        font-weight: 800;
+    }
+
+    .member-subtitle {
+        margin: 0.35rem 0 0;
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+
+    .member-alert {
+        margin-bottom: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 14px;
+        font-weight: 700;
+    }
+
+    .member-alert.success {
+        background: #ecfdf3;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .member-alert.error {
+        background: #fff1f2;
+        color: #be123c;
+        border: 1px solid #fecdd3;
+    }
+
+    .add-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.9rem;
+        align-items: end;
+    }
+
+    .field-label {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: #475569;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .member-input,
+    .member-select {
+        width: 100%;
+        border: 1px solid #dbe3ee;
+        border-radius: 14px;
+        padding: 0.8rem 0.95rem;
+        font-size: 0.94rem;
+        color: #0f172a;
+        background: #fff;
+    }
+
+    .member-input:focus,
+    .member-select:focus {
+        outline: none;
+        border-color: #f97316;
+        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
+    }
+
+    .member-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+    }
+
+    .member-btn {
+        border: none;
+        border-radius: 14px;
+        padding: 0.82rem 1.15rem;
+        font-size: 0.92rem;
+        font-weight: 800;
+        cursor: pointer;
+        text-decoration: none;
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .member-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .member-btn.primary {
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(249, 115, 22, 0.2);
+    }
+
+    .member-btn.secondary {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .member-btn.secondary.active {
+        background: #1d4ed8;
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(29, 78, 216, 0.18);
+    }
+
+    .member-btn.danger {
+        background: #fff1f2;
+        color: #be123c;
+    }
+
+    .member-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .member-search {
+        width: 100%;
+        max-width: 320px;
+        border: 1px solid #dbe3ee;
+        border-radius: 14px;
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    .role-filters {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .member-summary {
+        margin-bottom: 1rem;
+        color: #64748b;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .member-table-wrap {
+        overflow-x: auto;
+    }
+
+    .member-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.9rem;
+    }
+
+    .member-table th {
+        padding: 0 0.7rem 0.35rem;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .member-row {
+        background: #f8fafc;
+        box-shadow: inset 0 0 0 1px #e2e8f0;
+    }
+
+    .member-row td {
+        padding: 1rem 0.7rem;
+        vertical-align: middle;
+    }
+
+    .member-row td:first-child {
+        border-top-left-radius: 18px;
+        border-bottom-left-radius: 18px;
+    }
+
+    .member-row td:last-child {
+        border-top-right-radius: 18px;
+        border-bottom-right-radius: 18px;
+    }
+
+    .user-id-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 48px;
+        padding: 0.45rem 0.75rem;
+        border-radius: 999px;
+        background: #fff;
+        color: #0f172a;
+        font-weight: 800;
+        border: 1px solid #dbe3ee;
+    }
+
+    .user-name {
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .user-meta {
+        margin-top: 0.3rem;
+        display: grid;
+        gap: 0.18rem;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .role-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 800;
+    }
+
+    .role-admin { background: #dbeafe; color: #1d4ed8; }
+    .role-staff { background: #fef3c7; color: #92400e; }
+    .role-user { background: #e5e7eb; color: #374151; }
+
+    .member-muted {
+        color: #94a3b8;
+        font-size: 0.84rem;
+    }
+
+    .pagination-bar {
+        margin-top: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .page-status {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .pagination-actions {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .member-btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .empty-users {
+        padding: 2rem;
+        border-radius: 18px;
+        text-align: center;
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px dashed #cbd5e1;
+        font-weight: 700;
+    }
+
+    .modal-panel {
+        border: none;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    .modal-header.custom {
+        border-bottom: none;
+        padding: 1.2rem 1.3rem 0.6rem;
+        background: linear-gradient(180deg, #fff7ed, #fff);
+    }
+
+    .modal-body.custom {
+        padding: 0.5rem 1.3rem 1.3rem;
+    }
+
+    .edit-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    .edit-grid .full {
+        grid-column: 1 / -1;
+    }
+
+    @@media (max-width: 1200px) {
+        .hero-grid,
+        .add-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .member-card {
+            padding: 1rem;
+        }
+
+        .hero-grid,
+        .member-header,
+        .member-toolbar,
+        .pagination-bar {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .add-grid,
+        .edit-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .edit-grid .full {
+            grid-column: auto;
+        }
+    }
+</style>
+
+<div class="member-shell">
+    <div class="hero-card">
+        <div class="hero-grid">
+            <div>
+                <div class="hero-kicker"><i class="fas fa-users-gear"></i> Member Control</div>
+                <h2 class="hero-title">จัดการผู้ใช้งานในระบบ</h2>
+                <p class="hero-copy">หน้าเดียวสำหรับเพิ่มสมาชิกใหม่, แก้ไขข้อมูลทั้งหมด, จัดสิทธิ์ role และลบผู้ใช้งานแบบปลอดภัย ช่วยให้ฝั่งแอดมินดูแลข้อมูลสมาชิกได้รวดเร็วและเป็นระเบียบ</p>
+            </div>
+            <div class="hero-panel">
+                <div class="hero-panel-label">ผู้ใช้งานทั้งหมด</div>
+                <div class="hero-panel-value">@Model.Count คน</div>
+                <div class="hero-panel-copy">สามารถกรองตาม role, ค้นหารายชื่อ, และเปิด modal เพื่อแก้ข้อมูลสมาชิกแต่ละคนได้ทันที</div>
+            </div>
+        </div>
     </div>
 
-    <div style="margin-bottom: 20px;">
-        <input type="text" class="form-control" placeholder="🔍 ค้นหาผู้ใช้งาน..." />
+    <div class="member-card">
+        <div class="member-header">
+            <div>
+                <h2 class="member-title"><i class="fas fa-users-cog"></i> จัดการผู้ใช้งาน</h2>
+                <p class="member-subtitle">แสดงครั้งละ 10 คน, แยกดูตาม role ได้ และกดแก้ไขเพื่อเปิดหน้าต่างจัดการข้อมูลของสมาชิกคนนั้น</p>
+            </div>
+        </div>
+
+        @if (TempData["MemberSuccess"] != null)
+        {
+            <div class="member-alert success">@TempData["MemberSuccess"]</div>
+        }
+
+        @if (TempData["MemberError"] != null)
+        {
+            <div class="member-alert error">@TempData["MemberError"]</div>
+        }
+
+        <form asp-action="SaveMember" asp-controller="Account" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="userId" value="0" />
+
+            <div class="add-grid">
+                <div>
+                    <label class="field-label">ชื่อผู้ใช้งาน</label>
+                    <input class="member-input" type="text" name="username" required />
+                </div>
+                <div>
+                    <label class="field-label">อีเมล</label>
+                    <input class="member-input" type="email" name="email" />
+                </div>
+                <div>
+                    <label class="field-label">เบอร์โทร</label>
+                    <input class="member-input" type="text" name="phone" />
+                </div>
+                <div>
+                    <label class="field-label">รหัสผ่าน</label>
+                    <input class="member-input" type="text" name="password" required />
+                </div>
+                <div>
+                    <label class="field-label">สิทธิ์</label>
+                    <select class="member-select" name="roleId" required>
+                        <option value="">เลือกสิทธิ์</option>
+                        @foreach (var role in roles)
+                        {
+                            <option value="@role.RoleId">@role.RoleName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="member-actions" style="margin-top: 1rem;">
+                <button type="submit" class="member-btn primary">
+                    <i class="fas fa-user-plus"></i> เพิ่มผู้ใช้งาน
+                </button>
+            </div>
+        </form>
     </div>
 
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>รหัสผู้ใช้</th>
-                <th>ชื่อผู้ใช้</th>
-                <th>อีเมล</th>
-                <th>เบอร์โทร</th>
-                <th>บทบาท</th>
-                <th>การกระทำ</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var user in Model)
-            {
-                <tr>
-                    <td>@user.UserId</td>
-                    <td>@user.Username</td>
-                    <td>@(user.Email ?? "-")</td>
-                    <td>@(user.Phone ?? "-")</td>
-                    <td>
-                        @if (user.Role?.RoleName == "Admin")
+    <div class="member-card">
+        <div class="member-toolbar">
+            <div class="role-filters">
+                <button type="button" class="member-btn secondary active role-filter-btn" data-role-filter="all">ทั้งหมด</button>
+                <button type="button" class="member-btn secondary role-filter-btn" data-role-filter="Admin">Admin</button>
+                <button type="button" class="member-btn secondary role-filter-btn" data-role-filter="Staff">Staff</button>
+                <button type="button" class="member-btn secondary role-filter-btn" data-role-filter="User">User</button>
+            </div>
+            <input id="memberSearch" class="member-search" type="text" placeholder="ค้นหาชื่อ, อีเมล หรือเบอร์โทร..." />
+        </div>
+
+        <div id="memberSummary" class="member-summary">กำลังแสดงข้อมูลผู้ใช้งาน</div>
+
+        @if (Model.Any())
+        {
+            <div class="member-table-wrap">
+                <table class="member-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 90px;">ID</th>
+                            <th>ผู้ใช้งาน</th>
+                            <th style="width: 160px;">Role</th>
+                            <th style="width: 250px;">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="memberTableBody">
+                        @foreach (var user in Model)
                         {
-                            <span class="badge bg-primary">Admin</span>
+                            var roleName = user.Role?.RoleName ?? "User";
+                            var roleClass = roleName == "Admin"
+                                ? "role-admin"
+                                : roleName == "Staff"
+                                    ? "role-staff"
+                                    : "role-user";
+
+                            <tr class="member-row member-search-row"
+                                data-search="@($"{user.UserId} {user.Username} {user.Email} {user.Phone} {roleName}".ToLower())"
+                                data-role="@roleName">
+                                <td>
+                                    <span class="user-id-badge">#@user.UserId</span>
+                                </td>
+                                <td>
+                                    <div class="user-name">@user.Username</div>
+                                    <div class="user-meta">
+                                        <div>อีเมล: @(string.IsNullOrWhiteSpace(user.Email) ? "-" : user.Email)</div>
+                                        <div>เบอร์โทร: @(string.IsNullOrWhiteSpace(user.Phone) ? "-" : user.Phone)</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="role-badge @roleClass">@roleName</span>
+                                </td>
+                                <td>
+                                    <div class="member-actions">
+                                        <button type="button"
+                                                class="member-btn secondary edit-member-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editMemberModal"
+                                                data-user-id="@user.UserId"
+                                                data-username="@user.Username"
+                                                data-email="@user.Email"
+                                                data-phone="@user.Phone"
+                                                data-role-id="@user.RoleId">
+                                            <i class="fas fa-pen"></i> แก้ไข
+                                        </button>
+
+                                        <form asp-action="DeleteMember" asp-controller="Account" method="post" onsubmit="return confirmDeleteMember('@user.Username', @user.UserId);">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="userId" value="@user.UserId" />
+                                            <button type="submit" class="member-btn danger">
+                                                <i class="fas fa-trash-alt"></i> ลบ
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
                         }
-                        else if (user.Role?.RoleName == "Staff")
-                        {
-                            <span class="badge bg-warning text-dark">Staff</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">User</span>
-                        }
-                    </td>
-                    <td>
-    <a asp-route-id="@user.UserId" asp-action="Lab10" asp-controller="Account" class="btn btn-sm btn-dashboard primary">แก้ไข</a>
-    <a asp-route-id="@user.UserId" asp-action="Lab10D" asp-controller="Account" class="btn btn-sm btn-dashboard danger">ลบ</a>
-</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-bar">
+                <div id="pageStatus" class="page-status">หน้า 1 / 1</div>
+                <div class="pagination-actions">
+                    <button id="prevPageBtn" type="button" class="member-btn secondary">ย้อนกลับ</button>
+                    <button id="nextPageBtn" type="button" class="member-btn secondary">หน้าถัดไป</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="empty-users">ยังไม่มีข้อมูลผู้ใช้งานในระบบ</div>
+        }
+    </div>
 </div>
+
+<div class="modal fade" id="editMemberModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-panel">
+            <div class="modal-header custom">
+                <div>
+                    <div class="field-label" style="margin-bottom: 0.35rem;">Edit Member</div>
+                    <h5 class="modal-title" style="margin: 0; font-weight: 900; color: #0f172a;">แก้ไขข้อมูลผู้ใช้งาน</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body custom">
+                <form asp-action="SaveMember" asp-controller="Account" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="editUserId" name="userId" value="0" />
+
+                    <div class="edit-grid">
+                        <div>
+                            <label class="field-label">ชื่อผู้ใช้งาน</label>
+                            <input id="editUsername" class="member-input" type="text" name="username" required />
+                        </div>
+                        <div>
+                            <label class="field-label">อีเมล</label>
+                            <input id="editEmail" class="member-input" type="email" name="email" />
+                        </div>
+                        <div>
+                            <label class="field-label">เบอร์โทร</label>
+                            <input id="editPhone" class="member-input" type="text" name="phone" />
+                        </div>
+                        <div>
+                            <label class="field-label">สิทธิ์</label>
+                            <select id="editRoleId" class="member-select" name="roleId" required>
+                                @foreach (var role in roles)
+                                {
+                                    <option value="@role.RoleId">@role.RoleName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="full">
+                            <label class="field-label">รหัสผ่านใหม่</label>
+                            <input class="member-input" type="text" name="password" placeholder="เว้นว่างถ้าไม่ต้องการเปลี่ยนรหัสผ่าน" />
+                        </div>
+                    </div>
+
+                    <div class="member-actions" style="margin-top: 1.2rem;">
+                        <button type="submit" class="member-btn primary">
+                            <i class="fas fa-save"></i> บันทึกการแก้ไข
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmDeleteMember(username, userId) {
+            return confirm(`ยืนยันการลบผู้ใช้งาน ${username} (#${userId}) ใช่หรือไม่?`);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const rows = Array.from(document.querySelectorAll('.member-search-row'));
+            const searchInput = document.getElementById('memberSearch');
+            const summary = document.getElementById('memberSummary');
+            const prevBtn = document.getElementById('prevPageBtn');
+            const nextBtn = document.getElementById('nextPageBtn');
+            const pageStatus = document.getElementById('pageStatus');
+            const roleButtons = Array.from(document.querySelectorAll('.role-filter-btn'));
+            const editButtons = Array.from(document.querySelectorAll('.edit-member-btn'));
+            const pageSize = 10;
+            let currentPage = 1;
+            let currentRole = 'all';
+
+            function getFilteredRows() {
+                const keyword = (searchInput?.value || '').trim().toLowerCase();
+
+                return rows.filter(row => {
+                    const role = row.getAttribute('data-role') || '';
+                    const search = row.getAttribute('data-search') || '';
+                    const roleMatch = currentRole === 'all' || role === currentRole;
+                    const searchMatch = !keyword || search.includes(keyword);
+                    return roleMatch && searchMatch;
+                });
+            }
+
+            function renderRows() {
+                const filteredRows = getFilteredRows();
+                const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+                if (currentPage > totalPages) currentPage = totalPages;
+
+                rows.forEach(row => {
+                    row.style.display = 'none';
+                });
+
+                const startIndex = (currentPage - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, filteredRows.length);
+
+                filteredRows.slice(startIndex, endIndex).forEach(row => {
+                    row.style.display = '';
+                });
+
+                if (summary) {
+                    summary.textContent = filteredRows.length
+                        ? `แสดง ${startIndex + 1}-${endIndex} จาก ${filteredRows.length} คน`
+                        : 'ไม่พบข้อมูลผู้ใช้งานตามเงื่อนไขที่เลือก';
+                }
+
+                if (pageStatus) {
+                    pageStatus.textContent = `หน้า ${currentPage} / ${totalPages}`;
+                }
+
+                if (prevBtn) prevBtn.disabled = currentPage === 1;
+                if (nextBtn) nextBtn.disabled = currentPage === totalPages || filteredRows.length === 0;
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    currentPage = 1;
+                    renderRows();
+                });
+            }
+
+            roleButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    currentRole = button.getAttribute('data-role-filter') || 'all';
+                    currentPage = 1;
+
+                    roleButtons.forEach(item => item.classList.remove('active'));
+                    button.classList.add('active');
+
+                    renderRows();
+                });
+            });
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function () {
+                    if (currentPage > 1) {
+                        currentPage -= 1;
+                        renderRows();
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function () {
+                    const totalPages = Math.max(1, Math.ceil(getFilteredRows().length / pageSize));
+                    if (currentPage < totalPages) {
+                        currentPage += 1;
+                        renderRows();
+                    }
+                });
+            }
+
+            editButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    document.getElementById('editUserId').value = button.getAttribute('data-user-id') || '0';
+                    document.getElementById('editUsername').value = button.getAttribute('data-username') || '';
+                    document.getElementById('editEmail').value = button.getAttribute('data-email') || '';
+                    document.getElementById('editPhone').value = button.getAttribute('data-phone') || '';
+                    document.getElementById('editRoleId').value = button.getAttribute('data-role-id') || '';
+                });
+            });
+
+            renderRows();
+        });
+    </script>
+}

@@ -444,12 +444,31 @@
         gap: 1rem;
     }
 
+    .history-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .history-summary {
+        color: #6b7280;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
     .history-card {
         padding: 1.3rem 1.35rem;
         border: 1px solid #f7dccb;
         border-radius: 22px;
         background: rgba(255,255,255,0.95);
         box-shadow: 0 16px 38px rgba(60,30,8,0.06);
+    }
+
+    .history-card[hidden] {
+        display: none !important;
     }
 
     .history-head {
@@ -511,6 +530,78 @@
         font-size: 0.9rem;
         font-weight: 700;
         line-height: 1.65;
+    }
+
+    .history-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f4e3d8;
+        flex-wrap: wrap;
+    }
+
+    .history-discount {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        align-items: center;
+    }
+
+    .history-discount .history-label {
+        margin-bottom: 0;
+    }
+
+    .history-discount-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.42rem 0.8rem;
+        border-radius: 999px;
+        background: #fff5eb;
+        color: #c2410c;
+        font-size: 0.78rem;
+        font-weight: 800;
+        border: 1px solid #fed7aa;
+    }
+
+    .history-discount-chip.muted {
+        background: #f9fafb;
+        color: #6b7280;
+        border-color: #e5e7eb;
+    }
+
+    .history-nav {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.8rem;
+        margin-top: 1.1rem;
+        flex-wrap: wrap;
+    }
+
+    .history-page-indicator {
+        color: #6b7280;
+        font-size: 0.88rem;
+        font-weight: 800;
+    }
+
+    .history-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    .history-detail-card {
+        padding: 1rem;
+        border: 1px solid #f7dccb;
+        border-radius: 18px;
+        background: #fffaf7;
+    }
+
+    .history-detail-wide {
+        grid-column: 1 / -1;
     }
 
     .empty-history {
@@ -639,6 +730,10 @@
         .track-state-box {
             text-align: left;
         }
+
+        .history-detail-grid {
+            grid-template-columns: 1fr;
+        }
     }
 
     @@media (max-width: 760px) {
@@ -674,6 +769,11 @@
         .history-pill-row {
             justify-content: start;
         }
+
+        .history-footer,
+        .history-nav {
+            justify-content: start;
+        }
     }
 </style>
 
@@ -688,6 +788,8 @@
     {
         return Model.TrackingStage > step ? "on" : "";
     }
+
+    var historyTotal = Model.OrderHistory.Count;
 }
 
 <section class="del-hero">
@@ -832,9 +934,13 @@
 
         @if (Model.OrderHistory.Any())
         {
+            <div class="history-toolbar">
+                <div class="history-summary">แสดงประวัติย้อนหลังทั้งหมด @historyTotal รายการ โดยแสดงครั้งละ 4 รายการ</div>
+            </div>
             <div class="history-grid">
-                @foreach (var order in Model.OrderHistory)
+                @for (var i = 0; i < Model.OrderHistory.Count; i++)
                 {
+                    var order = Model.OrderHistory[i];
                     <div class="history-card">
                         <div class="history-head">
                             <div>
@@ -858,16 +964,49 @@
                             </div>
                             <div>
                                 <div class="history-label">ยอดรวม</div>
-                                <div class="history-value">฿@order.TotalAmount</div>
+                                <div class="history-value">฿@order.TotalAmount.ToString("N2")</div>
                             </div>
                             <div>
                                 <div class="history-label">ที่อยู่จัดส่ง</div>
                                 <div class="history-value">@order.DeliveryAddress</div>
                             </div>
                         </div>
+
+                        <div class="history-footer">
+                            <div class="history-discount">
+                                <div class="history-label">ส่วนลดที่ใช้</div>
+                                <div class="history-discount-chip @(order.DiscountDisplay == "-" ? "muted" : "")">
+                                    @(order.DiscountDisplay == "-" ? "ไม่มีส่วนลด" : $"{order.PromotionName} · {order.DiscountDisplay}")
+                                </div>
+                            </div>
+                            <button type="button"
+                                    class="action-btn secondary history-detail-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#historyDetailModal"
+                                    data-order-number="@order.OrderNumber"
+                                    data-order-date="@order.CreatedAtText"
+                                    data-order-status="@order.OrderStatus"
+                                    data-payment-status="@order.PaymentStatus"
+                                    data-total-amount="@order.TotalAmount.ToString("N2")"
+                                    data-item-summary="@order.ItemSummary"
+                                    data-delivery-address="@order.DeliveryAddress"
+                                    data-promotion-name="@order.PromotionName"
+                                    data-discount-display="@order.DiscountDisplay">
+                                ดูรายละเอียด
+                            </button>
+                        </div>
                     </div>
                 }
             </div>
+
+            @if (historyTotal > 4)
+            {
+                <div class="history-nav">
+                    <button type="button" class="action-btn secondary" id="historyPrevBtn">ย้อนกลับ</button>
+                    <div class="history-page-indicator" id="historyPageIndicator">หน้า 1 / 1</div>
+                    <button type="button" class="action-btn primary" id="historyNextBtn">หน้าถัดไป</button>
+                </div>
+            }
         }
         else
         {
@@ -926,6 +1065,56 @@
     </div>
 </div>
 
+<div class="modal fade" id="historyDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content modal-panel">
+            <div class="modal-header custom">
+                <div>
+                    <div class="section-title" style="margin-bottom:0.35rem;">Order Detail</div>
+                    <h5 class="modal-title" id="historyDetailTitle" style="margin:0; font-weight:900; color:#111827;">รายละเอียดออเดอร์</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body custom">
+                <div class="history-detail-grid">
+                    <div class="history-detail-card">
+                        <div class="history-label">วันที่ทำรายการ</div>
+                        <div class="history-value" id="historyModalDate">-</div>
+                    </div>
+                    <div class="history-detail-card">
+                        <div class="history-label">ยอดรวมสุทธิ</div>
+                        <div class="history-value" id="historyModalTotal">-</div>
+                    </div>
+                    <div class="history-detail-card">
+                        <div class="history-label">สถานะออเดอร์</div>
+                        <div class="history-value" id="historyModalOrderStatus">-</div>
+                    </div>
+                    <div class="history-detail-card">
+                        <div class="history-label">สถานะการชำระเงิน</div>
+                        <div class="history-value" id="historyModalPaymentStatus">-</div>
+                    </div>
+                    <div class="history-detail-card">
+                        <div class="history-label">โปรโมชั่น</div>
+                        <div class="history-value" id="historyModalPromotion">-</div>
+                    </div>
+                    <div class="history-detail-card">
+                        <div class="history-label">ส่วนลดที่ใช้</div>
+                        <div class="history-value" id="historyModalDiscount">-</div>
+                    </div>
+                    <div class="history-detail-card history-detail-wide">
+                        <div class="history-label">รายการสินค้า</div>
+                        <div class="history-value" id="historyModalItems">-</div>
+                    </div>
+                    <div class="history-detail-card history-detail-wide">
+                        <div class="history-label">ที่อยู่จัดส่ง</div>
+                        <div class="history-value" id="historyModalAddress">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
     async function completeOrder(orderId) {
@@ -950,5 +1139,87 @@
             alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
         }
     }
+
+    (() => {
+        const historyCards = Array.from(document.querySelectorAll('.history-card'));
+        const pageIndicator = document.getElementById('historyPageIndicator');
+        const prevBtn = document.getElementById('historyPrevBtn');
+        const nextBtn = document.getElementById('historyNextBtn');
+        const pageSize = 4;
+
+        if (historyCards.length) {
+            let currentPage = 1;
+            const totalPages = Math.max(1, Math.ceil(historyCards.length / pageSize));
+
+            const renderPage = () => {
+                const start = (currentPage - 1) * pageSize;
+                const end = start + pageSize;
+
+                historyCards.forEach((card, index) => {
+                    card.hidden = index < start || index >= end;
+                });
+
+                if (pageIndicator) {
+                    pageIndicator.textContent = `หน้า ${currentPage} / ${totalPages}`;
+                }
+
+                if (prevBtn) {
+                    prevBtn.disabled = currentPage === 1;
+                    prevBtn.style.opacity = currentPage === 1 ? '0.55' : '1';
+                }
+
+                if (nextBtn) {
+                    nextBtn.disabled = currentPage === totalPages;
+                    nextBtn.style.opacity = currentPage === totalPages ? '0.55' : '1';
+                }
+            };
+
+            prevBtn?.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage -= 1;
+                    renderPage();
+                }
+            });
+
+            nextBtn?.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage += 1;
+                    renderPage();
+                }
+            });
+
+            renderPage();
+        }
+
+        const historyDetailModal = document.getElementById('historyDetailModal');
+        if (historyDetailModal) {
+            historyDetailModal.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget;
+                if (!button) return;
+
+                const read = key => button.getAttribute(`data-${key}`) || '-';
+
+                const title = document.getElementById('historyDetailTitle');
+                const date = document.getElementById('historyModalDate');
+                const total = document.getElementById('historyModalTotal');
+                const orderStatus = document.getElementById('historyModalOrderStatus');
+                const paymentStatus = document.getElementById('historyModalPaymentStatus');
+                const promotion = document.getElementById('historyModalPromotion');
+                const discount = document.getElementById('historyModalDiscount');
+                const items = document.getElementById('historyModalItems');
+                const address = document.getElementById('historyModalAddress');
+
+                if (title) title.textContent = `รายละเอียดออเดอร์ #${read('order-number')}`;
+                if (date) date.textContent = read('order-date');
+                if (total) total.textContent = `฿${read('total-amount')}`;
+                if (orderStatus) orderStatus.textContent = read('order-status');
+                if (paymentStatus) paymentStatus.textContent = read('payment-status');
+                if (promotion) promotion.textContent = read('promotion-name');
+                if (discount) discount.textContent = read('discount-display') === '-' ? 'ไม่มีส่วนลด' : read('discount-display');
+                if (items) items.textContent = read('item-summary');
+                if (address) address.textContent = read('delivery-address');
+            });
+        }
+    })();
 </script>
 }

@@ -1,35 +1,642 @@
+@using _66022380.Models
+@model AdminDashboardViewModel
+
 @{
     ViewBag.Title = "Admin Dashboard";
-    ViewBag.PageTitle = "รายงาน & สรุปยอด";
+    ViewBag.PageTitle = "รายงานและสรุปยอด";
     Layout = "_AdminLayout";
+    var maxRevenue = Model.MonthlyRevenue.Any() ? Math.Max(Model.MonthlyRevenue.Max(x => x.Revenue), 1) : 1;
+
+    string StatusClass(string status)
+    {
+        return status switch
+        {
+            "Completed" => "success",
+            "Shipped" => "info",
+            "Preparing" => "warning",
+            "Paid" => "primary",
+            "Pending" => "muted",
+            _ => "muted"
+        };
+    }
 }
 
-<div class="stat-cards">
-    <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
-        <div class="stat-label">ยอดขายวันนี้</div>
-        <div class="stat-value">฿12,450</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-users"></i></div>
-        <div class="stat-label">ผู้เข้าชม</div>
-        <div class="stat-value">1,240</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-box"></i></div>
-        <div class="stat-label">ออเดอร์ใหม่</div>
-        <div class="stat-value">45</div>
-    </div>
-    <div class="stat-card" style="border-left-color: #ff6b6b;">
-        <div class="stat-icon" style="color: #ff6b6b;"><i class="fas fa-exclamation-triangle"></i></div>
-        <div class="stat-label">สินค้าใกล้หมด</div>
-        <div class="stat-value">12</div>
-    </div>
-</div>
+<style>
+    .admin-shell {
+        display: grid;
+        gap: 1.5rem;
+    }
 
-<div class="dashboard-card">
-    <h3 class="dashboard-card-title">สรุปภาพรวมรายเดือน</h3>
-    <div style="height: 300px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px;">
-        <p class="text-muted"><i class="fas fa-chart-line fa-3x mb-3 d-block text-center"></i> พื้นที่แสดงกราฟสถิติ</p>
-    </div>
+    .hero-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 28px;
+        padding: 2rem;
+        background: linear-gradient(135deg, #111827 0%, #1e293b 50%, #ea580c 130%);
+        color: #fff;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    .hero-card::before,
+    .hero-card::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+    }
+
+    .hero-card::before {
+        width: 220px;
+        height: 220px;
+        top: -70px;
+        right: -50px;
+    }
+
+    .hero-card::after {
+        width: 160px;
+        height: 160px;
+        bottom: -60px;
+        left: 18%;
+    }
+
+    .hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr);
+        gap: 1.25rem;
+        align-items: stretch;
+    }
+
+    .hero-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        background: rgba(249,115,22,0.18);
+        color: #fed7aa;
+        border: 1px solid rgba(253,186,116,0.18);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .hero-title {
+        margin: 1rem 0 0.7rem;
+        font-size: clamp(2rem, 4vw, 3.2rem);
+        font-weight: 900;
+        line-height: 0.98;
+    }
+
+    .hero-copy {
+        max-width: 720px;
+        color: rgba(255,255,255,0.78);
+        line-height: 1.75;
+        font-size: 0.96rem;
+        margin: 0;
+    }
+
+    .hero-panel {
+        padding: 1.15rem;
+        border-radius: 22px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.08);
+        backdrop-filter: blur(10px);
+    }
+
+    .hero-panel-label {
+        color: rgba(255,220,190,0.72);
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .hero-panel-value {
+        margin-top: 0.45rem;
+        font-size: 2rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .hero-panel-copy {
+        margin-top: 0.35rem;
+        color: rgba(255,255,255,0.75);
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .metric-card,
+    .content-card {
+        background: #fff;
+        border-radius: 24px;
+        border: 1px solid #e9eef5;
+        box-shadow: 0 18px 46px rgba(15, 23, 42, 0.05);
+    }
+
+    .metric-card {
+        padding: 1.3rem;
+    }
+
+    .metric-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        align-items: start;
+    }
+
+    .metric-icon {
+        width: 52px;
+        height: 52px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        font-size: 1.2rem;
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .metric-label {
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .metric-value {
+        margin-top: 0.6rem;
+        color: #0f172a;
+        font-size: 2rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .metric-sub {
+        margin-top: 0.35rem;
+        color: #94a3b8;
+        font-size: 0.88rem;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+        gap: 1rem;
+    }
+
+    .content-card {
+        padding: 1.35rem;
+    }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .card-title {
+        margin: 0;
+        color: #0f172a;
+        font-size: 1.08rem;
+        font-weight: 800;
+    }
+
+    .card-copy {
+        margin: 0.35rem 0 0;
+        color: #64748b;
+        font-size: 0.92rem;
+    }
+
+    .mini-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.72rem;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #c2410c;
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+
+    .chart-bars {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0.9rem;
+        align-items: end;
+        min-height: 260px;
+    }
+
+    .bar-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.6rem;
+        height: 100%;
+    }
+
+    .bar-track {
+        width: 100%;
+        height: 210px;
+        display: flex;
+        align-items: end;
+        padding: 0.5rem;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #fff7ed, #fff);
+        border: 1px solid #f4e7db;
+    }
+
+    .bar-fill {
+        width: 100%;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fb923c, #ea580c);
+        box-shadow: 0 14px 24px rgba(249,115,22,0.18);
+        min-height: 12px;
+    }
+
+    .bar-value {
+        color: #0f172a;
+        font-size: 0.86rem;
+        font-weight: 800;
+    }
+
+    .bar-label {
+        color: #64748b;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .stack-list {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .stack-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.95rem 1rem;
+        border-radius: 18px;
+        background: #f8fafc;
+        border: 1px solid #e5edf5;
+    }
+
+    .stack-name {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .stack-sub {
+        margin-top: 0.25rem;
+        color: #64748b;
+        font-size: 0.86rem;
+    }
+
+    .stack-value {
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 900;
+        text-align: right;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.38rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 800;
+    }
+
+    .status-chip.success { background: #ecfdf3; color: #15803d; }
+    .status-chip.info { background: #eff6ff; color: #2563eb; }
+    .status-chip.warning { background: #fff7ed; color: #c2410c; }
+    .status-chip.primary { background: #eef2ff; color: #4f46e5; }
+    .status-chip.muted { background: #f1f5f9; color: #475569; }
+
+    .order-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.75rem;
+    }
+
+    .order-table th {
+        padding: 0 0.75rem 0.3rem;
+        color: #64748b;
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .order-row {
+        background: #f8fafc;
+        box-shadow: inset 0 0 0 1px #e5edf5;
+    }
+
+    .order-row td {
+        padding: 0.95rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .order-row td:first-child {
+        border-top-left-radius: 16px;
+        border-bottom-left-radius: 16px;
+    }
+
+    .order-row td:last-child {
+        border-top-right-radius: 16px;
+        border-bottom-right-radius: 16px;
+    }
+
+    .helper-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .helper-box {
+        padding: 1.15rem;
+        border-radius: 22px;
+        background: linear-gradient(180deg, #fff, #f8fafc);
+        border: 1px solid #e9eef5;
+    }
+
+    .helper-kicker {
+        color: #f97316;
+        font-size: 0.76rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .helper-box h4 {
+        margin: 0.55rem 0 0.45rem;
+        color: #0f172a;
+        font-size: 1rem;
+        font-weight: 800;
+    }
+
+    .helper-box p {
+        margin: 0;
+        color: #64748b;
+        line-height: 1.7;
+        font-size: 0.9rem;
+    }
+
+    @@media (max-width: 1200px) {
+        .metrics-grid,
+        .helper-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .dashboard-grid,
+        .hero-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .metrics-grid,
+        .helper-grid,
+        .chart-bars {
+            grid-template-columns: 1fr;
+        }
+
+        .hero-card,
+        .metric-card,
+        .content-card {
+            padding: 1rem;
+        }
+
+        .bar-track {
+            height: 120px;
+        }
+    }
+</style>
+
+<div class="admin-shell">
+    <section class="hero-card">
+        <div class="hero-grid">
+            <div>
+                <div class="hero-kicker"><i class="fas fa-sparkles"></i> Live Admin Overview</div>
+                <h2 class="hero-title">Bagery Admin Dashboard</h2>
+                <p class="hero-copy">หน้าสรุปนี้ดึงข้อมูลจริงจากระบบออเดอร์ สมาชิก โปรโมชั่น และสต๊อก เพื่อให้เห็นภาพรวมของร้านในหน้าเดียว ทั้งยอดรายวัน งานที่ต้องรีบจัดการ และความเคลื่อนไหวล่าสุดของระบบ</p>
+            </div>
+            <div class="hero-panel">
+                <div class="hero-panel-label">ยอดขายวันนี้</div>
+                <div class="hero-panel-value">@Model.TodayRevenue.ToString("N2") บาท</div>
+                <div class="hero-panel-copy">วันนี้มีออเดอร์เข้า @Model.TodayOrders รายการ และมีออเดอร์รอตรวจสอบสลิป @Model.PendingVerificationOrders รายการ</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-top">
+                <div>
+                    <div class="metric-label">สมาชิกทั้งหมด</div>
+                    <div class="metric-value">@Model.TotalUsers</div>
+                    <div class="metric-sub">ผู้ใช้งานที่อยู่ในระบบตอนนี้</div>
+                </div>
+                <div class="metric-icon"><i class="fas fa-users"></i></div>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-top">
+                <div>
+                    <div class="metric-label">รอตรวจสลิป</div>
+                    <div class="metric-value">@Model.PendingVerificationOrders</div>
+                    <div class="metric-sub">ควรเช็กเพื่อเดินออเดอร์ต่อ</div>
+                </div>
+                <div class="metric-icon"><i class="fas fa-receipt"></i></div>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-top">
+                <div>
+                    <div class="metric-label">ใกล้หมด / หมด</div>
+                    <div class="metric-value">@Model.LowStockProducts / @Model.OutOfStockProducts</div>
+                    <div class="metric-sub">สินค้าที่ควรเติมสต๊อกก่อนขายสะดุด</div>
+                </div>
+                <div class="metric-icon"><i class="fas fa-box-open"></i></div>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-top">
+                <div>
+                    <div class="metric-label">โปรโมชั่น</div>
+                    <div class="metric-value">@Model.ActivePromotions</div>
+                    <div class="metric-sub">รายการโปรโมชั่นที่มีในระบบ</div>
+                </div>
+                <div class="metric-icon"><i class="fas fa-tags"></i></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="dashboard-grid">
+        <div class="content-card">
+            <div class="card-head">
+                <div>
+                    <h3 class="card-title">รายได้ 6 เดือนล่าสุด</h3>
+                    <p class="card-copy">คิดจากออเดอร์ที่เข้าสถานะชำระเงินแล้วขึ้นไป</p>
+                </div>
+                <span class="mini-pill">Revenue Trend</span>
+            </div>
+
+            <div class="chart-bars">
+                @foreach (var item in Model.MonthlyRevenue)
+                {
+                    var height = Math.Max((int)Math.Round((double)(item.Revenue / maxRevenue * 100m)), 8);
+                    <div class="bar-col">
+                        <div class="bar-track">
+                            <div class="bar-fill" style="height:@height%;"></div>
+                        </div>
+                        <div class="bar-value">@item.Revenue.ToString("N0")</div>
+                        <div class="bar-label">@item.Label (@item.Orders)</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="content-card">
+            <div class="card-head">
+                <div>
+                    <h3 class="card-title">สถานะงานหลัก</h3>
+                    <p class="card-copy">ดูว่างานฝั่ง fulfillment อยู่ช่วงไหนมากที่สุด</p>
+                </div>
+                <span class="mini-pill">Operations</span>
+            </div>
+
+            <div class="stack-list">
+                <div class="stack-item">
+                    <div>
+                        <div class="stack-name">ออเดอร์กำลังเตรียม</div>
+                        <div class="stack-sub">แอดมินรับงานแล้วและกำลังจัดสินค้า</div>
+                    </div>
+                    <div class="stack-value">@Model.PreparingOrders รายการ</div>
+                </div>
+                <div class="stack-item">
+                    <div>
+                        <div class="stack-name">ออเดอร์กำลังจัดส่ง</div>
+                        <div class="stack-sub">อยู่ระหว่างส่งถึงลูกค้า</div>
+                    </div>
+                    <div class="stack-value">@Model.ShippedOrders รายการ</div>
+                </div>
+                <div class="stack-item">
+                    <div>
+                        <div class="stack-name">ออเดอร์ปิดงานแล้ว</div>
+                        <div class="stack-sub">ลูกค้ากดยืนยันรับของเรียบร้อย</div>
+                    </div>
+                    <div class="stack-value">@Model.CompletedOrders รายการ</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="dashboard-grid">
+        <div class="content-card">
+            <div class="card-head">
+                <div>
+                    <h3 class="card-title">ออเดอร์ล่าสุด</h3>
+                    <p class="card-copy">รายการที่เข้ามาหรือถูกอัปเดตล่าสุดในระบบ</p>
+                </div>
+                <span class="mini-pill">Recent Orders</span>
+            </div>
+
+            <table class="order-table">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>ลูกค้า</th>
+                        <th>ยอดรวม</th>
+                        <th>สถานะ</th>
+                        <th>ชำระเงิน</th>
+                        <th>เวลา</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.RecentOrders)
+                    {
+                        <tr class="order-row">
+                            <td><strong>#ORD-@order.OrderId</strong></td>
+                            <td>@order.CustomerName</td>
+                            <td>@order.TotalAmount.ToString("N2") บาท</td>
+                            <td><span class="status-chip @StatusClass(order.Status)">@order.Status</span></td>
+                            <td><span class="status-chip @StatusClass(order.PaymentStatus == "Paid" ? "success" : order.PaymentStatus == "PendingVerify" ? "warning" : "muted")">@order.PaymentStatus</span></td>
+                            <td>@order.OrderDateText</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="content-card">
+            <div class="card-head">
+                <div>
+                    <h3 class="card-title">สินค้าใกล้หมด</h3>
+                    <p class="card-copy">สินค้าที่เหลือน้อยหรือหมดแล้วในสต๊อก</p>
+                </div>
+                <span class="mini-pill">Low Stock</span>
+            </div>
+
+            <div class="stack-list">
+                @if (Model.LowStockItems.Any())
+                {
+                    @foreach (var item in Model.LowStockItems)
+                    {
+                        <div class="stack-item">
+                            <div>
+                                <div class="stack-name">@item.ProductName</div>
+                                <div class="stack-sub">@item.CategoryName</div>
+                            </div>
+                            <div class="stack-value">@item.Stock ชิ้น</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="stack-item">
+                        <div>
+                            <div class="stack-name">สต๊อกโดยรวมยังปลอดภัย</div>
+                            <div class="stack-sub">ตอนนี้ยังไม่มีสินค้าที่ต่ำกว่าเกณฑ์</div>
+                        </div>
+                        <div class="stack-value">พร้อมขาย</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="content-card">
+        <div class="card-head">
+            <div>
+                <h3 class="card-title">ภาพรวมตามหมวดสินค้า</h3>
+                <p class="card-copy">ช่วยดูว่าหมวดไหนมีสินค้ามากและสต๊อกรวมอยู่ระดับไหน</p>
+            </div>
+            <span class="mini-pill">Category Mix</span>
+        </div>
+
+        <div class="helper-grid">
+            @foreach (var item in Model.CategorySummaries)
+            {
+                <div class="helper-box">
+                    <div class="helper-kicker">Category</div>
+                    <h4>@item.CategoryName</h4>
+                    <p>มีสินค้าในหมวดนี้ทั้งหมด @item.ProductCount รายการ และมีสต๊อกรวม @item.TotalStock ชิ้น</p>
+                </div>
+            }
+        </div>
+    </section>
 </div>

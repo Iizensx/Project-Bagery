@@ -33,5 +33,7 @@ public class DeliveryOrderHistoryItem
     public decimal TotalAmount { get; set; }
     public string ItemSummary { get; set; } = "-";
     public string DeliveryAddress { get; set; } = "-";
+    public string PromotionName { get; set; } = "-";
+    public string DiscountDisplay { get; set; } = "-";
     public bool IsActive { get; set; }
 }
