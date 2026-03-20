@@ -770,7 +770,7 @@
         btn.textContent = 'กำลังยืนยัน...';
 
         try {
-            const res = await fetch('/Account/ConfirmPayment', {
+            const res = await fetch('/AdminOrder/ConfirmPayment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `orderId=${orderId}`
@@ -795,7 +795,7 @@
     async function acceptOrder(btn, orderId) {
         if (!confirm(`รับออเดอร์ ORD-${orderId} ใช่หรือไม่?`)) return;
         try {
-            const res = await fetch('/Account/AcceptOrder', {
+            const res = await fetch('/AdminOrder/AcceptOrder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `orderId=${orderId}`
@@ -815,7 +815,7 @@
     async function shipOrder(btn, orderId) {
         if (!confirm(`ยืนยันจัดส่งสินค้า ORD-${orderId} ใช่หรือไม่?`)) return;
         try {
-            const res = await fetch('/Account/ShipOrder', {
+            const res = await fetch('/AdminOrder/ShipOrder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `orderId=${orderId}`
@@ -834,7 +834,7 @@
 
     async function viewOrder(orderId) {
         try {
-            const res = await fetch(`/Account/GetOrderDetails?orderId=${orderId}`);
+            const res = await fetch(`/AdminOrder/GetOrderDetails?orderId=${orderId}`);
             const data = await res.json();
 
             if (!data.success) {

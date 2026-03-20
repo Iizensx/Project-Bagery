@@ -2179,11 +2179,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\thana\\Downloads\\โค้ด\\Project-Bagery\\66022380.csproj",
+      "projectUniqueName": "C:\\Users\\thana\\Downloads\\โค้ดโปรเจกต์จารย์นัดBakery\\Project-Bagery\\66022380.csproj",
       "projectName": "66022380",
-      "projectPath": "C:\\Users\\thana\\Downloads\\โค้ด\\Project-Bagery\\66022380.csproj",
+      "projectPath": "C:\\Users\\thana\\Downloads\\โค้ดโปรเจกต์จารย์นัดBakery\\Project-Bagery\\66022380.csproj",
       "packagesPath": "C:\\Users\\thana\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\thana\\Downloads\\โค้ด\\Project-Bagery\\obj\\",
+      "outputPath": "C:\\Users\\thana\\Downloads\\โค้ดโปรเจกต์จารย์นัดBakery\\Project-Bagery\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\thana\\AppData\\Roaming\\NuGet\\NuGet.Config"

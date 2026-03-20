@@ -492,7 +492,7 @@
                 </div>
             </div>
 
-            <form asp-action="SavePromotion" asp-controller="Account" method="post">
+            <form asp-action="SavePromotion" asp-controller="AdminPromotion" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="promotionId" value="0" />
 
@@ -545,7 +545,7 @@
                         }
                     </select>
                 </div>
-                <form asp-action="GiftPromotionToAll" asp-controller="Account" method="post" onsubmit="return syncGiftPromotionForAll();">
+                <form asp-action="GiftPromotionToAll" asp-controller="AdminPromotion" method="post" onsubmit="return syncGiftPromotionForAll();">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="giftPromotionAllInput" name="promotionId" value="0" />
                     <button type="submit" class="promo-btn primary">กิ๊ฟให้ทุกคน</button>
@@ -561,7 +561,7 @@
                             <div class="gift-user-meta">User ID: @user.UserId | Email: @(string.IsNullOrWhiteSpace(user.Email) ? "-" : user.Email)</div>
                         </div>
                         <div class="gift-actions">
-                            <form asp-action="GiftPromotion" asp-controller="Account" method="post" onsubmit="return syncGiftPromotionForUser(this);">
+                            <form asp-action="GiftPromotion" asp-controller="AdminPromotion" method="post" onsubmit="return syncGiftPromotionForUser(this);">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="promotionId" value="0" class="gift-promotion-id-input" />
                                 <input type="hidden" name="userId" value="@user.UserId" />

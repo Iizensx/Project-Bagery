@@ -1121,7 +1121,7 @@
         if (!confirm(`ยืนยันว่าได้รับออเดอร์ ORD-${orderId} แล้ว?`)) return;
 
         try {
-            const res = await fetch('/Account/CompleteOrder', {
+            const res = await fetch('/Delivery/CompleteOrder', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'

@@ -29,7 +29,7 @@
                         <p class="text-center text-muted">กำลังโหลดที่อยู่...</p>
                     </div>
                     <div class="mt-3">
-                        <a href="/Account/Profile" class="btn btn-outline-primary btn-sm">จัดการที่อยู่</a>
+                        <a href="/Profile/Profile" class="btn btn-outline-primary btn-sm">จัดการที่อยู่</a>
                     </div>
                 </div>
             </div>
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (cart.length === 0) {
         alert('ตะกร้าว่างเปล่า');
-        window.location.href = '/Account/Menu';
+        window.location.href = '/Home/Menu';
         return;
     }
 
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 2. Load User Info & Data
     try {
-        const userRes = await fetch('/Account/GetCurrentUser');
+        const userRes = await fetch('/Order/GetCurrentUser');
         const userData = await userRes.json();
         
         if (!userData.success || userData.userId <= 0) {
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         userId = userData.userId;
 
         // Fetch Addresses
-        const addrRes = await fetch(`/Account/GetUserAddresses?userId=${userId}`);
+        const addrRes = await fetch(`/Profile/GetUserAddresses?userId=${userId}`);
         const addrData = await addrRes.json();
         const addrList = document.getElementById('address-list');
         
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Fetch Promotions
         try {
-            const promoRes = await fetch(`/Account/GetUserPromos?userId=${userId}`);
+            const promoRes = await fetch(`/Order/GetUserPromos?userId=${userId}`);
             if (promoRes.ok) {
                 const promoData = await promoRes.json();
                 const promoSelect = document.getElementById('promo-select');
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         try {
-            const res = await fetch('/Account/CreateOrder', {
+            const res = await fetch('/Order/CreateOrder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderData)
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (data.success) {
                 localStorage.removeItem('bakeryCart');
-                window.location.href = `/Account/Payment?orderId=${data.orderId}`;
+                window.location.href = `/Order/Payment?orderId=${data.orderId}`;
             } else {
                 alert(data.message || 'เกิดข้อผิดพลาดในการสั่งซื้อ');
                 confirmBtn.disabled = false;

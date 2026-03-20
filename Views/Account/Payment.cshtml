@@ -235,7 +235,7 @@
         formData.append('slipImage', file);
 
         try {
-            const res = await fetch('@Url.Action("UploadSlip", "Account")', {
+            const res = await fetch('@Url.Action("UploadSlip", "Order")', {
                 method: 'POST',
                 body: formData
             });
@@ -248,7 +248,7 @@
                 statusMsg.textContent = data.message;
                 btnConfirm.textContent = 'ส่งสลิปเรียบร้อยแล้ว';
                 setTimeout(() => {
-                    window.location.href = '/Account/Delivery';
+                    window.location.href = '/Delivery/Delivery';
                 }, 1200);
             } else {
                 statusMsg.className = 'status-msg error';

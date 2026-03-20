@@ -484,7 +484,7 @@
             <div class="member-alert error">@TempData["MemberError"]</div>
         }
 
-        <form asp-action="SaveMember" asp-controller="Account" method="post">
+        <form asp-action="SaveMember" asp-controller="AdminMember" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="userId" value="0" />
 
@@ -590,7 +590,7 @@
                                             <i class="fas fa-pen"></i> แก้ไข
                                         </button>
 
-                                        <form asp-action="DeleteMember" asp-controller="Account" method="post" onsubmit="return confirmDeleteMember('@user.Username', @user.UserId);">
+                                        <form asp-action="DeleteMember" asp-controller="AdminMember" method="post" onsubmit="return confirmDeleteMember('@user.Username', @user.UserId);">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="userId" value="@user.UserId" />
                                             <button type="submit" class="member-btn danger">
@@ -631,7 +631,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body custom">
-                <form asp-action="SaveMember" asp-controller="Account" method="post">
+                <form asp-action="SaveMember" asp-controller="AdminMember" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="editUserId" name="userId" value="0" />
 

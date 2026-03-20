@@ -790,7 +790,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body custom">
-                <form asp-action="SaveCategory" asp-controller="Account" method="post">
+                <form asp-action="SaveCategory" asp-controller="AdminStock" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="categoryIdInput" name="categoryId" value="0" />
 
@@ -825,7 +825,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body custom">
-                <form asp-action="SaveStock" asp-controller="Account" method="post">
+                <form asp-action="SaveStock" asp-controller="AdminStock" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="productIdInput" name="productId" value="0" />
 
