@@ -141,17 +141,8 @@ Project-Bagery/
 - ใช้ static files, routing, session
 - map route ค่าเริ่มต้นไปที่ `Account/Home`
 
-### Database connection
 
-ค่าปัจจุบันใน `appsettings.json`
 
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "server=localhost;port=3306;database=bakerydb;user=root;password=1234;SslMode=none;;AllowPublicKeyRetrieval=true;"
-}
-```
-
-หมายเหตุ: ใน `BakerydbContext.cs` ยังมี `OnConfiguring()` ที่ระบุ connection string ซ้ำไว้ด้วย จึงควรรู้ว่าปัจจุบันระบบมี config ซ้ำ 2 จุด
 
 ### URL สำหรับรันในเครื่อง
 
