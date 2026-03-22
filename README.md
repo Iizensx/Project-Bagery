@@ -1,203 +1,683 @@
-# Project Bagery
+# Project Bagery 🥐
 
-ระบบเว็บร้านเบเกอรี่ที่พัฒนาด้วย ASP.NET Core MVC เชื่อมต่อฐานข้อมูล MySQL ใช้สำหรับจัดการการขายสินค้า การสั่งซื้อ การชำระเงินด้วย PromptPay การติดตามสถานะการจัดส่ง และหลังบ้านสำหรับผู้ดูแลระบบ
+ระบบจัดการร้านเบเกอรี่แบบเต็มรูปแบบ (Full-stack) ที่พัฒนาด้วย **ASP.NET Core MVC (.NET 10)** เชื่อมต่อฐานข้อมูล **MySQL** 
+ใช้สำหรับจัดการการขายสินค้า การสั่งซื้อ การชำระเงินด้วย **PromptPay QR** การติดตามสถานะการจัดส่งแบบ real-time และหลังบ้านบริหารจัดการแอดมิน
 
-## ภาพรวมระบบ
+---
 
-- Backend: C# / ASP.NET Core MVC
-- ORM: Entity Framework Core
-- Database: MySQL
-- Frontend: Razor Views + Bootstrap + JavaScript
-- Payment Flow: PromptPay QR + อัปโหลดสลิป
-- State Management: Session
+## 🎯 ภาพรวมระบบ
 
-จุดเข้าใช้งานหลักของระบบถูกกำหนดไว้ที่:
+| หัวข้อ | รายละเอียด |
+|--------|-----------|
+| **Backend** | C# / ASP.NET Core MVC (.NET 10) |
+| **ORM** | Entity Framework Core |
+| **Database** | MySQL 8.0 (UTF-8MB4 encoding) |
+| **Frontend** | Razor Views + Bootstrap 5 + JavaScript |
+| **Payment** | PromptPay QR Code (QRCoder) + Manual Slip Upload |
+| **Authentication** | Session-based (30-min timeout) with Role-based Access |
+| **Timezone** | ไทย (UTF8MB4) |
 
-- Default route: `Account/Home`
-- Login ของผู้ใช้และแอดมิน: `Account/Login`
-- Dashboard หลังบ้าน: `Account/Dashbordadmin`
+### 🚪 จุดเข้าใช้งานหลักของระบบ
 
-## โครงสร้างโปรเจกต์
+| เส้นทาง | วัตถุประสงค์ |
+|---------|-----------|
+| `Home/Home` | หน้าแรกของระบบ |
+| `Account/Login` | เข้าสู่ระบบ (ผู้ใช้ & แอดมิน) |
+| `Account/Signup` | ลงทะเบียนสมาชิกใหม่ |
+| `Account/Home` | หน้าหลักหลังเข้าสู่ระบบ |
+| `Account/Menu` | ดูรายการเมนู (สินค้าทั้งหมด) |
+| `Account/Checkout` | หน้าสรุปก่อนสร้างออเดอร์ |
+| `Order/Payment` | หน้าชำระเงิน (PromptPay QR) |
+| `Account/Delivery` | ติดตามสถานะและประวัติออเดอร์ |
+| `Account/Profile` | จัดการโปรไฟล์และที่อยู่ |
+| `Admin/Dashbordadmin` | Dashboard หลังบ้าน (Admin only) |
 
-```text
+---
+
+## 📁 โครงสร้างโปรเจกต์
+
+```
 Project-Bagery/
-|- Controllers/           ควบคุม flow ของ request และ business flow หลัก
-|- Models/Db/             entity และ DbContext ของฐานข้อมูล
-|- Viewmodels/            model สำหรับส่งข้อมูลจาก controller ไปยัง view
-|- Views/                 Razor views ของฝั่งลูกค้าและแอดมิน
-|- Helpers/               utility ที่ใช้ร่วมกัน เช่น PromptPay QR payload
-|- Migrations/            EF Core migrations และ SQL script ประกอบ
-|- wwwroot/               static files, CSS, JS, รูป, ไฟล์อัปโหลด
-|- Properties/            launch settings สำหรับรันในเครื่อง
-|- Program.cs             จุดเริ่มต้นการตั้งค่า service และ middleware
-|- appsettings.json       config หลัก เช่น connection string
-|- 66022380.csproj        project file และ package references
+├── Controllers/                    // ควบคุม business logic หลัก
+│   ├── AccountController.cs        // Login, Signup,Menu,Profile,Payment confirmation
+│   ├── HomeController.cs           // Homepage, Contact  
+│   ├── OrderController.cs          // Checkout, CreateOrder, Payment, Slip upload
+│   ├── ProfileController.cs        // Profile management, Address CRUD
+│   ├── DeliveryController.cs       // Tracking orders and delivery status
+│   ├── Lab8Controller.cs           // Testing/Lab pages
+│   └── Admin/                      // Admin-only controllers
+│       ├── AdminControllerBase.cs  // Base class with auth check
+│       ├── AdminDashboardController.cs  // KPI Dashboard
+│       ├── AdminOrderController.cs      // Order management
+│       ├── AdminStockController.cs      // Stock & Category management
+│       ├── AdminPromotionController.cs  // Promotion management
+│       └── AdminMemberController.cs     // User management
+│
+├── Models/
+│   ├── Db/                         // Database entities (Created by EF Core)
+│   │   ├── BakerydbContext.cs      // DbContext
+│   │   ├── User.cs                 // ผู้ใช้
+│   │   ├── Role.cs                 // บทบาท (Admin, Staff, User)
+│   │   ├── Address.cs              // ที่อยู่จัดส่ง
+│   │   ├── Stock.cs                // สินค้า
+│   │   ├── Category.cs             // หมวดหมู่
+│   │   ├── Order.cs                // หัวออเดอร์
+│   │   ├── Orderdetail.cs          // รายการสินค้าในออเดอร์
+│   │   ├── Promotion.cs            // โปรโมชัน
+│   │   ├── UserPromotion.cs        // โปรโมชันที่แจกให้ผู้ใช้
+│   │   └── Historyorder.cs         // ประวัติออเดอร์ที่ปิดงาน
+│   │
+│   └── ErrorViewModel.cs           // Error viewmodel
+│
+├── Viewmodels/                     // ViewModels สำหรับ Views
+│   ├── OrderViewModel.cs           // Order data model
+│   ├── ProfileViewModel.cs         // Profile update model  
+│   ├── DeliveryTrackingViewModel.cs // Delivery tracking model
+│   ├── AdminDashboardViewModel.cs   // Dashboard KPI data
+│   ├── AdminStockViewModel.cs       // Stock management model
+│   └── AdminPromotionViewModel.cs   // Promotion management model
+│
+├── Views/
+│   ├── Account/                    // ฝั่งลูกค้า
+│   │   ├── Home.cshtml             // หน้าแรก
+│   │   ├── Login.cshtml            // เข้าสู่ระบบ
+│   │   ├── Signup.cshtml           // ลงทะเบียน
+│   │   ├── Menu.cshtml             // ดูเมนู/สินค้า
+│   │   ├── Checkout.cshtml         // ยืนยันก่อนสั่ง
+│   │   ├── Payment.cshtml          // ชำระเงิน (PromptPay QR)
+│   │   ├── Delivery.cshtml         // ติดตามจัดส่ง
+│   │   ├── Profile.cshtml          // จัดการโปรไฟล์
+│   │   └── Test1.cshtml            // หน้าทดสอบ
+│   │
+│   ├── admin/                      // หลังบ้าน (Admin only)
+│   │   ├── Dashbordadmin.cshtml    // Dashboard
+│   │   ├── Order.cshtml            // จัดการออเดอร์
+│   │   ├── Stock.cshtml            // จัดการสต็อก/หมวดหมู่
+│   │   ├── PromotionAdmin.cshtml   // จัดการโปรโมชัน
+│   │   └── Member.cshtml           // จัดการผู้ใช้
+│   │
+│   ├── Home/                       // Shared pages
+│   │   ├── Index.cshtml
+│   │   ├── Privacy.cshtml
+│   │   └── lab8.cshtml
+│   │
+│   └── Shared/                     // Layout & Partials
+│       ├── _Layoutmain.cshtml      // Main layout ฝั่งลูกค้า
+│       ├── _AdminLayout.cshtml     // Layout หลังบ้าน
+│       ├── _Navbar.cshtml          // Menu bar ฝั่งลูกค้า
+│       ├── _Dashbordnavbar.cshtml  // Menu bar หลังบ้าน
+│       ├── _CartDrawer.cshtml      // Cart sidebar
+│       ├── _Footer.cshtml          // Footer
+│       ├── _ViewStart.cshtml
+│       ├── _ViewImports.cshtml
+│       ├── Error.cshtml
+│       └── _ValidationScriptsPartial.cshtml
+│
+├── Helpers/
+│   └── PromptPayHelper.cs          // PromptPay QR code generation (EMV standard)
+│
+├── Migrations/                     // EF Core migrations
+│   ├── [Date]_AddPreparingStatusToOrder.cs
+│   ├── [Date]_AddCompletedStatusToOrder.cs
+│   ├── [Date]_AddHistoryorderTable.cs
+│   ├── BakerydbContextModelSnapshot.cs
+│   └── SQL/                        // SQL scripts
+│
+├── wwwroot/                        // Static assets
+│   ├── css/
+│   │   └── site.css                // Styling หลัก
+│   ├── js/
+│   │   └── site.js                 // JavaScript logic
+│   ├── img/                        // Images/logos
+│   ├── uploads/
+│   │   └── slips/                  // Payment slips (uploaded)
+│   ├── logs/                       // Login logs (runtime)
+│   └── lib/                        // Third-party libraries
+│       ├── bootstrap/
+│       ├── jquery/
+│       └── jquery-validation/
+│
+├── Properties/
+│   └── launchSettings.json         // URL config (5082, 7070)
+│
+├── Program.cs                      // Application startup & middleware
+├── appsettings.json                // Config & connection string
+├── 66022380.csproj                 // Project file & dependencies
+├── 66022380.sln                    // Solution file
+├── bakerydb.sql                    // Database SQL dump
+└── README.md                       // This file
 ```
 
-## หน้าที่ของแต่ละส่วน
+---
 
-### 1. Controllers
+## 💾 ฐานข้อมูล (10 ตาราง)
 
-ไฟล์หลักของระบบคือ `Controllers/AccountController.cs` ซึ่งรวมทั้ง flow ฝั่งลูกค้าและหลังบ้านไว้ใน controller เดียว
+| Table | Purpose | Key Fields |
+|-------|---------|-----------|
+| **user** | ข้อมูลผู้ใช้ | UserId, Username, Email, Phone, Password (hash), RoleId, CreatedDate |
+| **role** | บทบาทผู้ใช้ | RoleId (1=Admin, 3=User) |
+| **address** | ที่อยู่จัดส่ง | AddressId, UserId, AddressLine, District, Province, PostalCode, IsDefault |
+| **stock** | สินค้า | StockId, StockName, Description, Price, Quantity, CategoryId, Image |
+| **category** | หมวดหมู่ | CategoryId, CategoryName |
+| **order** | หัวออเดอร์ | OrderId, UserId, OrderDate, TotalPrice, Status, PaymentStatus, AddressId |
+| **orderdetail** | รายการในออเดอร์ | OrderDetailId, OrderId, StockId, Quantity, Price |
+| **promotion** | โปรโมชัน | PromotionId, PromotionName, DiscountType (%), DiscountValue, StartDate, EndDate |
+| **user_promotion** | แจกโปรให้ผู้ใช้ | UserPromotionId, UserId, PromotionId, IsUsed |
+| **historyorder** | ประวัติออเดอร์ | HistoryOrderId, OrderId (copied), เข้าหลังจบออเดอร์ |
 
-- `Home()` แสดงหน้าแรก
-- `Signup()` และ `Login()` จัดการสมัครสมาชิกและเข้าสู่ระบบ
-- `Profile()` จัดการข้อมูลผู้ใช้และที่อยู่
-- `Menu()` แสดงรายการสินค้า
-- `Checkout()` ใช้เป็นหน้าตรวจสอบก่อนสร้างออเดอร์
-- `CreateOrder()` สร้างออเดอร์และบันทึกรายการสินค้า
-- `Payment()` สร้าง PromptPay QR สำหรับออเดอร์
-- `ConfirmPayment()` ให้แอดมินยืนยันการชำระเงินและตัด stock
-- `Delivery()` แสดงสถานะออเดอร์ปัจจุบันและประวัติ
-- `AcceptOrder()` เปลี่ยนสถานะเป็น `Preparing`
-- `ShipOrder()` เปลี่ยนสถานะเป็น `Shipped`
-- `CompleteOrder()` ให้ลูกค้ายืนยันรับสินค้าและย้ายข้อมูลเข้า `historyorder`
-- `Dashbordadmin()` สรุปข้อมูลภาพรวมระบบ
-- `Stock()` จัดการสินค้าและหมวดหมู่
-- `Order()` ดูรายการออเดอร์ทั้งหมด
-- `PromotionAdmin()` จัดการโปรโมชั่นและแจกโปร
-- `Member()` จัดการสมาชิกและสิทธิ์ผู้ใช้
+### 📊 Order Status Pipeline
 
-`HomeController.cs` และ `Lab8Controller.cs` มีบทบาทรอง ใช้กับหน้าทดลองหรือหน้าทั่วไป
+```
+Pending → Paid → Preparing → Shipped → Completed
+                                    ↓ (User Confirm)
+                            Historyorder (Archive)
+                         
+(Anytime) → Cancelled
+```
 
-### 2. Models/Db
+### 💳 Payment Status
 
-โฟลเดอร์นี้เก็บ entity ของฐานข้อมูล และ `BakerydbContext`
+- **Pending**: ยังไม่ชำระ
+- **PendingVerify**: อัปโหลดสลิปแล้ว รอแอดมินยืนยัน
+- **Paid**: แอดมินยืนยันแล้ว
 
-ตารางหลักที่ใช้ในระบบ:
+---
 
-- `user` ข้อมูลผู้ใช้
-- `role` บทบาทผู้ใช้ เช่น Admin, Staff, User
-- `address` ที่อยู่จัดส่งของผู้ใช้
-- `category` หมวดหมู่สินค้า
-- `stock` ข้อมูลสินค้า ราคา รายละเอียด และจำนวนคงเหลือ
-- `promotion` โปรโมชัน
-- `user_promotion` โปรโมชันที่แจกให้ผู้ใช้แต่ละคน
-- `order` หัวออเดอร์
-- `orderdetail` รายการสินค้าในออเดอร์
-- `historyorder` ประวัติออเดอร์ที่ปิดงานแล้ว
+## ⚙️ Controllers และ Actions
 
-สถานะออเดอร์ที่พบในระบบ:
+### 1. **AccountController** (Shared - Customer + Admin)
 
-- `Pending`
-- `Paid`
-- `Preparing`
-- `Shipped`
-- `Completed`
-- `Cancelled`
+| Action | HTTP | วัตถุประสงค์ |
+|--------|------|-----------|
+| `Home()` | GET | หน้าแรก |
+| `Login()` | GET/POST | เข้าสู่ระบบ + บันทึก IP log |
+| `Signup()` | GET/POST | ลงทะเบียนสมาชิก (RoleId=3) |
+| `Logout()` | GET | ออกจากระบบ |
+| `Menu()` | GET | แสดงรายการสินค้า (filter by category) |
+| `Profile()` | GET/POST | ดูและแก้ไขข้อมูลโปรไฟล์ |
 
-สถานะการชำระเงินที่พบใน flow:
+### 2. **OrderController** (Customer)
 
-- `Pending`
-- `PendingVerify`
-- `Paid`
+| Action | HTTP | วัตถุประสงค์ |
+|--------|------|-----------|
+| `Checkout()` | GET | หน้าสรุปก่อนสั่ง |
+| `CreateOrder()` | POST | สร้างออเดอร์ + OrderDetails |
+| `Payment()` | GET | สร้าง PromptPay QR code |
+| `UploadSlip()` | POST | อัปโหลดหลักฐานการชำระเงิน |
+| `GetCurrentUser()` | GET | ข้อมูลผู้ใช้ปัจจุบัน (API) |
+| `GetUserPromos()` | GET | โปรโมชันของผู้ใช้ (API) |
 
-### 3. Viewmodels
+### 3. **ProfileController** (Customer)
 
-ใช้สำหรับจัดรูปข้อมูลก่อนส่งเข้า Razor View
+| Action | HTTP | วัตถุประสงค์ |
+|--------|------|-----------|
+| `Profile()` | GET/POST | ดู/แก้ไขโปรไฟล์ + รหัสผ่าน |
+| `SaveAddress()` | POST | เพิ่ม/แก้ไขที่อยู่ |
+| `DeleteAddress()` | POST | ลบที่อยู่ |
+| `GetUserAddresses()` | GET | ดึงที่อยู่ทั้งหมดของผู้ใช้ (API) |
 
-- `ProfileViewModel` ข้อมูลโปรไฟล์และที่อยู่
-- `OrderViewModel` โครงสร้างรับข้อมูลออเดอร์จากหน้า checkout
-- `DeliveryTrackingViewModel` ใช้แสดงสถานะจัดส่งและประวัติ
-- `AdminDashboardViewModel` ใช้สรุปข้อมูล dashboard
-- `AdminStockViewModel` ใช้ในหน้าจัดการสินค้า/หมวดหมู่
-- `AdminPromotionViewModel` ใช้ในหน้าจัดการโปรโมชัน
+### 4. **DeliveryController** (Customer)
 
-### 4. Views
+| Action | HTTP | วัตถุประสงค์ |
+|--------|------|-----------|
+| `Delivery()` | GET | ดูสถานะจัดส่งและประวัติ |
+| `UpdateStatus()` | POST | อัปเดตสถานะออเดอร์ (Admin) |
+| `GetDeliveryStatus()` | GET | ข้อมูลสถานะปัจจุบัน (API) |
 
-แบ่งเป็น 3 กลุ่มหลัก
+### 5. **Admin Controllers** (Admin only - RoleId == 1)
 
-- `Views/Account/` หน้าฝั่งลูกค้า เช่น `Home`, `Menu`, `Checkout`, `Payment`, `Delivery`, `Profile`, `Login`, `Signup`
-- `Views/admin/` หน้าหลังบ้าน เช่น `Dashbordadmin`, `Stock`, `Order`, `PromotionAdmin`, `Member`
-- `Views/Shared/` layout และ partial กลาง เช่น navbar, footer, cart drawer, admin layout
+#### **AdminDashboardController**
+- `Dashboard()` - Show KPIs: Revenue (today/month), Order counts, Stock alerts
 
-### 5. Helpers
+#### **AdminOrderController**
+- `Order()` - View all orders
+- `AcceptOrder()` - Change to "Preparing"
+- `ShipOrder()` - Change to "Shipped"  
+- `ConfirmPayment()` - Verify payment + deduct stock
+- `CompleteOrder()` - Archive to historyorder
+- `CancelOrder()` - Cancel order
 
-- `Helpers/PromptPayHelper.cs` ใช้สร้าง payload สำหรับ PromptPay QR
+#### **AdminStockController**
+- `Stock()` - View/Create/Edit stock items
+- `AddCategory()` - Add product category
+- `LowStockAlerts()` - Items with qty ≤ 10
 
-### 6. Migrations
+#### **AdminPromotionController**
+- `Promotion()` - View/Create promotions
+- `DistributePromo()` - Assign to users
+- `DeletePromo()` - Remove promotion
 
-ใช้เก็บ EF Core migrations และมี SQL script บางส่วนสำหรับรันตรงกับฐานข้อมูล เช่นการเพิ่มสถานะ `Completed` และตาราง `historyorder`
+#### **AdminMemberController**
+- `Member()` - View/Edit users
+- `ChangeRole()` - Change user role
+- `LockUnlockUser()` - Disable/enable account
 
-### 7. wwwroot
+### 6. **HomeController** (General)
+- `Home()` - Homepage
+- `Menu()` - Products listing
+- `Contact()` - Contact page
+- `Privacy()` - Privacy policy
 
-เก็บ static assets ของระบบ
+### 7. **Lab8Controller** (Testing)
+- `Index()` / `Privacy()` / `Error()` - Lab pages
 
-- `wwwroot/css/` style หลัก
-- `wwwroot/js/` script ฝั่งหน้าเว็บ
-- `wwwroot/img/` รูปภาพในระบบ
-- `wwwroot/uploads/slips/` ไฟล์สลิปที่ลูกค้าอัปโหลด
-- `wwwroot/logs/` log การ login ที่ระบบสร้างระหว่าง runtime
+---
 
-## การตั้งค่าระบบ
+## 🎨 ViewModels (6 models)
 
-### Startup และ middleware
+| ViewModel | ใช้ที่ | Properties |
+|-----------|-------|-----------|
+| **OrderViewModel** | Checkout, Payment | Items[], UserId, TotalPrice, PromotionId, Address |
+| **ProfileViewModel** | Profile page | UserId, Username, Email, Phone, Password, Addresses[] |
+| **DeliveryTrackingViewModel** | Delivery page | Orders[], HistoryOrders[], CurrentStatus |
+| **AdminDashboardViewModel** | Admin dashboard | TodayRevenue, MonthRevenue, PendingOrders, LowStockItems[] |
+| **AdminStockViewModel** | Stock management | StockList[], CategoryList[], SearchTerm |
+| **AdminPromotionViewModel** | Promotion mgmt | PromotionList[], UserList[], DistributionHistory[] |
 
-ใน `Program.cs` ระบบตั้งค่าหลักดังนี้
+---
 
-- ลงทะเบียน MVC ด้วย `AddControllersWithViews()`
-- เชื่อมต่อ MySQL ผ่าน `BakerydbContext`
-- เปิดใช้งาน Session โดยกำหนด timeout 30 นาที
-- ใช้ static files, routing, session
-- map route ค่าเริ่มต้นไปที่ `Account/Home`
+## 🔐 Authentication & Authorization
 
-### Database connection
+### Session-Based Auth
+- **Duration**: 30 minutes idle timeout
+- **Storage**: Session variables (`UserId`, `Username`, `RoleId`)
+- **Enforcement**: Role check in controller (`if (RoleId != 1) redirect to Home`)
 
-ค่าปัจจุบันใน `appsettings.json`
+### Roles
+- **RoleId = 1**: Admin (full access to admin controllers)
+- **RoleId = 3**: User (access to customer features only)
 
+### Login Flow
+```
+1. User enters username + password
+2. Query user table
+3. If found & password match:
+   - Store UserId, Username, RoleId in session
+   - Log IP to wwwroot/logs/login_YYYY-MM-DD.log
+   - Redirect to dashboard (Admin) or Home (User)
+4. Else: Show error
+```
+
+---
+
+## 💳 Payment Integration (PromptPay)
+
+### Implementation
+- **Library**: QRCoder NuGet package
+- **Standard**: EMV QR Code Format
+- **Helper**: `Helpers/PromptPayHelper.cs`
+
+### Flow
+```
+1. Order created (Status=Pending, PaymentStatus=Pending)
+2. User goes to Payment page
+3. System generates PromptPay QR with:
+   - Order ID
+   - Amount
+   - Shop PromptPay ID/Phone
+4. User scans QR → Mobile banking
+5. User takes screenshot → Upload slip
+6. Admin verifies slip → Click "ConfirmPayment"
+7. Stock deducted, Order status → Paid
+```
+
+### QR Payload (Example)
+```
+00020126...10330066300012A0000000365840010502050403402040063...61111112890204admin0607401330802D0310123...626
+(EMV format: merchant info, amount, Thai bank, etc.)
+```
+
+---
+
+## 📱 User Flows
+
+### 🛒 Customer - Order to Delivery
+
+```
+1. Signup/Login
+   └─ Profile created (RoleId=3, Session)
+
+2. Browse Menu
+   └─ View stock by category
+
+3. Add to Cart (Frontend localStorage/session)
+   └─ See promotions
+
+4. Checkout
+   └─ Select delivery address
+   └─ Apply promotion (discount %)
+   └─ Review total
+
+5. Create Order
+   └─ OrderId generated
+   └─ OrderDetails saved
+   └─ Status: Pending
+
+6. Payment
+   └─ View PromptPay QR
+   └─ User scans → Mobile banking payment
+   └─ Upload payment slip
+
+7. Admin Confirms Payment
+   └─ Verify slip
+   └─ Deduct stock
+   └─ Status: Paid
+
+8. Delivery Tracking
+   └─ Status: Preparing (Admin accepts)
+   └─ Status: Shipped (Admin ships)
+   └─ Status: Shipped → Completed (User confirms receipt)
+   └─ Archive to Historyorder
+
+9. Order History
+   └─ View in Delivery page
+   └─ Access past orders
+```
+
+### 🔧 Admin - Order Management
+
+```
+Admin Dashboard
+├─ View KPIs
+│  ├─ Today Revenue
+│  ├─ Monthly Revenue  
+│  ├─ Orders by status
+│  └─ Low stock alerts
+
+Order Management
+├─ View all orders (list/grid)
+├─ Verify payment slip
+├─ Confirm payment → Deduct stock
+├─ Accept order → Status: Preparing
+├─ Ship order → Status: Shipped
+└─ Complete order → Archive
+
+Stock Management
+├─ Add/Edit/Delete items
+├─ Manage categories
+├─ Stock quantity alerts (≤10 units)
+└─ Upload product images
+
+Promotion Management
+├─ Create promotion (% or ฿ discount)
+├─ Set validity period
+├─ Distribute to users
+├─ Track usage
+
+Member Management
+├─ View all users
+├─ Change user role
+├─ Lock/unlock accounts
+└─ View user purchase history
+```
+
+---
+
+## ⚡ Features & Highlights
+
+| Feature | Status | Implementation |
+|---------|--------|-----------------|
+| **PromptPay Payment** | ✅ | EMV QR format, manual slip verification |
+| **Real-time Order Tracking** | ✅ | 6-stage pipeline with status updates |
+| **Admin Dashboard KPIs** | ✅ | Revenue, order counts, stock alerts |
+| **Stock Management** | ✅ | Inventory tracking, low-stock alerts (≤10 units) |
+| **Promotion System** | ✅ | % or ฿ discounts, per-user distribution |
+| **Multi-Address Support** | ✅ | AddressLine + District + Province + PostalCode |
+| **Order History** | ✅ | Archive completed orders to historyorder table |
+| **Role-Based Access** | ✅ | Admin (RoleId=1) vs User (RoleId=3) |
+| **Session Authentication** | ✅ | 30-min timeout, IP logging |
+| **Category Filtering** | ✅ | Browse by product category |
+| **Search** | ⚙️ | Can be extended |
+| **Email Notifications** | ⚠️ | Not implemented |
+| **SMS Alerts** | ⚠️ | Not implemented |
+| **Payment Timeout** | ⚠️ | Auto-cancel after X hours |
+
+---
+
+## 🔧 Configuration & Setup
+
+### Database Connection
+**File**: `appsettings.json`
 ```json
 "ConnectionStrings": {
   "DefaultConnection": "server=localhost;port=3306;database=bakerydb;user=root;password=1234;SslMode=none;;AllowPublicKeyRetrieval=true;"
 }
 ```
 
-หมายเหตุ: ใน `BakerydbContext.cs` ยังมี `OnConfiguring()` ที่ระบุ connection string ซ้ำไว้ด้วย จึงควรรู้ว่าปัจจุบันระบบมี config ซ้ำ 2 จุด
-
-### URL สำหรับรันในเครื่อง
-
-จาก `Properties/launchSettings.json`
-
+### Local URLs
+**File**: `Properties/launchSettings.json`
 - HTTP: `http://localhost:5082`
 - HTTPS: `https://localhost:7070`
 
-## Workflow การทำงานของระบบ
+### Session Configuration
+**File**: `Program.cs`
+- Idle timeout: **30 minutes**
+- HttpOnly cookie: **enabled**
+- Essential cookie: **enabled**
 
-### 1. Authentication และการระบุตัวตน
+### Middleware Pipeline
+```
+HTTP Request
+  ↓
+HTTPS Redirect
+  ↓
+Static Files
+  ↓
+Session Middleware
+  ↓
+Routing
+  ↓
+Authorization/Authentication
+  ↓
+Controller Action
+```
 
-1. ผู้ใช้สมัครสมาชิกผ่าน `Signup`
-2. ระบบสร้าง record ในตาราง `user` โดยกำหนด `RoleId = 3` สำหรับผู้ใช้ทั่วไป
-3. ผู้ใช้ login ผ่าน username หรือ email
-4. ระบบตรวจสอบข้อมูลในตาราง `user`
-5. เมื่อสำเร็จ ระบบเก็บ `UserId` และ `Username` ลงใน session
-6. ถ้า `RoleId == 1` จะพาไปหน้า `Dashbordadmin`
-7. ถ้าไม่ใช่แอดมิน จะพาไปหน้า `Home`
+---
 
-เพิ่มเติม:
+## 🚀 How to Run
 
-- ระบบบันทึก log การ login ลงไฟล์ใน `wwwroot/logs/login_yyyy-MM-dd.log`
-- การตรวจสิทธิ์แอดมินในโค้ดปัจจุบันใช้การเช็ก `RoleId == 1`
+### Prerequisites
+- **.NET SDK**: 10.0+
+- **MySQL**: 8.0+
+- **Visual Studio Code** or **Visual Studio 2022+**
 
-### 2. Flow ฝั่งลูกค้า
+### Steps
 
-#### 2.1 ดูสินค้า
+1. **Clone/Open Project**
+   ```bash
+   cd Project-Bagery
+   ```
 
-1. ผู้ใช้เข้า `Menu`
-2. Controller ดึงข้อมูลจาก `stock` พร้อม `category`
-3. View แสดงสินค้าให้เลือกซื้อ
+2. **Configure Database Connection**
+   - Edit `appsettings.json`
+   - Set MySQL username/password
+   - Create empty `bakerydb` database
 
-#### 2.2 จัดการโปรไฟล์และที่อยู่
+3. **Apply Migrations**
+   ```bash
+   dotnet ef database update
+   ```
+   - Or run `bakerydb.sql` script directly
 
-1. ผู้ใช้เข้า `Profile`
-2. ระบบอ่านข้อมูลผู้ใช้จาก session
-3. ดึงข้อมูลจาก `user` และ `address`
-4. ผู้ใช้สามารถแก้ไขข้อมูลส่วนตัว เพิ่ม/แก้ไข/ลบที่อยู่ได้
+4. **Install Dependencies**
+   ```bash
+   dotnet restore
+   ```
 
-#### 2.3 สร้างออเดอร์
+5. **Run Application**
+   ```bash
+   dotnet run
+   ```
+   - Visit: `https://localhost:7070`
 
-1. ผู้ใช้เลือกสินค้าและไปหน้า `Checkout`
-2. หน้าเว็บส่งข้อมูลออเดอร์เข้า `CreateOrder()`
-3. ระบบสร้างข้อมูลใน `order`
-   - `Status = Pending`
+6. **Test**
+   - **Admin**: Create user with RoleId=1 or edit existing
+   - **User**: Signup with default RoleId=3
+
+---
+
+## 📋 Database Setup
+
+### SQL Script
+File: `bakerydb.sql` (ready to import)
+```sql
+CREATE DATABASE bakerydb;
+-- Tables will be created by EF Core migrations
+```
+
+### EF Core Migrations
+Located in `Migrations/` folder:
+- `20260319191210_AddPreparingStatusToOrder`
+- `20260320093000_AddCompletedStatusToOrder`
+- `20260320103000_AddHistoryorderTable`
+
+### Manual SQL Changes
+- File: `Migrations/SQL/` contains any manual SQL updates
+
+---
+
+## 🔍 File Structure Details
+
+### Controllers Deep Dive
+
+#### `AccountController.cs` - Mixed Customer/Admin
+- Handles login/signup for both user types
+- User creation assigns RoleId=3 by default
+- Password stored as hash (recommend: bcrypt)
+
+#### `OrderController.cs` - Pure Customer
+- Order creation validates stock & applies promos
+- PromptPay QR generation uses `PromptPayHelper`
+- Slip upload saves to `wwwroot/uploads/slips/`
+
+#### `ProfileController.cs` - Customer Profile Management
+- Supports multiple addresses per user
+- Password update validation
+- Address CRUD operations
+
+#### `DeliveryController.cs` - Tracking
+- Real-time status updates
+- Transition from Shipped → Completed archives to historyorder
+- Timeline view of order stages
+
+#### `Admin Controllers` - Fully Separated
+- `AdminControllerBase` enforces RoleId==1 check
+- Each admin function is isolated by responsibility
+- Dashboard shows business KPIs
+
+### Views Organization
+
+#### Customer Views (`Views/Account/`)
+- `Home.cshtml` - Dashboard after login
+- `Menu.cshtml` - Product listing with category filter
+- `Checkout.cshtml` - Order review before payment
+- `Payment.cshtml` - PromptPay QR display + slip upload
+- `Delivery.cshtml` - Real-time tracking + history
+- `Profile.cshtml` - User info + address management
+- `Login/Signup.cshtml` - Auth pages
+
+#### Admin Views (`Views/admin/`)
+- `Dashbordadmin.cshtml` - KPI cards + charts
+- `Order.cshtml` - Order list + status mgmt
+- `Stock.cshtml` - Inventory + categories
+- `PromotionAdmin.cshtml` - Promo creation + distribution
+- `Member.cshtml` - User list + role management
+
+#### Shared (`Views/Shared/`)
+- `_Layoutmain.cshtml` - Customer theme
+- `_AdminLayout.cshtml` - Admin theme (dark/different style)
+- Navigation bars, footer, shared partials
+
+### Static Assets (`wwwroot/`)
+- **CSS**: `site.css` (Bootstrap customization)
+- **JS**: `site.js` (Frontend logic: cart, validation, API calls)
+- **Uploads**: `uploads/slips/` (Payment proof images)
+- **Logs**: `logs/` (IP + login timestamps)
+
+### Helpers
+
+#### `PromptPayHelper.cs`
+Generates EMV QR code payload for PromptPay:
+```csharp
+public static string GenerateQRCode(
+    decimal amount,
+    string merchantPromptPay,
+    string reference)
+{
+    // EMV QR format construction
+    // Returns QR string for QRCoder to render
+}
+```
+
+---
+
+## 🛡️ Security Notes
+
+### Current State ✅
+- Session-based authentication
+- SQL stored via hashing (need to verify bcrypt usage)
+- HTTPS enforced (HSTS enabled)
+- HttpOnly cookies for session
+- SQL injection protection via EF Core parameterized queries
+
+### Recommendations ⚠️
+- [ ] Use bcrypt/Argon2 for password hashing (not plain hash)
+- [ ] Implement CSRF tokens in forms
+- [ ] Add rate limiting on login endpoint
+- [ ] Validate file uploads (payment slips)
+- [ ] Implement input sanitization on text fields
+- [ ] Add audit logging for admin actions
+- [ ] Use HTTPS in production (currently dev only)
+- [ ] Store sensitive config in secrets manager (not appsettings.json)
+- [ ] Implement email verification for signup
+- [ ] Add 2FA for admin accounts
+
+---
+
+## 🎯 Next Steps / Future Enhancements
+
+1. **Notifications**
+   - Email confirmation for order placement
+   - SMS reminder for pending payment
+   - Push notifications for delivery updates
+
+2. **Reporting**
+   - Monthly sales report (PDF export)
+   - Customer spending trends
+   - Popular products analysis
+
+3. **Integration**
+   - Real payment gateway (Omise, 2C2P, etc.)
+   - Google Maps for delivery tracking
+   - Email service (SendGrid, etc.)
+
+4. **Performance**
+   - Redis cache for stock/promo data
+   - Database query optimization
+   - Image optimization
+
+5. **UI/UX**
+   - Mobile-first responsive design
+   - Dark mode
+   - Progressive Web App (PWA)
+
+6. **Testing**
+   - Unit tests for biz logic
+   - Integration tests for payment flow
+   - End-to-end tests for order lifecycle
+
+---
+
+## 📞 Support & Contact
+
+ระบบนี้เป็นโปรเจกต์จำนวน 66022380 สำหรับการศึกษา และการพัฒนาต่อ
+
+---
+
+**Last Updated**: March 2026
+**Framework**: ASP.NET Core MVC (.NET 10)
+**Database**: MySQL 8.0
+**Status**: Active Development
    - `PaymentStatus = Pending`
 4. ระบบสร้างรายการสินค้าใน `orderdetail`
 5. ถ้ามีการใช้โปรโมชัน ระบบจะ mark `user_promotion.IsUsed = 1`
