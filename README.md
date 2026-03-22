@@ -278,6 +278,7 @@ Pending → Paid → Preparing → Shipped → Completed
 
 ## 🔐 Authentication & Authorization
 
+<<<<<<< HEAD
 ### Session-Based Auth
 - **Duration**: 30 minutes idle timeout
 - **Storage**: Session variables (`UserId`, `Username`, `RoleId`)
@@ -446,6 +447,15 @@ Member Management
 
 ### Local URLs
 **File**: `Properties/launchSettings.json`
+=======
+
+
+
+### URL สำหรับรันในเครื่อง
+
+จาก `Properties/launchSettings.json`
+
+>>>>>>> 2e51f00b479860575e5e0d5d7fdbe4f682608144
 - HTTP: `http://localhost:5082`
 - HTTPS: `https://localhost:7070`
 
