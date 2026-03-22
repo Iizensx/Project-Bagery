@@ -204,59 +204,74 @@
 
 @section Scripts {
 <script>
+    // ─── ดึงค่าจาก Server มาใช้ใน JavaScript ────────────────────────────────
+    // @ViewBag.OrderId ส่งมาจาก Controller ฝั่ง C# มาใส่ตัวแปร JS โดยตรง
     const orderId = @ViewBag.OrderId;
+
+    // ดึง element ที่จำเป็นทั้งหมด
     const fileInput = document.getElementById('slip-file');
-    const preview = document.getElementById('preview-img');
+    const preview   = document.getElementById('preview-img');
     const btnConfirm = document.getElementById('btn-confirm');
     const statusMsg = document.getElementById('status-msg');
 
+    // ─── 1. Preview รูปสลิปก่อนอัปโหลด ──────────────────────────────────────
     fileInput.addEventListener('change', function () {
         const file = this.files[0];
         if (!file) return;
 
+        // ใช้ FileReader อ่านไฟล์รูปแล้วแปลงเป็น Base64 เพื่อ preview
         const reader = new FileReader();
         reader.onload = e => {
-            preview.src = e.target.result;
+            preview.src = e.target.result; // ใส่รูปที่อ่านได้ลงใน img tag
             preview.style.display = 'block';
-            btnConfirm.disabled = false;
+            btnConfirm.disabled = false; // เปิดให้กดยืนยันได้เมื่อเลือกไฟล์แล้ว
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file); // อ่านไฟล์เป็น Data URL (Base64)
     });
 
+    // ─── 2. อัปโหลดสลิปไปที่ Server ─────────────────────────────────────────
     btnConfirm.addEventListener('click', async function () {
         const file = fileInput.files[0];
         if (!file) return;
 
+        // ล็อคปุ่มป้องกัน user กดซ้ำระหว่างอัปโหลด
         btnConfirm.disabled = true;
         btnConfirm.textContent = 'กำลังอัปโหลด...';
 
+        // ใช้ FormData ส่งไฟล์แบบ multipart/form-data
         const formData = new FormData();
         formData.append('orderId', orderId);
         formData.append('slipImage', file);
 
         try {
+            // ส่งไปที่ /Order/UploadSlip โดยใช้ Razor Url.Action สร้าง URL ให้
             const res = await fetch('@Url.Action("UploadSlip", "Order")', {
                 method: 'POST',
                 body: formData
+                // ไม่ต้องใส่ Content-Type เพราะ FormData จะจัดการ boundary เองอัตโนมัติ
             });
             const data = await res.json();
 
             statusMsg.style.display = 'block';
 
             if (data.success) {
+                // อัปโหลดสำเร็จ → แสดงข้อความสีเขียว แล้ว redirect ไปหน้า Delivery
                 statusMsg.className = 'status-msg success';
                 statusMsg.textContent = data.message;
                 btnConfirm.textContent = 'ส่งสลิปเรียบร้อยแล้ว';
+                // รอ 1.2 วินาทีให้ user เห็นข้อความก่อน redirect
                 setTimeout(() => {
                     window.location.href = '/Delivery/Delivery';
                 }, 1200);
             } else {
+                // อัปโหลดไม่สำเร็จ → แสดงข้อความ error และคืนปุ่มให้กดได้ใหม่
                 statusMsg.className = 'status-msg error';
                 statusMsg.textContent = data.message;
                 btnConfirm.disabled = false;
                 btnConfirm.textContent = 'ยืนยันการชำระเงิน';
             }
         } catch (e) {
+            // เกิด network error หรือ exception → แสดง error และคืนปุ่ม
             statusMsg.style.display = 'block';
             statusMsg.className = 'status-msg error';
             statusMsg.textContent = 'เกิดข้อผิดพลาด กรุณาลองใหม่';

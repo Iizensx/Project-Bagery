@@ -289,40 +289,52 @@
     </div>
 
     <script>
-        const signupForm = document.getElementById('signupForm');
-        signupForm.addEventListener('submit', function () {
-            const user = {
-                username: document.getElementById('username').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value
-            };
-            localStorage.setItem('user', JSON.stringify(user));
-        });
+    // ─── 1. บันทึกข้อมูล User ลง localStorage ตอน Submit Register ───────────
+    const signupForm = document.getElementById('signupForm');
+    signupForm.addEventListener('submit', function () {
+        // เก็บข้อมูลเบื้องต้นไว้ใน localStorage
+        // เพื่อให้หน้าอื่นเรียกใช้ได้ เช่น แสดงชื่อที่ navbar
+        const user = {
+            username: document.getElementById('username').value,
+            email:    document.getElementById('email').value,
+            phone:    document.getElementById('phone').value
+            // หมายเหตุ: ไม่เก็บ password ลง localStorage เพราะเป็น security risk
+        };
+        localStorage.setItem('user', JSON.stringify(user));
+        // ไม่มี e.preventDefault() → form จะ submit ไปที่ Controller ตามปกติ
+    });
 
-        const passwordInput = document.getElementById('password');
-        const strengthFill = document.getElementById('strength-fill');
+    // ─── 2. Password Strength Meter ──────────────────────────────────────────
+    const passwordInput = document.getElementById('password');
+    const strengthFill  = document.getElementById('strength-fill');
 
-        passwordInput.addEventListener('input', function () {
-            const val = passwordInput.value;
-            let strength = 0;
+    passwordInput.addEventListener('input', function () {
+        const val = passwordInput.value;
+        let strength = 0; // คะแนนความแข็งแรง 0-3
 
-            if (val.length >= 8) strength++;
-            if (val.match(/[a-z]/) && val.match(/[A-Z]/)) strength++;
-            if (val.match(/[0-9]/) || val.match(/[^a-zA-Z0-9]/)) strength++;
+        // เงื่อนไขที่ 1: ความยาวอย่างน้อย 8 ตัว
+        if (val.length >= 8) strength++;
 
-            strengthFill.className = 'strength-meter-fill';
+        // เงื่อนไขที่ 2: มีทั้งตัวพิมพ์เล็กและพิมพ์ใหญ่
+        if (val.match(/[a-z]/) && val.match(/[A-Z]/)) strength++;
 
-            if (val.length === 0) {
-                // No fill
-            } else if (strength === 1) {
-                strengthFill.classList.add('strength-weak');
-            } else if (strength === 2) {
-                strengthFill.classList.add('strength-medium');
-            } else if (strength >= 3) {
-                strengthFill.classList.add('strength-strong');
-            }
-        });
-    </script>
+        // เงื่อนไขที่ 3: มีตัวเลข หรือ อักขระพิเศษ
+        if (val.match(/[0-9]/) || val.match(/[^a-zA-Z0-9]/)) strength++;
+
+        // reset class ก่อนแล้วค่อยใส่ใหม่ตามระดับ
+        strengthFill.className = 'strength-meter-fill';
+
+        if (val.length === 0) {
+            // ถ้ายังไม่กรอก ไม่แสดง bar
+        } else if (strength === 1) {
+            strengthFill.classList.add('strength-weak');   // อ่อน → สีแดง
+        } else if (strength === 2) {
+            strengthFill.classList.add('strength-medium'); // ปานกลาง → สีเหลือง
+        } else if (strength >= 3) {
+            strengthFill.classList.add('strength-strong'); // แข็งแรง → สีเขียว
+        }
+    });
+</script>
 </body>
 
 </html>

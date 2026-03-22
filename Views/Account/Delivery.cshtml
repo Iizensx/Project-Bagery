@@ -1117,10 +1117,13 @@
 
 @section Scripts {
 <script>
+    // ─── 1. ฟังก์ชันยืนยันรับสินค้า ──────────────────────────────────────────
     async function completeOrder(orderId) {
+        // ให้ user ยืนยันก่อนเสมอ ป้องกันกดพลาด
         if (!confirm(`ยืนยันว่าได้รับออเดอร์ ORD-${orderId} แล้ว?`)) return;
 
         try {
+            // ส่ง orderId ไปที่ /Delivery/CompleteOrder แบบ POST form-urlencoded
             const res = await fetch('/Delivery/CompleteOrder', {
                 method: 'POST',
                 headers: {
@@ -1132,6 +1135,7 @@
             const data = await res.json();
             alert(data.message);
 
+            // ถ้าสำเร็จให้ reload หน้าเพื่ออัปเดตสถานะ
             if (data.success) {
                 window.location.reload();
             }
@@ -1140,40 +1144,49 @@
         }
     }
 
+    // ใช้ IIFE (Immediately Invoked Function Expression) เพื่อไม่ให้ตัวแปรรั่วออกไป global
     (() => {
+        // ─── 2. ระบบ Pagination ประวัติการสั่งซื้อ ────────────────────────────
         const historyCards = Array.from(document.querySelectorAll('.history-card'));
         const pageIndicator = document.getElementById('historyPageIndicator');
         const prevBtn = document.getElementById('historyPrevBtn');
         const nextBtn = document.getElementById('historyNextBtn');
-        const pageSize = 4;
+        const pageSize = 4; // แสดงประวัติ 4 รายการต่อหน้า
 
         if (historyCards.length) {
             let currentPage = 1;
+            // คำนวณจำนวนหน้าทั้งหมด ขั้นต่ำ 1 หน้า
             const totalPages = Math.max(1, Math.ceil(historyCards.length / pageSize));
 
             const renderPage = () => {
+                // คำนวณ index เริ่มต้นและสิ้นสุดของหน้านี้
                 const start = (currentPage - 1) * pageSize;
                 const end = start + pageSize;
 
+                // ซ่อน card ที่ไม่อยู่ในหน้าปัจจุบัน
                 historyCards.forEach((card, index) => {
                     card.hidden = index < start || index >= end;
                 });
 
+                // อัปเดตข้อความบอกหน้าปัจจุบัน เช่น "หน้า 1 / 3"
                 if (pageIndicator) {
                     pageIndicator.textContent = `หน้า ${currentPage} / ${totalPages}`;
                 }
 
+                // ปุ่ม Prev: disable ถ้าอยู่หน้าแรกอยู่แล้ว
                 if (prevBtn) {
                     prevBtn.disabled = currentPage === 1;
                     prevBtn.style.opacity = currentPage === 1 ? '0.55' : '1';
                 }
 
+                // ปุ่ม Next: disable ถ้าอยู่หน้าสุดท้ายแล้ว
                 if (nextBtn) {
                     nextBtn.disabled = currentPage === totalPages;
                     nextBtn.style.opacity = currentPage === totalPages ? '0.55' : '1';
                 }
             };
 
+            // กดปุ่มย้อนกลับ → ลด currentPage แล้ว render ใหม่
             prevBtn?.addEventListener('click', () => {
                 if (currentPage > 1) {
                     currentPage -= 1;
@@ -1181,6 +1194,7 @@
                 }
             });
 
+            // กดปุ่มถัดไป → เพิ่ม currentPage แล้ว render ใหม่
             nextBtn?.addEventListener('click', () => {
                 if (currentPage < totalPages) {
                     currentPage += 1;
@@ -1188,17 +1202,23 @@
                 }
             });
 
-            renderPage();
+            renderPage(); // render ครั้งแรกตอนโหลดหน้า
         }
 
+        // ─── 3. Modal แสดงรายละเอียดประวัติออเดอร์ ───────────────────────────
         const historyDetailModal = document.getElementById('historyDetailModal');
         if (historyDetailModal) {
+            // ดักจับ event ตอน Bootstrap Modal กำลังจะเปิด
             historyDetailModal.addEventListener('show.bs.modal', event => {
+                // ดึง button ที่กด trigger modal มา
                 const button = event.relatedTarget;
                 if (!button) return;
 
+                // Helper อ่านค่าจาก data attribute ของ button ที่กด
+                // ถ้าไม่มีค่าให้แสดง '-' แทน
                 const read = key => button.getAttribute(`data-${key}`) || '-';
 
+                // ดึง element ทุกช่องในหน้าต่าง Modal
                 const title = document.getElementById('historyDetailTitle');
                 const date = document.getElementById('historyModalDate');
                 const total = document.getElementById('historyModalTotal');
@@ -1209,12 +1229,14 @@
                 const items = document.getElementById('historyModalItems');
                 const address = document.getElementById('historyModalAddress');
 
+                // นำข้อมูลจาก data attribute ของปุ่มไปใส่ใน Modal ทีละช่อง
                 if (title) title.textContent = `รายละเอียดออเดอร์ #${read('order-number')}`;
                 if (date) date.textContent = read('order-date');
                 if (total) total.textContent = `฿${read('total-amount')}`;
                 if (orderStatus) orderStatus.textContent = read('order-status');
                 if (paymentStatus) paymentStatus.textContent = read('payment-status');
                 if (promotion) promotion.textContent = read('promotion-name');
+                // ถ้าไม่มีส่วนลดให้แสดงข้อความแทนแทนที่จะแสดง '-'
                 if (discount) discount.textContent = read('discount-display') === '-' ? 'ไม่มีส่วนลด' : read('discount-display');
                 if (items) items.textContent = read('item-summary');
                 if (address) address.textContent = read('delivery-address');

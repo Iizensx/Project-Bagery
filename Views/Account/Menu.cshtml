@@ -1036,51 +1036,58 @@
     </div>
 </div>
 
+@* Helper function แปลงชื่อ Category เป็น Emoji ให้แสดงหน้าเมนู *@
 @functions {
     private string GetCategoryIcon(string categoryName)
     {
+        // ใช้ Switch Expression เช็คชื่อ category (แปลงเป็นตัวเล็กก่อนเพื่อป้องกัน case sensitive)
         return categoryName?.ToLower() switch
         {
-            var s when s.Contains("ครัว") || s.Contains("pastry") => "🥐",
-            var s when s.Contains("เค้ก") || s.Contains("cake") => "🍰",
+            var s when s.Contains("ครัว") || s.Contains("pastry")    => "🥐",
+            var s when s.Contains("เค้ก") || s.Contains("cake")      => "🍰",
             var s when s.Contains("เครื่องดื่ม") || s.Contains("drink") => "☕",
-            var s when s.Contains("ซิก") || s.Contains("signature") => "⭐",
-            _ => "🥐"
+            var s when s.Contains("ซิก") || s.Contains("signature")  => "⭐",
+            _ => "🥐" // default ถ้าไม่ตรงกับ category ไหนเลย
         };
     }
 }
 
 @section Scripts {
     <script>
+        // ─── 1. แสดง Modal รายละเอียดสินค้า ─────────────────────────────────
         function showProductDetails(name, description, price, imageUrl, stock) {
+            // นำข้อมูลสินค้าที่รับมาใส่ใน element ของ Modal
             document.getElementById('modalProductName').innerText = name;
             document.getElementById('modalProductDescription').innerText = description;
             document.getElementById('modalProductPrice').innerText = price + ' บาท';
             document.getElementById('modalProductImage').src = imageUrl;
             document.getElementById('modalProductStock').innerText = 'คงเหลือ: ' + stock;
             
-            // Update Add to Cart button in modal
+            // กำหนด onclick ของปุ่ม "เพิ่มลงตะกร้า" ใน Modal ให้เรียก addToCart()
             const addToCartBtn = document.getElementById('modalAddToCartBtn');
             addToCartBtn.onclick = function() {
                 addToCart(name, price);
-                // Optional: close modal after adding to cart
+                // Optional: ปิด Modal หลังเพิ่มสินค้า (ปัจจุบัน comment ไว้)
                 // var modal = bootstrap.Modal.getInstance(document.getElementById('productDetailModal'));
                 // modal.hide();
             };
 
-            // Show modal
+            // เปิด Bootstrap Modal
             var productModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
             productModal.show();
         }
 
-        const productsPerPage = 6;
+        // ─── 2. ตัวแปร State ของระบบ Pagination และ Filter ──────────────────
+        const productsPerPage = 6; // แสดงสินค้า 6 ชิ้นต่อหน้า
         let currentPage = 1;
-        let currentCategory = 'all';
+        let currentCategory = 'all'; // category ที่กรองอยู่ตอนนี้
 
+        // ดึง product card ทั้งหมดในหน้า
         function getAllProductCards() {
             return Array.from(document.querySelectorAll('.product-card'));
         }
 
+        // กรองเฉพาะ product ที่ตรงกับ category ที่เลือก
         function getFilteredProducts() {
             return getAllProductCards().filter(product => {
                 const productCategory = product.getAttribute('data-category');
@@ -1088,6 +1095,7 @@
             });
         }
 
+        // ─── 3. สร้าง Page Indicator (ถ้ายังไม่มี) ───────────────────────────
         function ensurePageIndicator() {
             const navControls = document.querySelector('.nav-controls');
             if (!navControls || document.getElementById('pageIndicator')) return;
@@ -1096,19 +1104,22 @@
             indicator.id = 'pageIndicator';
             indicator.className = 'page-indicator';
             indicator.innerText = '1 / 1';
+            // แทรก indicator ระหว่างปุ่ม Prev และ Next
             navControls.insertBefore(indicator, navControls.children[1] || null);
         }
 
+        // ─── 4. Setup ปุ่ม Prev / Next ───────────────────────────────────────
         function setupNavButtons() {
             const navButtons = document.querySelectorAll('.nav-controls .nav-btn');
             if (navButtons.length < 2) return;
 
             navButtons[0].textContent = 'Prev';
             navButtons[1].textContent = 'Next';
-            navButtons[0].onclick = () => changePage(-1);
-            navButtons[1].onclick = () => changePage(1);
+            navButtons[0].onclick = () => changePage(-1); // กด Prev ลดหน้า
+            navButtons[1].onclick = () => changePage(1);  // กด Next เพิ่มหน้า
         }
 
+        // ─── 5. Render สินค้าในหน้าปัจจุบัน ─────────────────────────────────
         function renderProducts() {
             const allProducts = getAllProductCards();
             const filteredProducts = getFilteredProducts();
@@ -1117,23 +1128,29 @@
             const pageIndicator = document.getElementById('pageIndicator');
             const rangeText = document.getElementById('menuRangeText');
 
+            // ป้องกัน currentPage เกิน totalPages เมื่อ filter เปลี่ยน
             if (currentPage > totalPages) currentPage = totalPages;
 
+            // ซ่อนสินค้าทั้งหมดก่อน แล้วค่อยแสดงเฉพาะที่อยู่ในหน้านี้
             allProducts.forEach(product => {
                 product.style.display = 'none';
             });
 
+            // คำนวณ index เริ่มต้นและสิ้นสุดของหน้านี้
             const startIndex = (currentPage - 1) * productsPerPage;
             const endIndex = Math.min(startIndex + productsPerPage, filteredProducts.length);
 
+            // แสดงเฉพาะสินค้าในช่วง startIndex ถึง endIndex
             filteredProducts.slice(startIndex, endIndex).forEach(product => {
                 product.style.display = 'block';
             });
 
+            // อัปเดต Page Indicator เช่น "2 / 4"
             if (pageIndicator) {
                 pageIndicator.innerText = `${currentPage} / ${totalPages}`;
             }
 
+            // อัปเดตข้อความบอกจำนวนสินค้าที่แสดงอยู่
             if (rangeText) {
                 if (filteredProducts.length === 0) {
                     rangeText.innerText = 'No menu items found in this category yet';
@@ -1142,25 +1159,30 @@
                 }
             }
 
+            // disable ปุ่ม Prev ถ้าอยู่หน้าแรก / ปุ่ม Next ถ้าอยู่หน้าสุดท้าย
             if (navButtons.length >= 2) {
                 navButtons[0].disabled = currentPage === 1;
                 navButtons[1].disabled = currentPage === totalPages;
             }
         }
 
+        // ─── 6. เปลี่ยนหน้า Prev / Next ──────────────────────────────────────
         function changePage(direction) {
             const totalPages = Math.max(1, Math.ceil(getFilteredProducts().length / productsPerPage));
             const nextPage = currentPage + direction;
+            // ป้องกันออกนอก range
             if (nextPage < 1 || nextPage > totalPages) return;
             currentPage = nextPage;
             renderProducts();
         }
 
+        // ─── 7. กรองสินค้าตาม Category ───────────────────────────────────────
         function filterMenu(category, event) {
             if (event) {
                 event.preventDefault();
             }
 
+            // ล้าง active ของทุก menu item แล้ว active อันที่กด
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -1169,15 +1191,17 @@
                 event.currentTarget.classList.add('active');
             }
 
+            // เปลี่ยน category และ reset กลับหน้า 1 แล้ว render ใหม่
             currentCategory = category;
             currentPage = 1;
             renderProducts();
         }
 
+        // ─── 8. เริ่มต้นระบบเมื่อโหลดหน้าเสร็จ ──────────────────────────────
         document.addEventListener('DOMContentLoaded', function () {
-            ensurePageIndicator();
-            setupNavButtons();
-            renderProducts();
+            ensurePageIndicator(); // สร้าง page indicator
+            setupNavButtons();     // setup ปุ่ม prev/next
+            renderProducts();      // render สินค้าหน้าแรก
         });
     </script>
 }

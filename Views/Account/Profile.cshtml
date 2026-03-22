@@ -700,121 +700,248 @@
     </div>
 
     <script>
-        const modal = document.getElementById('addressModal');
-        const closeModal = document.querySelector('.close-modal');
-        const cancelBtn = document.querySelector('.btn-cancel');
-        const saveAddressBtn = document.getElementById('save-address');
-        const btnAddAddress = document.getElementById('btn-add-address');
-        const profileForm = document.getElementById('profile-form');
-        const addressForm = document.getElementById('address-form');
-        const userId = document.getElementById('profile-userid').value;
+    // ─── ดึง Element หลักทั้งหมดที่ใช้บ่อย ──────────────────────────────────
+    const modal        = document.getElementById('addressModal');
+    const closeModal   = document.querySelector('.close-modal');
+    const cancelBtn    = document.querySelector('.btn-cancel');
+    const saveAddressBtn = document.getElementById('save-address');
+    const btnAddAddress  = document.getElementById('btn-add-address');
+    const profileForm  = document.getElementById('profile-form');
+    const addressForm  = document.getElementById('address-form');
+    const userId       = document.getElementById('profile-userid').value; // ดึง UserId จาก hidden input
 
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
+    // ─── 1. Tab Navigation (สลับ Tab ข้อมูลส่วนตัว / ที่อยู่) ───────────────
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // ล้าง active ทุก tab แล้ว active เฉพาะอันที่กด
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // ─── 2. บันทึกข้อมูลโปรไฟล์ (ชื่อ, Email, Phone) ────────────────────────
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // ป้องกัน form submit แบบปกติ
+
+            // ส่งข้อมูลโปรไฟล์ไปที่ /Profile/Profile แบบ POST JSON
+            fetch('@Url.Action("Profile", "Account")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    UserId:   parseInt(document.getElementById('profile-userid').value),
+                    Username: document.getElementById('profile-name').value,
+                    Email:    document.getElementById('profile-email').value,
+                    Phone:    document.getElementById('profile-phone').value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.success ? data.message : (data.message || 'เกิดข้อผิดพลาด'));
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาด');
             });
         });
+    }
 
-        if (profileForm) {
-            profileForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+    // ─── 3. Modal จัดการที่อยู่ (เพิ่ม / แก้ไข) ──────────────────────────────
+    // เปิด Modal พร้อมกรอกข้อมูลเดิม (ถ้าเป็นการแก้ไข)
+    function openModal(title, addressId = 0, name = '', district = '', province = '', postal = '') {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('input-address-id').value = addressId;
+        document.getElementById('input-address-name').value = name;
+        document.getElementById('input-address-district').value = district;
+        document.getElementById('input-address-province').value = province;
+        document.getElementById('input-address-postal').value = postal;
+        modal.style.display = 'flex';
+    }
+
+    // ปิด Modal และ reset form
+    function hideModal() {
+        modal.style.display = 'none';
+        addressForm.reset();
+    }
+
+    // กดปุ่ม "เพิ่มที่อยู่" → เปิด Modal แบบว่างเปล่า
+    btnAddAddress.addEventListener('click', () => openModal('เพิ่มที่อยู่ใหม่'));
+
+    // กดปุ่ม "แก้ไข" บน address card → เปิด Modal พร้อมข้อมูลเดิม
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-edit-address')) {
+            const card = e.target.closest('.address-card');
+            const addressId = card.dataset.addressId;
+            const name = card.querySelector('[data-field="name"]').innerText;
+            const details = card.querySelector('[data-field="details"]').innerText;
+            // แยกข้อมูลที่อยู่จาก string โดย split ด้วย whitespace
+            const parts = details.trim().split(/\s+/);
+            
+            openModal('แก้ไขที่อยู่', addressId, name, parts[0] || '', parts[1] || '', parts[2] || '');
+        }
+    });
+
+    // ปิด Modal เมื่อกดปุ่ม X, Cancel, หรือกดนอก Modal
+    closeModal.addEventListener('click', hideModal);
+    cancelBtn.addEventListener('click', hideModal);
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) hideModal();
+    });
+
+    // ─── 4. บันทึกที่อยู่ (เพิ่มใหม่ หรือ แก้ไข) ────────────────────────────
+    saveAddressBtn.addEventListener('click', function() {
+        const name      = document.getElementById('input-address-name').value;
+        const district  = document.getElementById('input-address-district').value;
+        const province  = document.getElementById('input-address-province').value;
+        const postal    = document.getElementById('input-address-postal').value;
+        const addressId = document.getElementById('input-address-id').value;
+
+        if (!name) {
+            alert('กรุณากรอกข้อมูลที่อยู่');
+            return;
+        }
+
+        // ส่งแบบ form-urlencoded เพราะ Controller รับแบบ parameter ธรรมดา
+        fetch('@Url.Action("SaveAddress", "Account")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                userId, addressId,
+                addressLine: name,
+                district, province,
+                postalCode: postal
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload(); // reload เพื่อแสดงที่อยู่ที่เพิ่ม/แก้ไข
+            } else {
+                alert('เกิดข้อผิดพลาด');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('เกิดข้อผิดพลาด');
+        });
+    });
+
+    // ─── 5. ลบที่อยู่ ─────────────────────────────────────────────────────────
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-delete-address')) {
+            if (confirm('คุณต้องการลบที่อยู่นี้หรือไม่?')) {
+                const card = e.target.closest('.address-card');
+                const addressId = card.dataset.addressId;
                 
-                fetch('@Url.Action("Profile", "Account")', {
+                fetch('@Url.Action("DeleteAddress", "Account")', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        UserId: parseInt(document.getElementById('profile-userid').value),
-                        Username: document.getElementById('profile-name').value,
-                        Email: document.getElementById('profile-email').value,
-                        Phone: document.getElementById('profile-phone').value
-                    })
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ addressId, userId })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         alert(data.message);
+                        location.reload();
                     } else {
-                        alert(data.message || 'เกิดข้อผิดพลาด');
+                        alert('เกิดข้อผิดพลาด');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('เกิดข้อผิดพลาด');
                 });
-            });
-        }
-
-        function openModal(title, addressId = 0, name = '', district = '', province = '', postal = '') {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('input-address-id').value = addressId;
-            document.getElementById('input-address-name').value = name;
-            document.getElementById('input-address-district').value = district;
-            document.getElementById('input-address-province').value = province;
-            document.getElementById('input-address-postal').value = postal;
-            modal.style.display = 'flex';
-        }
-
-        function hideModal() {
-            modal.style.display = 'none';
-            addressForm.reset();
-        }
-
-        btnAddAddress.addEventListener('click', () => openModal('เพิ่มที่อยู่ใหม่'));
-
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('btn-edit-address')) {
-                const card = e.target.closest('.address-card');
-                const addressId = card.dataset.addressId;
-                const name = card.querySelector('[data-field="name"]').innerText;
-                const details = card.querySelector('[data-field="details"]').innerText;
-                const parts = details.trim().split(/\s+/);
-                
-                openModal('แก้ไขที่อยู่', addressId, name, parts[0] || '', parts[1] || '', parts[2] || '');
             }
-        });
+        }
+    });
 
-        closeModal.addEventListener('click', hideModal);
-        cancelBtn.addEventListener('click', hideModal);
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) hideModal();
-        });
+    // ─── 6. Modal เปลี่ยนรหัสผ่าน ────────────────────────────────────────────
+    const passwordModal      = document.getElementById('passwordModal');
+    const closePasswordModal = document.querySelector('.close-modal-password');
+    const cancelPasswordBtn  = document.getElementById('cancel-password');
+    const savePasswordBtn    = document.getElementById('save-password');
+    const passwordForm       = document.getElementById('password-form');
+    const changePasswordBtn  = document.getElementById('btn-change-password');
 
-        saveAddressBtn.addEventListener('click', function() {
-            const name = document.getElementById('input-address-name').value;
-            const district = document.getElementById('input-address-district').value;
-            const province = document.getElementById('input-address-province').value;
-            const postal = document.getElementById('input-address-postal').value;
-            const addressId = document.getElementById('input-address-id').value;
+    function openPasswordModal() {
+        passwordModal.style.display = 'flex';
+        passwordForm.reset();
+    }
 
-            if (!name) {
-                alert('กรุณากรอกข้อมูลที่อยู่');
+    // Toggle แสดง/ซ่อน รหัสผ่าน (password ↔ text)
+    function togglePasswordVisibility(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.type = element.type === 'password' ? 'text' : 'password';
+        }
+    }
+
+    function hidePasswordModal() {
+        passwordModal.style.display = 'none';
+        passwordForm.reset();
+    }
+
+    if (changePasswordBtn) changePasswordBtn.addEventListener('click', openPasswordModal);
+    if (closePasswordModal) closePasswordModal.addEventListener('click', hidePasswordModal);
+    if (cancelPasswordBtn)  cancelPasswordBtn.addEventListener('click', hidePasswordModal);
+
+    // ปิด password modal เมื่อกดนอก Modal
+    window.addEventListener('click', (e) => {
+        if (e.target === passwordModal) hidePasswordModal();
+    });
+
+    // ─── 7. บันทึกรหัสผ่านใหม่ ───────────────────────────────────────────────
+    if (savePasswordBtn) {
+        savePasswordBtn.addEventListener('click', function() {
+            const currentPassword  = document.getElementById('input-current-password').value;
+            const newPassword      = document.getElementById('input-new-password').value;
+            const confirmPassword  = document.getElementById('input-confirm-new-password').value;
+
+            // Debug log ช่วยตรวจสอบค่าที่รับมา (ลบออกได้เมื่อ production)
+            console.log('Password Change Debug Info:');
+            console.log('Current Password Length:', currentPassword.length);
+            console.log('New Password Length:', newPassword.length);
+            console.log('Confirm Password Length:', confirmPassword.length);
+
+            // Validate ฝั่ง Frontend ก่อนส่งไป Server
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('กรุณากรอกข้อมูลให้ครบ');
                 return;
             }
 
-            fetch('@Url.Action("SaveAddress", "Account")', {
+            if (newPassword !== confirmPassword) {
+                alert('รหัสผ่านใหม่และการยืนยันไม่ตรงกัน');
+                return;
+            }
+
+            // รวมข้อมูล Profile + Password ส่งไปพร้อมกัน
+            // เพราะ Controller ใช้ endpoint เดิม /Profile/Profile
+            const payloadData = {
+                UserId:          parseInt(document.getElementById('profile-userid').value),
+                Username:        document.getElementById('profile-name').value,
+                Email:           document.getElementById('profile-email').value,
+                Phone:           document.getElementById('profile-phone').value,
+                CurrentPassword: currentPassword,
+                NewPassword:     newPassword,
+                ConfirmPassword: confirmPassword
+            };
+
+            console.log('Sending JSON:', JSON.stringify(payloadData));
+
+            fetch('@Url.Action("Profile", "Account")', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    userId: userId,
-                    addressId: addressId,
-                    addressLine: name,
-                    district: district,
-                    province: province,
-                    postalCode: postal
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payloadData)
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     alert(data.message);
+                    hidePasswordModal();
                     location.reload();
                 } else {
-                    alert('เกิดข้อผิดพลาด');
+                    alert(data.message || 'เกิดข้อผิดพลาด');
                 }
             })
             .catch(error => {
@@ -822,149 +949,18 @@
                 alert('เกิดข้อผิดพลาด');
             });
         });
+    }
 
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('btn-delete-address')) {
-                if (confirm('คุณต้องการลบที่อยู่นี้หรือไม่?')) {
-                    const card = e.target.closest('.address-card');
-                    const addressId = card.dataset.addressId;
-                    
-                    fetch('@Url.Action("DeleteAddress", "Account")', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: new URLSearchParams({
-                            addressId: addressId,
-                            userId: userId
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert(data.message);
-                            location.reload();
-                        } else {
-                            alert('เกิดข้อผิดพลาด');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('เกิดข้อผิดพลาด');
-                    });
-                }
-            }
-        });
+    // ─── 8. ปุ่มอื่นๆ (ฟังก์ชันที่ยังไม่เปิดใช้งาน) ──────────────────────────
+    // ปุ่มบัตรสมาชิก → แจ้งว่ายังไม่เปิดให้ใช้
+    document.querySelector('.membership-btn').addEventListener('click', function() {
+        alert('ฟังก์ชันบัตรสมาชิกจะเปิดในอนาคต');
+    });
 
-        const passwordModal = document.getElementById('passwordModal');
-        const closePasswordModal = document.querySelector('.close-modal-password');
-        const cancelPasswordBtn = document.getElementById('cancel-password');
-        const savePasswordBtn = document.getElementById('save-password');
-        const passwordForm = document.getElementById('password-form');
-        const changePasswordBtn = document.getElementById('btn-change-password');
-
-        function openPasswordModal() {
-            passwordModal.style.display = 'flex';
-            passwordForm.reset();
-        }
-
-        function togglePasswordVisibility(elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                if (element.type === 'password') {
-                    element.type = 'text';
-                } else {
-                    element.type = 'password';
-                }
-            }
-        }
-
-        function hidePasswordModal() {
-            passwordModal.style.display = 'none';
-            passwordForm.reset();
-        }
-
-        if (changePasswordBtn) {
-            changePasswordBtn.addEventListener('click', openPasswordModal);
-        }
-
-        if (closePasswordModal) {
-            closePasswordModal.addEventListener('click', hidePasswordModal);
-        }
-
-        if (cancelPasswordBtn) {
-            cancelPasswordBtn.addEventListener('click', hidePasswordModal);
-        }
-
-        window.addEventListener('click', (e) => {
-            if (e.target === passwordModal) hidePasswordModal();
-        });
-
-        if (savePasswordBtn) {
-            savePasswordBtn.addEventListener('click', function() {
-                const currentPassword = document.getElementById('input-current-password').value;
-                const newPassword = document.getElementById('input-new-password').value;
-                const confirmPassword = document.getElementById('input-confirm-new-password').value;
-
-                console.log('Password Change Debug Info:');
-                console.log('Current Password Length:', currentPassword.length);
-                console.log('New Password Length:', newPassword.length);
-                console.log('Confirm Password Length:', confirmPassword.length);
-                console.log('Current Password Value:', currentPassword);
-
-                if (!currentPassword || !newPassword || !confirmPassword) {
-                    alert('กรุณากรอกข้อมูลให้ครบ');
-                    return;
-                }
-
-                if (newPassword !== confirmPassword) {
-                    alert('รหัสผ่านใหม่และการยืนยันไม่ตรงกัน');
-                    return;
-                }
-
-                const payloadData = {
-                    UserId: parseInt(document.getElementById('profile-userid').value),
-                    Username: document.getElementById('profile-name').value,
-                    Email: document.getElementById('profile-email').value,
-                    Phone: document.getElementById('profile-phone').value,
-                    CurrentPassword: currentPassword,
-                    NewPassword: newPassword,
-                    ConfirmPassword: confirmPassword
-                };
-
-                console.log('Sending JSON:', JSON.stringify(payloadData));
-
-                fetch('@Url.Action("Profile", "Account")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payloadData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(data.message);
-                        hidePasswordModal();
-                        location.reload();
-                    } else {
-                        alert(data.message || 'เกิดข้อผิดพลาด');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('เกิดข้อผิดพลาด');
-                });
-            });
-        }
-
-        document.querySelector('.membership-btn').addEventListener('click', function() {
-            alert('ฟังก์ชันบัตรสมาชิกจะเปิดในอนาคต');
-        });
-
-        document.querySelector('.change-avatar-btn').addEventListener('click', function() {
-            alert('ฟังก์ชันเปลี่ยนรูปโปรไฟล์');
-        });
-    </script>
+    // ปุ่มเปลี่ยนรูปโปรไฟล์ → แจ้ง placeholder
+    document.querySelector('.change-avatar-btn').addEventListener('click', function() {
+        alert('ฟังก์ชันเปลี่ยนรูปโปรไฟล์');
+    });
+</script>
 </body>
 </html>

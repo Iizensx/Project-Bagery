@@ -102,25 +102,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
+    // ตัวแปรหลักที่ใช้ตลอดหน้า Checkout
     let cart = JSON.parse(localStorage.getItem('bakeryCart')) || [];
     let userId = 0;
-    let selectedAddressId = null;
-    let selectedPromoId = null;
+    let selectedAddressId = null;  // ที่อยู่ที่ user เลือก
+    let selectedPromoId = null;    // โปรโมชั่นที่ user เลือก
     let subtotal = 0;
     let discount = 0;
     let total = 0;
-    let availablePromos = [];
+    let availablePromos = [];      // รายการโปรโมชั่นทั้งหมดที่ดึงมาจาก server
 
+    // ถ้าตะกร้าว่างให้ redirect กลับหน้าเมนูทันที
     if (cart.length === 0) {
         alert('ตะกร้าว่างเปล่า');
         window.location.href = '/Home/Menu';
         return;
     }
 
-    // 1. Load Cart Data
+    // ─── 1. แสดงรายการสินค้าในตะกร้า ───────────────────────────────────────
     const container = document.getElementById('checkout-items-container');
+
+    // คำนวณราคารวมก่อนหักส่วนลด
     subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     
+    // สร้าง HTML แสดงรายการสินค้าแต่ละชิ้น
     container.innerHTML = cart.map(item => `
         <div class="checkout-item">
             <div>
@@ -132,13 +137,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     `).join('');
 
     document.getElementById('subtotal-amount').innerText = subtotal + ' บาท';
-    updateTotal();
+    updateTotal(); // อัปเดตยอดรวมครั้งแรก
 
-    // 2. Load User Info & Data
+    // ─── 2. ดึงข้อมูล User, ที่อยู่, และโปรโมชั่น ──────────────────────────
     try {
+        // เรียก API ดึง UserId จาก Session ที่ฝั่ง Server
         const userRes = await fetch('/Order/GetCurrentUser');
         const userData = await userRes.json();
         
+        // ถ้ายังไม่ได้ login ให้ redirect ไปหน้า Login
         if (!userData.success || userData.userId <= 0) {
             alert('กรุณาเข้าสู่ระบบก่อนชำระเงิน');
             window.location.href = '/Account/Login';
@@ -147,12 +154,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         userId = userData.userId;
 
-        // Fetch Addresses
+        // ── ดึงรายการที่อยู่ของ User ────────────────────────────────────────
         const addrRes = await fetch(`/Profile/GetUserAddresses?userId=${userId}`);
         const addrData = await addrRes.json();
         const addrList = document.getElementById('address-list');
         
         if (addrData.success && addrData.addresses.length > 0) {
+            // สร้าง card ให้แต่ละที่อยู่ให้ user กดเลือกได้
             addrList.innerHTML = addrData.addresses.map(addr => `
                 <div class="list-group-item address-item p-3" data-id="${addr.addressId}">
                     <div class="d-flex justify-content-between align-items-center">
@@ -164,20 +172,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `).join('');
 
-            // Add Click Event
+            // เพิ่ม Event Click ให้แต่ละที่อยู่
             document.querySelectorAll('.address-item').forEach(item => {
                 item.addEventListener('click', () => {
+                    // ล้าง active ของทุกอัน แล้ว active อันที่กดเท่านั้น
                     document.querySelectorAll('.address-item').forEach(i => i.classList.remove('active'));
                     item.classList.add('active');
-                    selectedAddressId = item.dataset.id;
-                    checkValidity();
+                    selectedAddressId = item.dataset.id; // เก็บ id ที่อยู่ที่เลือก
+                    checkValidity(); // เช็คว่าครบพร้อมกด confirm ยัง
                 });
             });
         } else {
             addrList.innerHTML = '<p class="text-center text-muted">ไม่พบข้อมูลที่อยู่ กรุณาเพิ่มที่อยู่ใหม่</p>';
         }
 
-        // Fetch Promotions
+        // ── ดึงโปรโมชั่นที่ user มีและยังไม่ได้ใช้ ──────────────────────────
         try {
             const promoRes = await fetch(`/Order/GetUserPromos?userId=${userId}`);
             if (promoRes.ok) {
@@ -186,9 +195,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 if (promoData.success && promoData.promos && promoData.promos.length > 0) {
                     availablePromos = promoData.promos;
+
+                    // เพิ่ม option ให้ dropdown โปรโมชั่น
                     promoData.promos.forEach(p => {
                         const opt = document.createElement('option');
                         opt.value = p.promotionId;
+                        // แสดงชื่อโปร + ค่าส่วนลด (% หรือ บาท)
                         opt.innerText = `${p.promotionName} (${p.discountValue} ${p.discountType === 'Percent' || p.discountType === 'Percentage' ? '%' : 'บาท'})`;
                         promoSelect.appendChild(opt);
                     });
@@ -199,23 +211,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (promoErr) {
             console.error('Promotion error:', promoErr);
         }
+
     } catch (e) {
         console.error(e);
         alert('เกิดข้อผิดพลาดในการดึงข้อมูล');
     }
 
-    // Promo Change Logic
+    // ─── 3. เมื่อ User เลือกโปรโมชั่น ────────────────────────────────────────
     document.getElementById('promo-select').addEventListener('change', (e) => {
         selectedPromoId = e.target.value;
         const promo = availablePromos.find(p => p.promotionId == selectedPromoId);
         
         if (promo) {
+            // คำนวณส่วนลดตามประเภท: Percent = คิดเป็น % / อื่นๆ = ลดเป็นบาทตรงๆ
             if (promo.discountType === 'Percent' || promo.discountType === 'Percentage') {
                 discount = (subtotal * promo.discountValue) / 100;
             } else {
                 discount = promo.discountValue;
             }
         } else {
+            // ถ้าเลือก "ไม่ใช้โปร" ให้ reset ส่วนลดเป็น 0
             discount = 0;
             selectedPromoId = null;
         }
@@ -223,12 +238,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateTotal();
     });
 
+    // ─── Helper: คำนวณและแสดงยอดรวม ─────────────────────────────────────────
     function updateTotal() {
-        total = Math.max(0, subtotal - discount);
+        total = Math.max(0, subtotal - discount); // ป้องกันยอดติดลบ
         document.getElementById('discount-amount').innerText = '-' + discount.toFixed(2) + ' บาท';
         document.getElementById('total-amount').innerText = total.toFixed(2) + ' บาท';
     }
 
+    // ─── Helper: เช็คว่าพร้อมกด Confirm ยัง (ต้องเลือกที่อยู่และมีสินค้า) ──
     function checkValidity() {
         const btn = document.getElementById('confirm-order-btn');
         if (selectedAddressId && cart.length > 0) {
@@ -238,17 +255,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Confirm Order Logic
+    // ─── 4. กดยืนยันการสั่งซื้อ ──────────────────────────────────────────────
     document.getElementById('confirm-order-btn').addEventListener('click', async () => {
         if (!selectedAddressId) {
             alert('กรุณาเลือกที่อยู่จัดส่ง');
             return;
         }
 
+        // ล็อคปุ่มป้องกัน user กดซ้ำ
         const confirmBtn = document.getElementById('confirm-order-btn');
         confirmBtn.disabled = true;
         confirmBtn.innerText = 'กำลังประมวลผล...';
 
+        // รวมข้อมูล Order ที่จะส่งไป Controller
         const orderData = {
             userId: userId,
             addressId: parseInt(selectedAddressId),
@@ -262,6 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         try {
+            // ส่งข้อมูล Order ไปที่ /Order/CreateOrder แบบ POST JSON
             const res = await fetch('/Order/CreateOrder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -270,10 +290,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await res.json();
 
             if (data.success) {
-                localStorage.removeItem('bakeryCart');
-                window.location.href = `/Order/Payment?orderId=${data.orderId}`;
+                localStorage.removeItem('bakeryCart'); // ล้างตะกร้าหลังสั่งสำเร็จ
+                window.location.href = `/Order/Payment?orderId=${data.orderId}`; // ไปหน้าชำระเงิน
             } else {
                 alert(data.message || 'เกิดข้อผิดพลาดในการสั่งซื้อ');
+                // คืนสถานะปุ่มให้กดได้ใหม่
                 confirmBtn.disabled = false;
                 confirmBtn.innerText = 'ยืนยันการสั่งซื้อ';
             }

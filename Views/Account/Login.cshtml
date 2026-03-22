@@ -470,16 +470,25 @@
         </div>
     </div>
 
-    @* Removed script that prevents form submission *@
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function (e) {
-            const username = document.getElementById('username').value;
-            const user = {
-                username: username,
-                loginTime: new Date().getTime()
-            };
-            localStorage.setItem('user', JSON.stringify(user));
-        });
-    </script>
+   @* บันทึกข้อมูล User ลง localStorage ตอน Submit Login *@
+<script>
+    // ดักจับ event ตอนกด Submit ฟอร์ม Login
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+        const username = document.getElementById('username').value;
+
+        // สร้าง object เก็บข้อมูล user ที่จะบันทึกลง localStorage
+        const user = {
+            username: username,
+            loginTime: new Date().getTime() // เก็บเวลา login เป็น timestamp (milliseconds)
+        };
+
+        // บันทึกลง localStorage เพื่อให้หน้าอื่นๆ เรียกใช้ได้
+        // เช่น แสดงชื่อ user ที่ navbar โดยไม่ต้องเรียก server
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // หมายเหตุ: ไม่มี e.preventDefault() 
+        // ดังนั้นฟอร์มจะยัง submit ตามปกติไปที่ Controller
+    });
+</script>
 </body>
 </html>
