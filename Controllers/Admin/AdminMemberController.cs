@@ -4,18 +4,26 @@ using _66022380.Models.Db;
 
 namespace _66022380.Controllers.Admin;
 
+// Controller สำหรับจัดการสมาชิกและบทบาทผู้ใช้
+// รองรับการดูรายชื่อผู้ใช้ เพิ่มสมาชิกใหม่ แก้ไขข้อมูลเดิม และลบผู้ใช้
 public class AdminMemberController : AdminControllerBase
 {
+    // รับ BakerydbContext จากคลาสแม่
     public AdminMemberController(BakerydbContext db) : base(db)
     {
     }
 
+    // GET: แสดงหน้าจัดการสมาชิก พร้อมรายชื่อผู้ใช้และข้อมูลบทบาท
     public IActionResult Member()
     {
+        // จำกัดสิทธิ์เฉพาะ Admin
         if (!IsCurrentUserAdmin())
             return RedirectToAdminLogin();
 
+        // ส่งรายการบทบาทไปให้หน้า View ใช้สร้างตัวเลือกในฟอร์ม
         ViewBag.Roles = Db.Roles.OrderBy(r => r.RoleId).ToList();
+
+        // ดึงผู้ใช้ทั้งหมดพร้อมบทบาท เพื่อแสดงในหน้าจัดการสมาชิก
         var users = Db.Users
             .Include(u => u.Role)
             .OrderBy(u => u.UserId)
@@ -24,6 +32,7 @@ public class AdminMemberController : AdminControllerBase
         return View("~/Views/admin/Member.cshtml", users);
     }
 
+    // POST: เพิ่มผู้ใช้ใหม่ หรือแก้ไขข้อมูลผู้ใช้เดิม
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult SaveMember(int userId, string username, string? email, string? phone, string? password, int? roleId)
@@ -31,6 +40,7 @@ public class AdminMemberController : AdminControllerBase
         if (!IsCurrentUserAdmin())
             return RedirectToAdminLogin();
 
+        // ตรวจสอบข้อมูลก่อนบันทึก
         if (string.IsNullOrWhiteSpace(username))
         {
             TempData["MemberError"] = "กรุณากรอกชื่อผู้ใช้งาน";
@@ -43,6 +53,7 @@ public class AdminMemberController : AdminControllerBase
             return RedirectToAction("Member");
         }
 
+        // ถ้ามี userId แสดงว่าเป็นการแก้ไขผู้ใช้เดิม
         if (userId > 0)
         {
             var user = Db.Users.FirstOrDefault(u => u.UserId == userId);
@@ -52,6 +63,7 @@ public class AdminMemberController : AdminControllerBase
                 return RedirectToAction("Member");
             }
 
+            // อัปเดตข้อมูลพื้นฐาน และเปลี่ยนรหัสผ่านเฉพาะเมื่อมีการกรอกค่าใหม่
             user.Username = username.Trim();
             user.Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
             user.Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
@@ -65,12 +77,14 @@ public class AdminMemberController : AdminControllerBase
             return RedirectToAction("Member");
         }
 
+        // ถ้าเป็นการเพิ่มผู้ใช้ใหม่ ต้องมีรหัสผ่านเสมอ
         if (string.IsNullOrWhiteSpace(password))
         {
             TempData["MemberError"] = "การเพิ่มผู้ใช้งานใหม่ต้องกำหนดรหัสผ่าน";
             return RedirectToAction("Member");
         }
 
+        // สร้างผู้ใช้ใหม่ลงฐานข้อมูล
         Db.Users.Add(new User
         {
             Username = username.Trim(),
@@ -85,6 +99,7 @@ public class AdminMemberController : AdminControllerBase
         return RedirectToAction("Member");
     }
 
+    // POST: ลบผู้ใช้ตาม userId
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult DeleteMember(int userId)
@@ -92,6 +107,7 @@ public class AdminMemberController : AdminControllerBase
         if (!IsCurrentUserAdmin())
             return RedirectToAdminLogin();
 
+        // ป้องกันไม่ให้แอดมินลบบัญชีของตัวเองระหว่างใช้งานระบบ
         var currentAdminId = GetCurrentUserId();
         if (currentAdminId == userId)
         {
@@ -99,6 +115,7 @@ public class AdminMemberController : AdminControllerBase
             return RedirectToAction("Member");
         }
 
+        // ค้นหาผู้ใช้ที่ต้องการลบ
         var user = Db.Users.FirstOrDefault(u => u.UserId == userId);
         if (user == null)
         {
@@ -106,6 +123,7 @@ public class AdminMemberController : AdminControllerBase
             return RedirectToAction("Member");
         }
 
+        // ลบผู้ใช้ออกจากระบบแล้วบันทึกลงฐานข้อมูล มีแค่นี้เลยจริงๆมั้ง
         Db.Users.Remove(user);
         Db.SaveChanges();
 
