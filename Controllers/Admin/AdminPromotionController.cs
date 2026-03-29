@@ -1,85 +1,133 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using _66022380.Models;
 using _66022380.Models.Db;
 
 namespace _66022380.Controllers.Admin;
 
-// Controller สำหรับจัดการโปรโมชั่น
-// รองรับการสร้างโปร แก้ไขโปร และแจกโปรโมชั่นให้ผู้ใช้รายคนหรือทุกคน
 public class AdminPromotionController : AdminControllerBase
 {
-    // รับ BakerydbContext จากคลาสแม่
-    public AdminPromotionController(BakerydbContext db) : base(db)
+    private readonly IWebHostEnvironment _environment;
+
+    public AdminPromotionController(BakerydbContext db, IWebHostEnvironment environment) : base(db)
     {
+        _environment = environment;
     }
 
-    // GET: แสดงหน้าจัดการโปรโมชั่น พร้อมข้อมูลผู้ใช้และสถิติการแจก/การใช้งาน
     public IActionResult PromotionAdmin()
     {
         if (!IsCurrentUserAdmin())
             return RedirectToAdminLogin();
 
-        // ดึงโปรล่าสุดขึ้นมาก่อน เพื่อให้แอดมินเห็นโปรใหม่ได้ง่าย
-        var promotions = Db.Promotions
-            .OrderByDescending(p => p.PromotionId)
-            .ToList();
-
-        // ดึงรายชื่อผู้ใช้ทั้งหมดสำหรับใช้ในฟอร์มแจกโปรรายบุคคล
-        var users = Db.Users
-            .OrderBy(u => u.UserId)
-            .ToList();
-
-        // นับจำนวนครั้งที่โปรโมชั่นแต่ละตัวถูกแจก
-        var giftedCounts = Db.UserPromotions
-            .GroupBy(up => up.PromotionId)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        // นับจำนวนครั้งที่โปรโมชั่นแต่ละตัวถูกใช้งานแล้ว
-        var usedCounts = Db.UserPromotions
-            .Where(up => up.IsUsed == 1)
-            .GroupBy(up => up.PromotionId)
-            .ToDictionary(g => g.Key, g => g.Count());
-
-        // รวมข้อมูลทั้งหมดเป็น ViewModel เพื่อส่งไปหน้า PromotionAdmin
-        var model = new AdminPromotionViewModel
-        {
-            Promotions = promotions,
-            Users = users,
-            PromotionGiftCounts = giftedCounts,
-            PromotionUsageCounts = usedCounts
-        };
+        var model = BuildPromotionViewModel();
 
         return View("~/Views/admin/PromotionAdmin.cshtml", model);
     }
 
-    // POST: เพิ่มโปรโมชั่นใหม่ หรือแก้ไขโปรโมชั่นเดิม
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult SavePromotion(int promotionId, string promotionName, string? description, decimal? discountValue, string discountType)
+    public IActionResult EventPromotion()
     {
         if (!IsCurrentUserAdmin())
             return RedirectToAdminLogin();
 
-        // ตรวจสอบข้อมูลก่อนบันทึก
+        ViewBag.Title = "Event Promotion";
+        ViewBag.PageTitle = "Event Promotion";
+
+        var model = BuildPromotionViewModel();
+        return View("~/Views/admin/EventPromotion.cshtml", model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SavePromotion(
+        int promotionId,
+        string promotionName,
+        string? description,
+        decimal? discountValue,
+        string? discountType,
+        int promoType,
+        DateTime? startDate,
+        DateTime? endDate,
+        bool isActive,
+        bool isCombinable,
+        bool requiresProof,
+        int? buyQuantity,
+        int? rewardProductId,
+        int? rewardQuantity,
+        string? rewardItemsJson,
+        int? maxUsePerUser,
+        string? existingImagePath,
+        IFormFile? imageFile)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAdminLogin();
+
         if (string.IsNullOrWhiteSpace(promotionName))
         {
             TempData["PromotionError"] = "กรุณากรอกชื่อโปรโมชั่น";
             return RedirectToAction("PromotionAdmin");
         }
 
-        if (discountValue == null || discountValue <= 0)
+        if (promoType is < 1 or > 3)
         {
-            TempData["PromotionError"] = "กรุณากรอกมูลค่าส่วนลดให้ถูกต้อง";
+            TempData["PromotionError"] = "กรุณาเลือกประเภทโปรโมชั่นให้ถูกต้อง";
             return RedirectToAction("PromotionAdmin");
         }
 
-        if (discountType != "Percent" && discountType != "Baht")
+        if (startDate.HasValue && endDate.HasValue && startDate > endDate)
         {
-            TempData["PromotionError"] = "กรุณาเลือกประเภทส่วนลดเป็นเปอร์เซ็นต์หรือบาท";
+            TempData["PromotionError"] = "วันเริ่มโปรโมชั่นต้องไม่มากกว่าวันสิ้นสุด";
             return RedirectToAction("PromotionAdmin");
         }
 
-        // ถ้ามี promotionId แสดงว่าเป็นการแก้ไขโปรโมชั่นเดิม
+        var normalizedDiscountType = NormalizeDiscountType(discountType);
+        var rewardItems = ParseRewardItems(rewardItemsJson, rewardProductId, rewardQuantity);
+
+        if (promoType == 1)
+        {
+            if (discountValue == null || discountValue <= 0)
+            {
+                TempData["PromotionError"] = "โปรโมชั่นส่วนลดต้องมีมูลค่าส่วนลดมากกว่า 0";
+                return RedirectToAction("PromotionAdmin");
+            }
+
+            if (normalizedDiscountType == null)
+            {
+                TempData["PromotionError"] = "กรุณาเลือกประเภทส่วนลดเป็นเปอร์เซ็นต์หรือบาท";
+                return RedirectToAction("PromotionAdmin");
+            }
+        }
+
+        if (promoType == 2)
+        {
+            if (buyQuantity == null || buyQuantity <= 0 || rewardItems.Count == 0)
+            {
+                TempData["PromotionError"] = "โปรโมชั่นซื้อแถมต้องกำหนดจำนวนที่ซื้อ สินค้าของแถม และจำนวนของแถม";
+                return RedirectToAction("PromotionAdmin");
+            }
+        }
+
+        if (promoType == 3)
+        {
+            if (rewardItems.Count == 0)
+            {
+                TempData["PromotionError"] = "โปรโมชั่นอีเวนต์ต้องกำหนดขนมที่จะแถมและจำนวน";
+                return RedirectToAction("PromotionAdmin");
+            }
+        }
+
+        var resolvedMaxUsePerUser = Math.Max(1, maxUsePerUser ?? 1);
+        var resolvedRequiresProof = promoType == 3 || requiresProof;
+        var resolvedDiscountValue = promoType == 1 ? discountValue!.Value : 0m;
+        var resolvedDiscountType = promoType == 1 ? normalizedDiscountType! : "Fixed";
+        var resolvedImagePath = existingImagePath;
+        var primaryRewardItem = rewardItems.FirstOrDefault();
+
+        if (imageFile is { Length: > 0 })
+        {
+            resolvedImagePath = await SaveImageAsync(imageFile, "promotions");
+        }
+
         if (promotionId > 0)
         {
             var promotion = Db.Promotions.FirstOrDefault(p => p.PromotionId == promotionId);
@@ -89,32 +137,55 @@ public class AdminPromotionController : AdminControllerBase
                 return RedirectToAction("PromotionAdmin");
             }
 
-            // อัปเดตรายละเอียดโปรโมชั่นเดิม
             promotion.PromotionName = promotionName.Trim();
             promotion.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
-            promotion.DiscountValue = discountValue.Value;
-            promotion.DiscountType = discountType;
-            Db.SaveChanges();
+            promotion.DiscountValue = resolvedDiscountValue;
+            promotion.DiscountType = resolvedDiscountType;
+            promotion.ImagePath = string.IsNullOrWhiteSpace(resolvedImagePath) ? null : resolvedImagePath;
+            promotion.StartDate = startDate;
+            promotion.EndDate = endDate;
+            promotion.PromoType = promoType;
+            promotion.IsActive = isActive;
+            promotion.BuyQuantity = promoType == 2 ? buyQuantity : null;
+            promotion.RewardProductId = promoType is 2 or 3 ? primaryRewardItem?.ProductId : null;
+            promotion.RewardQuantity = promoType is 2 or 3 ? primaryRewardItem?.Quantity : null;
+            promotion.IsCombinable = isCombinable;
+            promotion.RequiresProof = resolvedRequiresProof;
+            promotion.MaxUsePerUser = resolvedMaxUsePerUser;
 
+            ReplaceRewardItems(promotion.PromotionId, promoType is 2 or 3 ? rewardItems : new List<PromotionRewardItemInput>());
+            Db.SaveChanges();
             TempData["PromotionSuccess"] = "อัปเดตโปรโมชั่นเรียบร้อย";
             return RedirectToAction("PromotionAdmin");
         }
 
-        // ถ้าไม่มี promotionId ให้สร้างโปรโมชั่นใหม่
-        Db.Promotions.Add(new Promotion
+        var newPromotion = new Promotion
         {
             PromotionName = promotionName.Trim(),
             Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
-            DiscountValue = discountValue.Value,
-            DiscountType = discountType
-        });
-        Db.SaveChanges();
+            DiscountValue = resolvedDiscountValue,
+            DiscountType = resolvedDiscountType,
+            ImagePath = string.IsNullOrWhiteSpace(resolvedImagePath) ? null : resolvedImagePath,
+            StartDate = startDate,
+            EndDate = endDate,
+            PromoType = promoType,
+            IsActive = isActive,
+            BuyQuantity = promoType == 2 ? buyQuantity : null,
+            RewardProductId = promoType is 2 or 3 ? primaryRewardItem?.ProductId : null,
+            RewardQuantity = promoType is 2 or 3 ? primaryRewardItem?.Quantity : null,
+            IsCombinable = isCombinable,
+            RequiresProof = resolvedRequiresProof,
+            MaxUsePerUser = resolvedMaxUsePerUser
+        };
 
+        Db.Promotions.Add(newPromotion);
+        Db.SaveChanges();
+        ReplaceRewardItems(newPromotion.PromotionId, promoType is 2 or 3 ? rewardItems : new List<PromotionRewardItemInput>());
+        Db.SaveChanges();
         TempData["PromotionSuccess"] = "เพิ่มโปรโมชั่นใหม่เรียบร้อย";
         return RedirectToAction("PromotionAdmin");
     }
 
-    // POST: แจกโปรโมชั่นให้ผู้ใช้รายบุคคล
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult GiftPromotion(int promotionId, int userId)
@@ -122,7 +193,6 @@ public class AdminPromotionController : AdminControllerBase
         if (!IsCurrentUserAdmin())
             return RedirectToAdminLogin();
 
-        // ตรวจสอบว่าทั้งโปรโมชั่นและผู้ใช้มีอยู่จริง
         var promotion = Db.Promotions.FirstOrDefault(p => p.PromotionId == promotionId);
         var user = Db.Users.FirstOrDefault(u => u.UserId == userId);
 
@@ -132,8 +202,12 @@ public class AdminPromotionController : AdminControllerBase
             return RedirectToAction("PromotionAdmin");
         }
 
-        // ถ้าผู้ใช้คนนี้เคยได้รับโปรนี้แล้ว ให้รีเซ็ตสถานะการใช้งาน
-        // ถ้ายังไม่เคยได้รับ ให้สร้างรายการใหม่ใน UserPromotions
+        if (!IsPromotionAvailable(promotion))
+        {
+            TempData["PromotionError"] = "โปรโมชั่นนี้ยังไม่พร้อมแจก เพราะปิดใช้งานหรืออยู่นอกช่วงเวลา";
+            return RedirectToAction("PromotionAdmin");
+        }
+
         var existing = Db.UserPromotions.FirstOrDefault(up => up.PromotionId == promotionId && up.UserId == userId);
         if (existing == null)
         {
@@ -156,7 +230,6 @@ public class AdminPromotionController : AdminControllerBase
         return RedirectToAction("PromotionAdmin");
     }
 
-    // POST: แจกโปรโมชั่นเดียวกันให้ผู้ใช้ทุกคนในระบบ
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult GiftPromotionToAll(int promotionId)
@@ -164,7 +237,6 @@ public class AdminPromotionController : AdminControllerBase
         if (!IsCurrentUserAdmin())
             return RedirectToAdminLogin();
 
-        // ตรวจสอบก่อนว่ามีโปรโมชั่นที่ต้องการแจกจริง
         var promotion = Db.Promotions.FirstOrDefault(p => p.PromotionId == promotionId);
         if (promotion == null)
         {
@@ -172,14 +244,17 @@ public class AdminPromotionController : AdminControllerBase
             return RedirectToAction("PromotionAdmin");
         }
 
-        // ดึงผู้ใช้ทั้งหมด และสร้างแผนที่ของรายการโปรเดิมเพื่อ lookup ได้เร็วขึ้น
+        if (!IsPromotionAvailable(promotion))
+        {
+            TempData["PromotionError"] = "โปรโมชั่นนี้ยังไม่พร้อมแจก เพราะปิดใช้งานหรืออยู่นอกช่วงเวลา";
+            return RedirectToAction("PromotionAdmin");
+        }
+
         var users = Db.Users.Select(u => u.UserId).ToList();
         var existingMap = Db.UserPromotions
             .Where(up => up.PromotionId == promotionId)
             .ToDictionary(up => up.UserId, up => up);
 
-        // วนแจกโปรให้ครบทุกคน
-        // ถ้ามีอยู่แล้วให้รีเซ็ตสิทธิ์ ถ้ายังไม่มีก็เพิ่มรายการใหม่
         foreach (var userId in users)
         {
             if (existingMap.TryGetValue(userId, out var existing))
@@ -202,5 +277,246 @@ public class AdminPromotionController : AdminControllerBase
         Db.SaveChanges();
         TempData["PromotionSuccess"] = "แจกโปรโมชั่นให้ผู้ใช้ทั้งหมดเรียบร้อย";
         return RedirectToAction("PromotionAdmin");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ApproveClaim(int claimId, string? returnTo)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAdminLogin();
+
+        var claim = Db.PromotionClaims
+            .Include(c => c.User)
+            .Include(c => c.Promotion)
+            .FirstOrDefault(c => c.ClaimId == claimId);
+
+        if (claim == null || claim.Status != "Pending")
+        {
+            TempData["PromotionError"] = "ไม่พบคำขอที่ต้องการอนุมัติ";
+            return RedirectToPromotionPage(returnTo);
+        }
+
+        var existing = Db.UserPromotions.FirstOrDefault(up => up.UserId == claim.UserId && up.PromotionId == claim.PromotionId);
+        if (existing == null)
+        {
+            Db.UserPromotions.Add(new UserPromotion
+            {
+                UserId = claim.UserId,
+                PromotionId = claim.PromotionId,
+                IsUsed = 0,
+                UsedAt = null
+            });
+        }
+
+        claim.Status = "Approved";
+        claim.ReviewedAt = DateTime.Now;
+        claim.ReviewedByUserId = GetCurrentUserId();
+        claim.ReviewNote = "อนุมัติโดยพนักงาน";
+
+        Db.SaveChanges();
+        TempData["PromotionSuccess"] = $"อนุมัติคำขอของ {claim.User.Username} และมอบโปรโมชั่นเรียบร้อย";
+        return RedirectToPromotionPage(returnTo);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult RejectClaim(int claimId, string? reviewNote, string? returnTo)
+    {
+        if (!IsCurrentUserAdmin())
+            return RedirectToAdminLogin();
+
+        var claim = Db.PromotionClaims
+            .Include(c => c.User)
+            .FirstOrDefault(c => c.ClaimId == claimId);
+
+        if (claim == null || claim.Status != "Pending")
+        {
+            TempData["PromotionError"] = "ไม่พบคำขอที่ต้องการปฏิเสธ";
+            return RedirectToPromotionPage(returnTo);
+        }
+
+        claim.Status = "Rejected";
+        claim.ReviewedAt = DateTime.Now;
+        claim.ReviewedByUserId = GetCurrentUserId();
+        claim.ReviewNote = string.IsNullOrWhiteSpace(reviewNote) ? "รูปไม่ผ่านการตรวจสอบ" : reviewNote.Trim();
+
+        Db.SaveChanges();
+        TempData["PromotionSuccess"] = $"ปฏิเสธคำขอของ {claim.User.Username} เรียบร้อย";
+        return RedirectToPromotionPage(returnTo);
+    }
+
+    private List<PromotionRewardItemInput> ParseRewardItems(string? rewardItemsJson, int? rewardProductId, int? rewardQuantity)
+    {
+        if (!string.IsNullOrWhiteSpace(rewardItemsJson))
+        {
+            try
+            {
+                var parsed = JsonSerializer.Deserialize<List<PromotionRewardItemInput>>(rewardItemsJson);
+                if (parsed != null)
+                {
+                    return parsed
+                        .Where(item => item.ProductId > 0 && item.Quantity > 0)
+                        .Select((item, index) => new PromotionRewardItemInput
+                        {
+                            ProductId = item.ProductId,
+                            Quantity = item.Quantity,
+                            SortOrder = index
+                        })
+                        .ToList();
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        if (rewardProductId.HasValue && rewardProductId.Value > 0 && rewardQuantity.HasValue && rewardQuantity.Value > 0)
+        {
+            return new List<PromotionRewardItemInput>
+            {
+                new()
+                {
+                    ProductId = rewardProductId.Value,
+                    Quantity = rewardQuantity.Value,
+                    SortOrder = 0
+                }
+            };
+        }
+
+        return new List<PromotionRewardItemInput>();
+    }
+
+    private void ReplaceRewardItems(int promotionId, List<PromotionRewardItemInput> rewardItems)
+    {
+        var existingItems = Db.PromotionRewardItems
+            .Where(item => item.PromotionId == promotionId)
+            .ToList();
+
+        if (existingItems.Count > 0)
+            Db.PromotionRewardItems.RemoveRange(existingItems);
+
+        var normalizedItems = rewardItems
+            .Where(item => item.ProductId > 0 && item.Quantity > 0)
+            .Select((item, index) => new PromotionRewardItem
+            {
+                PromotionId = promotionId,
+                ProductId = item.ProductId,
+                Quantity = item.Quantity,
+                SortOrder = index
+            })
+            .ToList();
+
+        if (normalizedItems.Count > 0)
+            Db.PromotionRewardItems.AddRange(normalizedItems);
+    }
+
+    private AdminPromotionViewModel BuildPromotionViewModel()
+    {
+        var promotions = Db.Promotions
+            .OrderByDescending(p => p.PromotionId)
+            .ToList();
+
+        var users = Db.Users
+            .OrderBy(u => u.UserId)
+            .ToList();
+
+        var stocks = Db.Stocks
+            .OrderBy(s => s.ProductName)
+            .ToList();
+
+        var pendingClaims = Db.PromotionClaims
+            .Include(c => c.User)
+            .Include(c => c.Promotion)
+            .Where(c => c.Status == "Pending")
+            .OrderByDescending(c => c.RequestedAt)
+            .ToList();
+
+        var giftedCounts = Db.UserPromotions
+            .GroupBy(up => up.PromotionId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var usedCounts = Db.UserPromotions
+            .Where(up => up.IsUsed == 1)
+            .GroupBy(up => up.PromotionId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var rewardItems = Db.PromotionRewardItems
+            .Include(item => item.Product)
+            .OrderBy(item => item.SortOrder)
+            .ThenBy(item => item.RewardItemId)
+            .AsEnumerable()
+            .GroupBy(item => item.PromotionId)
+            .ToDictionary(group => group.Key, group => group.ToList());
+
+        return new AdminPromotionViewModel
+        {
+            Promotions = promotions,
+            Users = users,
+            Stocks = stocks,
+            PendingClaims = pendingClaims,
+            PromotionGiftCounts = giftedCounts,
+            PromotionUsageCounts = usedCounts,
+            PromotionRewardItems = rewardItems
+        };
+    }
+
+    private IActionResult RedirectToPromotionPage(string? returnTo)
+    {
+        if (string.Equals(returnTo, nameof(PromotionAdmin), StringComparison.Ordinal))
+            return RedirectToAction(nameof(PromotionAdmin));
+
+        return RedirectToAction(nameof(EventPromotion));
+    }
+
+    private static string? NormalizeDiscountType(string? discountType)
+    {
+        if (string.Equals(discountType, "Percent", StringComparison.OrdinalIgnoreCase))
+            return "Percent";
+
+        if (string.Equals(discountType, "Fixed", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(discountType, "Baht", StringComparison.OrdinalIgnoreCase))
+            return "Fixed";
+
+        return null;
+    }
+
+    private static bool IsPromotionAvailable(Promotion promotion)
+    {
+        if (!promotion.IsActive)
+            return false;
+
+        var now = DateTime.Now;
+        if (promotion.StartDate.HasValue && promotion.StartDate.Value > now)
+            return false;
+
+        if (promotion.EndDate.HasValue && promotion.EndDate.Value < now)
+            return false;
+
+        return true;
+    }
+
+    private async Task<string> SaveImageAsync(IFormFile file, string folderName)
+    {
+        var uploadsRoot = Path.Combine(_environment.WebRootPath, "uploads", folderName);
+        Directory.CreateDirectory(uploadsRoot);
+
+        var safeExtension = Path.GetExtension(file.FileName);
+        var fileName = $"{folderName}_{DateTime.Now:yyyyMMddHHmmssfff}{safeExtension}";
+        var filePath = Path.Combine(uploadsRoot, fileName);
+
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+
+        return $"/uploads/{folderName}/{fileName}";
+    }
+
+    private sealed class PromotionRewardItemInput
+    {
+        public int ProductId { get; set; }
+
+        public int Quantity { get; set; }
+
+        public int SortOrder { get; set; }
     }
 }

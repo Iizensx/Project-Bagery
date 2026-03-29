@@ -1,0 +1,242 @@
+@using _66022380.Models
+@model AdminPromotionViewModel
+
+@{
+    ViewBag.Title = "Event Promotion";
+    ViewBag.PageTitle = "Event Promotion";
+    Layout = "_AdminLayout";
+}
+
+<style>
+    .event-shell { display: grid; gap: 1.25rem; }
+    .event-card {
+        background: #fff;
+        border: 1px solid #e9eef5;
+        border-radius: 24px;
+        padding: 1.4rem;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.05);
+    }
+    .event-hero {
+        background: linear-gradient(135deg, #111827 0%, #7c2d12 55%, #fb923c 120%);
+        color: #fff;
+    }
+    .event-title { margin: 0; font-size: clamp(1.8rem, 3.4vw, 2.6rem); font-weight: 900; }
+    .event-copy { margin: .7rem 0 0; color: rgba(255,255,255,.84); line-height: 1.75; max-width: 920px; }
+    .event-top {
+        margin-top: 1.2rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .8rem;
+    }
+    .event-stat {
+        padding: 1rem;
+        border-radius: 18px;
+        background: rgba(255,255,255,.11);
+        border: 1px solid rgba(255,255,255,.12);
+    }
+    .event-stat-label { font-size: .78rem; color: rgba(255,255,255,.72); text-transform: uppercase; font-weight: 800; }
+    .event-stat-value { margin-top: .35rem; font-size: 1.5rem; font-weight: 900; }
+    .event-alert {
+        padding: .9rem 1rem;
+        border-radius: 14px;
+        font-weight: 700;
+    }
+    .event-alert.success { background: #ecfdf3; color: #166534; border: 1px solid #bbf7d0; }
+    .event-alert.error { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+    .section-head { display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+    .section-title { margin: 0; font-size: 1.1rem; font-weight: 900; color: #0f172a; }
+    .section-copy { margin: .35rem 0 0; color: #64748b; line-height: 1.65; }
+    .event-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        text-decoration: none;
+        color: #1d4ed8;
+        font-weight: 800;
+    }
+    .claim-list { display: grid; gap: .95rem; }
+    .claim-item {
+        display: grid;
+        grid-template-columns: 160px minmax(0, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 20px;
+        background: linear-gradient(180deg, #fff, #f8fafc);
+        border: 1px solid #e5edf5;
+    }
+    .claim-proof {
+        width: 160px;
+        aspect-ratio: 1 / 1;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid #dbe3ee;
+        background: #fff;
+        display: block;
+    }
+    .claim-proof img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .claim-user { color: #0f172a; font-size: 1.05rem; font-weight: 900; }
+    .claim-meta {
+        margin-top: .45rem;
+        color: #64748b;
+        line-height: 1.7;
+        font-size: .92rem;
+    }
+    .claim-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: .7rem;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+    .claim-actions form {
+        display: flex;
+        gap: .6rem;
+        flex-wrap: wrap;
+        align-items: center;
+        margin: 0;
+    }
+    .event-input {
+        min-width: 260px;
+        border: 1px solid #dbe3ee;
+        border-radius: 14px;
+        padding: .82rem .95rem;
+        font-size: .94rem;
+        color: #0f172a;
+        background: #fff;
+    }
+    .event-input:focus {
+        outline: none;
+        border-color: #f97316;
+        box-shadow: 0 0 0 4px rgba(249,115,22,.12);
+    }
+    .event-btn {
+        border: none;
+        border-radius: 14px;
+        padding: .82rem 1.1rem;
+        font-size: .92rem;
+        font-weight: 800;
+        cursor: pointer;
+    }
+    .event-btn.primary { background: linear-gradient(135deg, #f97316, #fb923c); color: #fff; }
+    .event-btn.ghost { background: #fff; color: #475569; border: 1px solid #dbe3ee; }
+    .claim-status {
+        display: inline-flex;
+        align-items: center;
+        padding: .42rem .78rem;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #c2410c;
+        font-size: .78rem;
+        font-weight: 900;
+    }
+    .empty-state {
+        padding: 1.8rem;
+        border-radius: 20px;
+        text-align: center;
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px dashed #cbd5e1;
+        font-weight: 700;
+    }
+    @@media (max-width: 980px) {
+        .event-top { grid-template-columns: 1fr; }
+        .claim-item { grid-template-columns: 1fr; }
+        .claim-proof { width: 100%; max-width: 280px; }
+    }
+</style>
+
+<div class="event-shell">
+    <section class="event-card event-hero">
+        <h2 class="event-title">Event Promotion Review</h2>
+        <p class="event-copy">
+            หน้านี้ให้พนักงานตรวจรูปที่ลูกค้าแนบเข้ามา ถ้ารูปผ่านจึงค่อยอนุมัติและเพิ่มสิทธิ์โปรโมชั่นเข้าบัญชีลูกค้าคนนั้น
+            ตอนลูกค้าส่งรูปเข้ามา ระบบจะเก็บเป็นสถานะรอตรวจสอบก่อน ยังไม่ได้รับโปรโมชั่นทันที
+        </p>
+        <div class="event-top">
+            <div class="event-stat">
+                <div class="event-stat-label">Pending Claims</div>
+                <div class="event-stat-value">@Model.PendingClaims.Count</div>
+            </div>
+            <div class="event-stat">
+                <div class="event-stat-label">Event Promotions</div>
+                <div class="event-stat-value">@Model.Promotions.Count(p => p.PromoType == 3)</div>
+            </div>
+            <div class="event-stat">
+                <div class="event-stat-label">Workflow</div>
+                <div class="event-stat-value">Pending -> Approve</div>
+            </div>
+        </div>
+    </section>
+
+    @if (TempData["PromotionSuccess"] != null)
+    {
+        <div class="event-alert success">@TempData["PromotionSuccess"]</div>
+    }
+
+    @if (TempData["PromotionError"] != null)
+    {
+        <div class="event-alert error">@TempData["PromotionError"]</div>
+    }
+
+    <section class="event-card">
+        <div class="section-head">
+            <div>
+                <h3 class="section-title">รายการรอตรวจสอบ</h3>
+                <p class="section-copy">ตรวจภาพ, ดูว่าเป็นการเช็กอินจริงหรือไม่, แล้วค่อยอนุมัติหรือปฏิเสธจากรายการด้านล่าง</p>
+            </div>
+            <a asp-controller="AdminPromotion" asp-action="PromotionAdmin" class="event-link">
+                <i class="fas fa-arrow-left"></i> กลับไปหน้า Promotion Dashboard
+            </a>
+        </div>
+
+        @if (Model.PendingClaims.Any())
+        {
+            <div class="claim-list">
+                @foreach (var claim in Model.PendingClaims)
+                {
+                    <article class="claim-item">
+                        <a class="claim-proof" href="@claim.ProofImagePath" target="_blank" rel="noopener">
+                            <img src="@claim.ProofImagePath" alt="proof image" />
+                        </a>
+
+                        <div>
+                            <span class="claim-status">Waiting Review</span>
+                            <div class="claim-user" style="margin-top:.7rem;">@claim.User.Username</div>
+                            <div class="claim-meta">
+                                โปรโมชั่น: @claim.Promotion.PromotionName<br />
+                                ส่งเมื่อ: @claim.RequestedAt.ToString("dd/MM/yyyy HH:mm")<br />
+                                หมายเหตุจากลูกค้า: @(string.IsNullOrWhiteSpace(claim.Note) ? "-" : claim.Note)<br />
+                                ถ้าอนุมัติ ระบบจะเพิ่มโปรโมชั่นนี้ให้ผู้ใช้คนนี้เท่านั้น
+                            </div>
+
+                            <div class="claim-actions">
+                                <form asp-action="ApproveClaim" asp-controller="AdminPromotion" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="claimId" value="@claim.ClaimId" />
+                                    <input type="hidden" name="returnTo" value="EventPromotion" />
+                                    <button type="submit" class="event-btn primary">อนุมัติและมอบสิทธิ์</button>
+                                </form>
+
+                                <form asp-action="RejectClaim" asp-controller="AdminPromotion" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="claimId" value="@claim.ClaimId" />
+                                    <input type="hidden" name="returnTo" value="EventPromotion" />
+                                    <input class="event-input" type="text" name="reviewNote" placeholder="เหตุผลที่ไม่อนุมัติ" />
+                                    <button type="submit" class="event-btn ghost">ปฏิเสธ</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">ตอนนี้ยังไม่มีรูปจากลูกค้าที่รอพนักงานตรวจสอบ</div>
+        }
+    </section>
+</div>

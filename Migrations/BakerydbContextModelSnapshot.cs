@@ -125,7 +125,8 @@ namespace _66022380.Migrations
 
                     b.HasIndex(new[] { "OrderId" }, "OrderId");
 
-                    b.HasIndex(new[] { "UserId" }, "UserId");
+                    b.HasIndex(new[] { "UserId" }, "UserId")
+                        .HasDatabaseName("UserId1");
 
                     b.ToTable("historyorder", (string)null);
                 });
@@ -174,7 +175,7 @@ namespace _66022380.Migrations
                     b.HasIndex(new[] { "PromotionId" }, "PromotionId");
 
                     b.HasIndex(new[] { "UserId" }, "UserId")
-                        .HasDatabaseName("UserId1");
+                        .HasDatabaseName("UserId2");
 
                     b.ToTable("order", (string)null);
                 });
@@ -203,7 +204,8 @@ namespace _66022380.Migrations
                     b.HasKey("OrderDetailId")
                         .HasName("PRIMARY");
 
-                    b.HasIndex(new[] { "OrderId" }, "OrderId");
+                    b.HasIndex(new[] { "OrderId" }, "OrderId")
+                        .HasDatabaseName("OrderId1");
 
                     b.HasIndex(new[] { "ProductId" }, "ProductId");
 
@@ -218,6 +220,11 @@ namespace _66022380.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PromotionId"));
 
+                    b.Property<int?>("BuyQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValueSql("'0'");
+
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
@@ -229,15 +236,114 @@ namespace _66022380.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("ImagePath")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValueSql("'1'");
+
+                    b.Property<bool>("IsCombinable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValueSql("'0'");
+
+                    b.Property<int>("MaxUsePerUser")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValueSql("'1'");
+
+                    b.Property<int>("PromoType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValueSql("'1'");
+
                     b.Property<string>("PromotionName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<bool>("RequiresProof")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValueSql("'0'");
+
+                    b.Property<int?>("RewardProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RewardQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValueSql("'0'");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime");
+
                     b.HasKey("PromotionId")
                         .HasName("PRIMARY");
 
+                    b.HasIndex(new[] { "RewardProductId" }, "RewardProductId");
+
                     b.ToTable("promotion", (string)null);
+                });
+
+            modelBuilder.Entity("_66022380.Models.Db.PromotionClaim", b =>
+                {
+                    b.Property<int>("ClaimId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ClaimId"));
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PromotionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProofImagePath")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("ReviewNote")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime");
+
+                    b.Property<int?>("ReviewedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('Pending','Approved','Rejected')");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ClaimId")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "PromotionId" }, "PromotionId")
+                        .HasDatabaseName("PromotionId1");
+
+                    b.HasIndex(new[] { "ReviewedByUserId" }, "ReviewedByUserId");
+
+                    b.HasIndex(new[] { "UserId" }, "UserId")
+                        .HasDatabaseName("UserId3");
+
+                    b.ToTable("promotion_claim", (string)null);
                 });
 
             modelBuilder.Entity("_66022380.Models.Db.Role", b =>
@@ -352,10 +458,10 @@ namespace _66022380.Migrations
                         .HasName("PRIMARY");
 
                     b.HasIndex(new[] { "PromotionId" }, "PromotionId")
-                        .HasDatabaseName("PromotionId1");
+                        .HasDatabaseName("PromotionId2");
 
                     b.HasIndex(new[] { "UserId" }, "UserId")
-                        .HasDatabaseName("UserId2");
+                        .HasDatabaseName("UserId4");
 
                     b.ToTable("user_promotion", (string)null);
                 });
@@ -366,6 +472,16 @@ namespace _66022380.Migrations
                         .WithMany("Addresses")
                         .HasForeignKey("UserId")
                         .HasConstraintName("address_ibfk_1");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("_66022380.Models.Db.Historyorder", b =>
+                {
+                    b.HasOne("_66022380.Models.Db.User", "User")
+                        .WithMany("Historyorders")
+                        .HasForeignKey("UserId")
+                        .HasConstraintName("historyorder_ibfk_1");
 
                     b.Navigation("User");
                 });
@@ -411,6 +527,35 @@ namespace _66022380.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("_66022380.Models.Db.Promotion", b =>
+                {
+                    b.HasOne("_66022380.Models.Db.Stock", null)
+                        .WithMany()
+                        .HasForeignKey("RewardProductId")
+                        .HasConstraintName("promotion_ibfk_1");
+                });
+
+            modelBuilder.Entity("_66022380.Models.Db.PromotionClaim", b =>
+                {
+                    b.HasOne("_66022380.Models.Db.Promotion", "Promotion")
+                        .WithMany("PromotionClaims")
+                        .HasForeignKey("PromotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("promotion_claim_ibfk_1");
+
+                    b.HasOne("_66022380.Models.Db.User", "User")
+                        .WithMany("PromotionClaims")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("promotion_claim_ibfk_2");
+
+                    b.Navigation("Promotion");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("_66022380.Models.Db.Stock", b =>
                 {
                     b.HasOne("_66022380.Models.Db.Category", "Category")
@@ -429,16 +574,6 @@ namespace _66022380.Migrations
                         .HasConstraintName("user_ibfk_1");
 
                     b.Navigation("Role");
-                });
-
-            modelBuilder.Entity("_66022380.Models.Db.Historyorder", b =>
-                {
-                    b.HasOne("_66022380.Models.Db.User", "User")
-                        .WithMany("Historyorders")
-                        .HasForeignKey("UserId")
-                        .HasConstraintName("historyorder_ibfk_1");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("_66022380.Models.Db.UserPromotion", b =>
@@ -480,6 +615,8 @@ namespace _66022380.Migrations
             modelBuilder.Entity("_66022380.Models.Db.Promotion", b =>
                 {
                     b.Navigation("Orders");
+
+                    b.Navigation("PromotionClaims");
                 });
 
             modelBuilder.Entity("_66022380.Models.Db.Role", b =>
@@ -499,6 +636,8 @@ namespace _66022380.Migrations
                     b.Navigation("Historyorders");
 
                     b.Navigation("Orders");
+
+                    b.Navigation("PromotionClaims");
                 });
 #pragma warning restore 612, 618
         }

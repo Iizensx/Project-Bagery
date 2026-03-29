@@ -1,3 +1,4 @@
+@using System.Text.Json
 @model _66022380.Models.DeliveryTrackingViewModel
 
 @{
@@ -600,6 +601,64 @@
         background: #fffaf7;
     }
 
+    .history-items-list {
+        display: grid;
+        gap: .8rem;
+    }
+
+    .history-item-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        padding: .9rem 1rem;
+        border-radius: 16px;
+        border: 1px solid #f4e3d8;
+        background: #fff;
+    }
+
+    .history-item-main {
+        display: grid;
+        gap: .2rem;
+    }
+
+    .history-item-name {
+        color: #111827;
+        font-size: .94rem;
+        font-weight: 900;
+    }
+
+    .history-item-meta {
+        color: #6b7280;
+        font-size: .84rem;
+        font-weight: 700;
+    }
+
+    .history-item-price {
+        color: #111827;
+        font-size: .92rem;
+        font-weight: 900;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .history-item-price.reward {
+        color: #ea580c;
+    }
+
+    .history-item-badge {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        padding: .28rem .58rem;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #c2410c;
+        font-size: .72rem;
+        font-weight: 900;
+        border: 1px solid #fed7aa;
+    }
+
     .history-detail-wide {
         grid-column: 1 / -1;
     }
@@ -989,6 +1048,7 @@
                                     data-payment-status="@order.PaymentStatus"
                                     data-total-amount="@order.TotalAmount.ToString("N2")"
                                     data-item-summary="@order.ItemSummary"
+                                    data-items-json="@JsonSerializer.Serialize(order.Items)"
                                     data-delivery-address="@order.DeliveryAddress"
                                     data-promotion-name="@order.PromotionName"
                                     data-discount-display="@order.DiscountDisplay">
@@ -1217,6 +1277,17 @@
                 // Helper อ่านค่าจาก data attribute ของ button ที่กด
                 // ถ้าไม่มีค่าให้แสดง '-' แทน
                 const read = key => button.getAttribute(`data-${key}`) || '-';
+                const readItems = () => {
+                    const raw = button.getAttribute('data-items-json');
+                    if (!raw) return [];
+
+                    try {
+                        const parsed = JSON.parse(raw);
+                        return Array.isArray(parsed) ? parsed : [];
+                    } catch {
+                        return [];
+                    }
+                };
 
                 // ดึง element ทุกช่องในหน้าต่าง Modal
                 const title = document.getElementById('historyDetailTitle');
@@ -1238,7 +1309,34 @@
                 if (promotion) promotion.textContent = read('promotion-name');
                 // ถ้าไม่มีส่วนลดให้แสดงข้อความแทนแทนที่จะแสดง '-'
                 if (discount) discount.textContent = read('discount-display') === '-' ? 'ไม่มีส่วนลด' : read('discount-display');
-                if (items) items.textContent = read('item-summary');
+                if (items) {
+                    const orderItems = readItems();
+                    if (orderItems.length) {
+                        items.innerHTML = orderItems.map(item => {
+                            const price = Number(item.unitPrice ?? item.UnitPrice ?? 0);
+                            const quantity = item.quantity ?? item.Quantity ?? 0;
+                            const productName = item.productName ?? item.ProductName ?? '-';
+                            const isReward = Boolean(item.isReward ?? item.IsReward ?? false);
+                            const badge = isReward ? '<span class="history-item-badge">ของแถม</span>' : '';
+                            const priceClass = isReward ? 'history-item-price reward' : 'history-item-price';
+                            const priceText = isReward
+                                ? `฿${price.toFixed(2)} บาท <br><span class="history-item-meta">ได้เป็นของแถม</span>`
+                                : `฿${price.toFixed(2)} บาท`;
+
+                            return `
+                                <div class="history-item-row">
+                                    <div class="history-item-main">
+                                        <div class="history-item-name">${productName} x${quantity}</div>
+                                        ${badge}
+                                    </div>
+                                    <div class="${priceClass}">${priceText}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        items.textContent = read('item-summary');
+                    }
+                }
                 if (address) address.textContent = read('delivery-address');
             });
         }

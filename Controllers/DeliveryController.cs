@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 using _66022380.Models;
 using _66022380.Models.Db;
 
@@ -142,7 +143,8 @@ public class DeliveryController : Controller
             ItemSummary = string.IsNullOrWhiteSpace(h.ItemSummary) ? "-" : h.ItemSummary,
             PromotionName = "-",
             DiscountDisplay = "-",
-            IsActive = false
+            IsActive = false,
+            Items = ParseHistoryLineItems(h.ItemSummary)
         }).ToList();
 
         if (completedOrders != null && completedOrders.Count > 0)
@@ -155,8 +157,10 @@ public class DeliveryController : Controller
             {
                 if (completedOrderMap.TryGetValue(item.OrderId, out var matchedOrder))
                 {
+                    item.ItemSummary = BuildItemSummary(matchedOrder);
                     item.PromotionName = matchedOrder.Promotion?.PromotionName?.Trim() ?? "-";
                     item.DiscountDisplay = BuildDiscountDisplay(matchedOrder.Promotion);
+                    item.Items = BuildHistoryLineItems(matchedOrder);
                 }
             }
 
@@ -181,7 +185,8 @@ public class DeliveryController : Controller
                     ItemSummary = BuildItemSummary(o),
                     PromotionName = o.Promotion?.PromotionName?.Trim() ?? "-",
                     DiscountDisplay = BuildDiscountDisplay(o.Promotion),
-                    IsActive = false
+                    IsActive = false,
+                    Items = BuildHistoryLineItems(o)
                 });
 
             history.AddRange(fallbackHistory);
@@ -303,8 +308,57 @@ public class DeliveryController : Controller
     // Helper: สรุปรายการสินค้าในออเดอร์เป็น string เดียว เช่น "เค้ก x2, คุกกี้ x1"
     private string BuildItemSummary(Order order)
     {
-        var itemSummary = string.Join(", ", order.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}"));
+        var itemSummary = string.Join(", ", order.Orderdetails.Select(d =>
+        {
+            var itemName = $"{d.Product?.ProductName} x{d.Quantity}";
+            return (d.UnitPrice ?? 0) <= 0 ? $"{itemName} (ของแถม)" : itemName;
+        }));
         return string.IsNullOrWhiteSpace(itemSummary) ? "-" : itemSummary;
+    }
+
+    private List<DeliveryOrderHistoryLineItem> BuildHistoryLineItems(Order order)
+    {
+        return order.Orderdetails
+            .Select(d => new DeliveryOrderHistoryLineItem
+            {
+                ProductName = d.Product?.ProductName?.Trim() ?? "-",
+                Quantity = d.Quantity ?? 0,
+                UnitPrice = d.UnitPrice ?? 0,
+                IsReward = (d.UnitPrice ?? 0) <= 0
+            })
+            .ToList();
+    }
+
+    private List<DeliveryOrderHistoryLineItem> ParseHistoryLineItems(string? itemSummary)
+    {
+        if (string.IsNullOrWhiteSpace(itemSummary))
+            return new List<DeliveryOrderHistoryLineItem>();
+
+        return itemSummary
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part =>
+            {
+                var match = Regex.Match(part, @"^(.*)\sx(\d+)(?:\s\((.*)\))?$");
+                if (match.Success)
+                {
+                    return new DeliveryOrderHistoryLineItem
+                    {
+                        ProductName = match.Groups[1].Value.Trim(),
+                        Quantity = int.TryParse(match.Groups[2].Value, out var quantity) ? quantity : 0,
+                        UnitPrice = 0,
+                        IsReward = part.Contains("ของแถม")
+                    };
+                }
+
+                return new DeliveryOrderHistoryLineItem
+                {
+                    ProductName = part.Trim(),
+                    Quantity = 0,
+                    UnitPrice = 0,
+                    IsReward = part.Contains("ของแถม")
+                };
+            })
+            .ToList();
     }
 
     // Helper: แปลง Promotion เป็นข้อความส่วนลด เช่น "10%" หรือ "฿50"
@@ -317,6 +371,7 @@ public class DeliveryController : Controller
         {
             "Percent" => $"{promotion.DiscountValue:0.##}%",
             "Baht"    => $"฿{promotion.DiscountValue:0.##}",
+            "Fixed"   => $"฿{promotion.DiscountValue:0.##}",
             _         => $"{promotion.DiscountValue:0.##}"
         };
     }

@@ -28,6 +28,10 @@ public partial class BakerydbContext : DbContext
 
     public virtual DbSet<Promotion> Promotions { get; set; }
 
+    public virtual DbSet<PromotionClaim> PromotionClaims { get; set; }
+
+    public virtual DbSet<PromotionRewardItem> PromotionRewardItems { get; set; }
+
     public virtual DbSet<UserPromotion> UserPromotions { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
@@ -155,10 +159,80 @@ public partial class BakerydbContext : DbContext
 
             entity.ToTable("promotion");
 
+            entity.HasIndex(e => e.RewardProductId, "RewardProductId");
+
+            entity.Property(e => e.BuyQuantity).HasDefaultValueSql("'0'");
             entity.Property(e => e.Description).HasColumnType("text");
             entity.Property(e => e.DiscountType).HasColumnType("enum('Percent','Fixed')");
             entity.Property(e => e.DiscountValue).HasPrecision(10, 2);
+            entity.Property(e => e.EndDate).HasColumnType("datetime");
+            entity.Property(e => e.ImagePath).HasMaxLength(255);
+            entity.Property(e => e.IsActive).HasDefaultValueSql("'1'");
+            entity.Property(e => e.IsCombinable).HasDefaultValueSql("'0'");
+            entity.Property(e => e.MaxUsePerUser).HasDefaultValueSql("'1'");
+            entity.Property(e => e.PromoType).HasDefaultValueSql("'1'");
             entity.Property(e => e.PromotionName).HasMaxLength(100);
+            entity.Property(e => e.RequiresProof).HasDefaultValueSql("'0'");
+            entity.Property(e => e.RewardQuantity).HasDefaultValueSql("'0'");
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+
+            entity.HasOne<Stock>()
+                .WithMany()
+                .HasForeignKey(e => e.RewardProductId)
+                .HasConstraintName("promotion_ibfk_1");
+        });
+
+        modelBuilder.Entity<PromotionClaim>(entity =>
+        {
+            entity.HasKey(e => e.ClaimId).HasName("PRIMARY");
+
+            entity.ToTable("promotion_claim");
+
+            entity.HasIndex(e => e.PromotionId, "PromotionId");
+
+            entity.HasIndex(e => e.ReviewedByUserId, "ReviewedByUserId");
+
+            entity.HasIndex(e => e.UserId, "UserId");
+
+            entity.Property(e => e.ClaimId).ValueGeneratedOnAdd();
+            entity.Property(e => e.Note).HasColumnType("text");
+            entity.Property(e => e.ProofImagePath).HasMaxLength(255);
+            entity.Property(e => e.RequestedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ReviewNote).HasColumnType("text");
+            entity.Property(e => e.ReviewedAt).HasColumnType("datetime");
+            entity.Property(e => e.Status).HasColumnType("enum('Pending','Approved','Rejected')");
+
+            entity.HasOne(d => d.Promotion).WithMany(p => p.PromotionClaims)
+                .HasForeignKey(d => d.PromotionId)
+                .HasConstraintName("promotion_claim_ibfk_1");
+
+            entity.HasOne(d => d.User).WithMany(p => p.PromotionClaims)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("promotion_claim_ibfk_2");
+        });
+
+        modelBuilder.Entity<PromotionRewardItem>(entity =>
+        {
+            entity.HasKey(e => e.RewardItemId).HasName("PRIMARY");
+
+            entity.ToTable("promotion_reward_item");
+
+            entity.HasIndex(e => e.ProductId, "ProductId");
+
+            entity.HasIndex(e => e.PromotionId, "PromotionId");
+
+            entity.Property(e => e.Quantity).HasDefaultValueSql("'1'");
+            entity.Property(e => e.SortOrder).HasDefaultValueSql("'0'");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.PromotionRewardItems)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("promotion_reward_item_ibfk_2");
+
+            entity.HasOne(d => d.Promotion).WithMany(p => p.PromotionRewardItems)
+                .HasForeignKey(d => d.PromotionId)
+                .HasConstraintName("promotion_reward_item_ibfk_1");
         });
 
         modelBuilder.Entity<Role>(entity =>

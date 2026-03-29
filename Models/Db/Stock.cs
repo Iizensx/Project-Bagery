@@ -20,4 +20,6 @@ public partial class Stock
     public virtual Category? Category { get; set; }
 
     public virtual ICollection<Orderdetail> Orderdetails { get; set; } = new List<Orderdetail>();
+
+    public virtual ICollection<PromotionRewardItem> PromotionRewardItems { get; set; } = new List<PromotionRewardItem>();
 }

@@ -1,0 +1,823 @@
+@using System.Text.Json
+@using _66022380.Models
+@using _66022380.Models.Db
+@model UserPromotionPageViewModel
+
+@{
+    ViewData["Title"] = "Promotion";
+
+    string PromoTypeText(int promoType) => promoType switch
+    {
+        1 => "Discount",
+        2 => "Buy & Bonus",
+        3 => "Event",
+        _ => "Promotion"
+    };
+
+    string RewardName(int? productId)
+    {
+        if (!productId.HasValue) return "-";
+        return Model.RewardProductNames.TryGetValue(productId.Value, out var name) ? name : "-";
+    }
+
+    var featuredEvent = Model.EventPromotions.FirstOrDefault();
+}
+
+<style>
+    body {
+        background:
+            radial-gradient(circle at top right, rgba(249, 115, 22, 0.16), transparent 28%),
+            linear-gradient(180deg, #fff7ed 0%, #fffaf4 42%, #fff 100%);
+        color: #1f2937;
+    }
+
+    .promo-page {
+        width: min(1240px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 1.5rem 0 4rem;
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .promo-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 34px;
+        padding: 2.2rem;
+        background: linear-gradient(135deg, #111827 0%, #7c2d12 48%, #fb923c 120%);
+        color: #fff;
+        box-shadow: 0 28px 60px rgba(124, 45, 18, 0.20);
+    }
+
+    .promo-hero::before,
+    .promo-hero::after {
+        content: "";
+        position: absolute;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+    }
+
+    .promo-hero::before {
+        width: 260px;
+        height: 260px;
+        top: -90px;
+        right: -60px;
+    }
+
+    .promo-hero::after {
+        width: 180px;
+        height: 180px;
+        left: 10%;
+        bottom: -90px;
+    }
+
+    .promo-hero-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+        gap: 1.25rem;
+        align-items: stretch;
+    }
+
+    .promo-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .45rem .85rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.12);
+        color: #fed7aa;
+        font-size: .78rem;
+        letter-spacing: .08em;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .promo-hero-title {
+        margin: 1rem 0 .8rem;
+        font-size: clamp(2.1rem, 4vw, 3.4rem);
+        line-height: .98;
+        font-weight: 900;
+        max-width: 760px;
+    }
+
+    .promo-hero-copy {
+        margin: 0;
+        max-width: 640px;
+        color: rgba(255,244,235,.84);
+        line-height: 1.8;
+        font-size: .98rem;
+    }
+
+    .promo-hero-actions {
+        margin-top: 1.25rem;
+        display: flex;
+        gap: .8rem;
+        flex-wrap: wrap;
+    }
+
+    .promo-btn-main,
+    .promo-btn-alt {
+        border: none;
+        border-radius: 999px;
+        padding: .92rem 1.35rem;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    .promo-btn-main {
+        background: #fff;
+        color: #9a3412;
+        box-shadow: 0 12px 24px rgba(255,255,255,.18);
+    }
+
+    .promo-btn-alt {
+        background: rgba(255,255,255,.1);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .promo-btn-main:hover,
+    .promo-btn-alt:hover {
+        transform: translateY(-2px);
+    }
+
+    .promo-side {
+        padding: 1.15rem;
+        border-radius: 24px;
+        background: rgba(255,255,255,.11);
+        border: 1px solid rgba(255,255,255,.1);
+        backdrop-filter: blur(12px);
+        display: grid;
+        gap: .95rem;
+        align-content: start;
+    }
+
+    .promo-side-label {
+        color: rgba(255,255,255,.68);
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        font-size: .76rem;
+        font-weight: 800;
+    }
+
+    .promo-side-value {
+        font-size: 1.95rem;
+        font-weight: 900;
+    }
+
+    .promo-side-note {
+        color: rgba(255,245,238,.82);
+        line-height: 1.7;
+        font-size: .92rem;
+    }
+
+    .promo-event-card {
+        border-radius: 28px;
+        padding: 1.4rem;
+        background: linear-gradient(135deg, #fff 0%, #fff7ed 100%);
+        border: 1px solid #fed7aa;
+        box-shadow: 0 20px 44px rgba(251, 146, 60, 0.12);
+    }
+
+    .promo-event-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .promo-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: .45rem .8rem;
+        border-radius: 999px;
+        font-size: .79rem;
+        font-weight: 900;
+    }
+
+    .promo-badge.event {
+        background: #fff1f2;
+        color: #be123c;
+    }
+
+    .promo-badge.live {
+        background: #ecfdf3;
+        color: #166534;
+    }
+
+    .promo-event-title {
+        margin: .8rem 0 .4rem;
+        font-size: clamp(1.5rem, 3vw, 2.3rem);
+        color: #7c2d12;
+        font-weight: 900;
+    }
+
+    .promo-event-copy {
+        color: #7c5a45;
+        line-height: 1.8;
+        margin: 0;
+        max-width: 820px;
+    }
+
+    .promo-event-info {
+        margin-top: 1rem;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .85rem;
+    }
+
+    .promo-event-info-item {
+        padding: .95rem 1rem;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid #ffedd5;
+    }
+
+    .promo-event-info-label {
+        color: #9a3412;
+        font-size: .74rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .promo-event-info-value {
+        margin-top: .35rem;
+        color: #431407;
+        font-size: 1rem;
+        font-weight: 900;
+        line-height: 1.5;
+    }
+
+    .promo-section-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: end;
+        flex-wrap: wrap;
+    }
+
+    .promo-section-title {
+        margin: 0;
+        font-size: 1.35rem;
+        color: #111827;
+        font-weight: 900;
+    }
+
+    .promo-section-copy {
+        margin: .35rem 0 0;
+        color: #6b7280;
+        line-height: 1.7;
+    }
+
+    .promo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .promo-card {
+        background: #fff;
+        border: 1px solid #f1e5d8;
+        border-radius: 26px;
+        overflow: hidden;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, .05);
+        display: grid;
+    }
+
+    .promo-card-image {
+        position: relative;
+        aspect-ratio: 16 / 11;
+        background: linear-gradient(135deg, #ffedd5, #fff7ed);
+        overflow: hidden;
+    }
+
+    .promo-card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .promo-card-image.empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #c2410c;
+        font-size: 2rem;
+    }
+
+    .promo-card-body {
+        padding: 1.1rem;
+        display: grid;
+        gap: .85rem;
+    }
+
+    .promo-card-top {
+        display: flex;
+        justify-content: space-between;
+        gap: .8rem;
+        align-items: start;
+    }
+
+    .promo-card-name {
+        color: #111827;
+        font-size: 1.08rem;
+        font-weight: 900;
+    }
+
+    .promo-card-desc {
+        color: #6b7280;
+        line-height: 1.7;
+        font-size: .92rem;
+    }
+
+    .promo-public-note {
+        display: none;
+    }
+
+    .empty-state {
+        padding: 2rem;
+        border-radius: 24px;
+        border: 1px dashed #d6d3d1;
+        background: #fff;
+        text-align: center;
+        color: #6b7280;
+        font-weight: 700;
+    }
+
+    .promo-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 39, .58);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        z-index: 2000;
+    }
+
+    .promo-modal.show {
+        display: flex;
+    }
+
+    .promo-modal-panel {
+        width: min(640px, 100%);
+        border-radius: 30px;
+        background: #fffaf6;
+        border: 1px solid #fed7aa;
+        box-shadow: 0 30px 80px rgba(17, 24, 39, .18);
+        overflow: hidden;
+    }
+
+    .promo-modal-header {
+        padding: 1.3rem 1.35rem 1rem;
+        background: linear-gradient(135deg, #fff7ed, #ffedd5);
+        border-bottom: 1px solid #fed7aa;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: start;
+    }
+
+    .promo-modal-title {
+        margin: 0;
+        color: #7c2d12;
+        font-size: 1.25rem;
+        font-weight: 900;
+    }
+
+    .promo-modal-copy {
+        margin: .35rem 0 0;
+        color: #7c5a45;
+        line-height: 1.7;
+    }
+
+    .promo-close {
+        width: 42px;
+        height: 42px;
+        border: none;
+        border-radius: 999px;
+        background: #fff;
+        color: #9a3412;
+        font-size: 1.15rem;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .promo-form {
+        padding: 1.2rem 1.35rem 1.35rem;
+        display: grid;
+        gap: 1rem;
+    }
+
+    .promo-field label {
+        display: block;
+        margin-bottom: .38rem;
+        color: #7c2d12;
+        font-size: .82rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        font-weight: 800;
+    }
+
+    .promo-input,
+    .promo-textarea,
+    .promo-select {
+        width: 100%;
+        border: 1px solid #f1c89a;
+        border-radius: 16px;
+        background: #fff;
+        color: #1f2937;
+        padding: .92rem 1rem;
+        font-size: .95rem;
+    }
+
+    .promo-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .promo-submit {
+        border: none;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        padding: .95rem 1.15rem;
+        font-size: .96rem;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .promo-status-box {
+        display: none;
+        padding: .95rem 1rem;
+        border-radius: 16px;
+        font-weight: 700;
+        line-height: 1.6;
+    }
+
+    .promo-status-box.show {
+        display: block;
+    }
+
+    .promo-status-box.success {
+        background: #ecfdf3;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
+
+    .promo-status-box.error {
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        color: #be123c;
+    }
+
+    @@media (max-width: 1100px) {
+        .promo-hero-grid,
+        .promo-grid,
+        .promo-event-info {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .promo-page {
+            width: min(100% - 1rem, 100%);
+            padding-top: 1rem;
+        }
+
+        .promo-hero,
+        .promo-event-card {
+            padding: 1.2rem;
+            border-radius: 24px;
+        }
+
+    }
+</style>
+
+<div class="promo-page">
+    <section class="promo-hero">
+        <div class="promo-hero-grid">
+            <div>
+                <div class="promo-kicker"><i class="fas fa-sparkles"></i> BAGERY PROMOTION</div>
+                <h1 class="promo-hero-title">รวมโปรโมชั่นทั้งหมดให้ลูกค้าเห็นง่าย และกดร่วมกิจกรรมได้จากหน้านี้เลย</h1>
+                <p class="promo-hero-copy">
+                    หน้านี้ดึงโปรโมชั่นจริงจากระบบมาแสดงเป็นภาพการ์ดแบบอ่านง่าย มีทั้งโปรส่วนลด โปรซื้อแถม
+                    และโปรอีเวนต์ที่ลูกค้ากดแนบรูปเพื่อรับขนมฟรีได้ทันที
+                </p>
+                <div class="promo-hero-actions">
+                    @if (featuredEvent != null)
+                    {
+                        <button type="button" class="promo-btn-main" data-open-promo-modal="true">
+                            <i class="fas fa-camera-retro"></i> แนบรูป รับฟรี 1 ชิ้น
+                        </button>
+                    }
+                    <a asp-controller="Home" asp-action="Menu" class="promo-btn-alt">
+                        <i class="fas fa-cookie-bite"></i> ไปเลือกเมนู
+                    </a>
+                </div>
+            </div>
+            <div class="promo-side">
+                <div>
+                    <div class="promo-side-label">Active Promotions</div>
+                    <div class="promo-side-value">@Model.Promotions.Count รายการ</div>
+                </div>
+                <div class="promo-side-note">
+                    ลูกค้าจะเห็นเฉพาะโปรโมชั่นที่เปิดใช้งานและอยู่ในช่วงเวลาที่ร้านกำหนดเท่านั้น
+                </div>
+                <div class="promo-side-note">
+                    @if (featuredEvent != null)
+                    {
+                        <span>วันนี้มีอีเวนต์ “@featuredEvent.PromotionName” กดร่วมกิจกรรมจากปุ่มด้านซ้ายได้เลย</span>
+                    }
+                    else
+                    {
+                        <span>ตอนนี้ยังไม่มีอีเวนต์แนบรูป แต่ยังดูโปรทั้งหมดของร้านได้ด้านล่าง</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @if (featuredEvent != null)
+    {
+        <section class="promo-event-card">
+            <div class="promo-event-top">
+                <div>
+                    <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                        <span class="promo-badge event">Event Highlight</span>
+                        <span class="promo-badge live">Live Now</span>
+                    </div>
+                    <h2 class="promo-event-title">@featuredEvent.PromotionName</h2>
+                    <p class="promo-event-copy">
+                        @(string.IsNullOrWhiteSpace(featuredEvent.Description)
+                            ? "ลูกค้าเช็คอินหรือแนบรูปยืนยันที่ร้านตอนนี้ แล้วส่งคำขอรับขนมฟรีได้ทันที พนักงานจะมาตรวจและอนุมัติให้ภายหลัง"
+                            : featuredEvent.Description)
+                    </p>
+                </div>
+                <button type="button" class="promo-btn-main" data-open-promo-modal="true">
+                    <i class="fas fa-gift"></i> รับสิทธิ์ตอนนี้
+                </button>
+            </div>
+
+            <div class="promo-event-info">
+                <div class="promo-event-info-item">
+                    <div class="promo-event-info-label">ของรางวัล</div>
+                    <div class="promo-event-info-value">@RewardName(featuredEvent.RewardProductId) x@(featuredEvent.RewardQuantity ?? 1)</div>
+                </div>
+                <div class="promo-event-info-item">
+                    <div class="promo-event-info-label">ช่วงเวลา</div>
+                    <div class="promo-event-info-value">
+                        @(featuredEvent.StartDate?.ToString("dd/MM/yyyy HH:mm") ?? "ไม่กำหนด")
+                        <br />
+                        ถึง @(featuredEvent.EndDate?.ToString("dd/MM/yyyy HH:mm") ?? "ไม่กำหนด")
+                    </div>
+                </div>
+                <div class="promo-event-info-item">
+                    <div class="promo-event-info-label">วิธีรับสิทธิ์</div>
+                    <div class="promo-event-info-value">แนบรูปที่ร้าน แล้วรอพนักงานอนุมัติในระบบ</div>
+                </div>
+            </div>
+        </section>
+    }
+
+    <section>
+        <div class="promo-section-head">
+            <div>
+                <h2 class="promo-section-title">โปรโมชั่นทั้งหมด</h2>
+                <p class="promo-section-copy">ทำเป็นหน้ารวมโปรให้ลูกค้าเข้ามาดูได้ชัดกว่าไปซ่อนในหน้าอื่น และเหมาะกับการลงรูปโปรเทศกาลมาก</p>
+            </div>
+        </div>
+    </section>
+
+    @if (Model.Promotions.Any())
+    {
+        <section class="promo-grid">
+            @foreach (var promo in Model.Promotions)
+            {
+                <article class="promo-card">
+                    <div class="promo-card-image @(string.IsNullOrWhiteSpace(promo.ImagePath) ? "empty" : "")">
+                        @if (!string.IsNullOrWhiteSpace(promo.ImagePath))
+                        {
+                            <img src="@promo.ImagePath" alt="@promo.PromotionName" />
+                        }
+                        else
+                        {
+                            <i class="fas fa-badge-percent"></i>
+                        }
+                    </div>
+
+                    <div class="promo-card-body">
+                        <div class="promo-card-top">
+                            <div class="promo-card-name">@promo.PromotionName</div>
+                            <span class="promo-badge @(promo.PromoType == 3 ? "event" : "live")">@PromoTypeText(promo.PromoType)</span>
+                        </div>
+
+                        <div class="promo-card-desc">
+                            @(string.IsNullOrWhiteSpace(promo.Description) ? "ร้านยังไม่ได้ใส่รายละเอียดเพิ่มเติมสำหรับโปรโมชั่นนี้" : promo.Description)
+                        </div>
+
+                        <div class="promo-public-note">
+                            โปรโมชั่นนี้เปิดให้ลูกค้าเห็นบนหน้าเว็บของร้าน
+                        </div>
+
+                        @if (promo.PromoType == 3)
+                        {
+                            <button type="button"
+                                    class="promo-btn-main"
+                                    data-open-promo-modal="true"
+                                    data-promotion-id="@promo.PromotionId"
+                                    data-promotion-name="@promo.PromotionName"
+                                    data-promotion-desc="@promo.Description"
+                                    data-promotion-reward="@RewardName(promo.RewardProductId) x@(promo.RewardQuantity ?? 1)">
+                                <i class="fas fa-camera"></i> ร่วมกิจกรรมนี้
+                            </button>
+                        }
+                    </div>
+                </article>
+            }
+        </section>
+    }
+    else
+    {
+        <div class="empty-state">ตอนนี้ยังไม่มีโปรโมชั่นที่เปิดใช้งานอยู่</div>
+    }
+</div>
+
+@if (featuredEvent != null)
+{
+    <div class="promo-modal" id="promotionClaimModal">
+        <div class="promo-modal-panel">
+            <div class="promo-modal-header">
+                <div>
+                    <h3 class="promo-modal-title" id="promotionClaimTitle">@featuredEvent.PromotionName</h3>
+                    <p class="promo-modal-copy" id="promotionClaimCopy">
+                        แนบรูปตอนอยู่ที่ร้านตอนนี้ เพื่อรับฟรี @RewardName(featuredEvent.RewardProductId) x@(featuredEvent.RewardQuantity ?? 1)
+                        เมื่อพนักงานตรวจสอบแล้ว ระบบจะเพิ่มสิทธิ์ให้คุณนำไปใช้ตอนสั่งของ
+                    </p>
+                </div>
+                <button type="button" class="promo-close" id="closePromotionClaimModal">×</button>
+            </div>
+
+            <form class="promo-form" id="promotionClaimForm" enctype="multipart/form-data">
+                <input type="hidden" id="promotionClaimId" name="promotionId" value="@featuredEvent.PromotionId" />
+
+                <div id="promotionClaimStatus" class="promo-status-box"></div>
+
+                @if (Model.EventPromotions.Count > 1)
+                {
+                    <div class="promo-field">
+                        <label for="promotionClaimSelect">เลือกอีเวนต์</label>
+                        <select id="promotionClaimSelect" name="promotionSelect" class="promo-select">
+                            @foreach (var eventPromo in Model.EventPromotions)
+                            {
+                                <option value="@eventPromo.PromotionId"
+                                        data-name="@eventPromo.PromotionName"
+                                        data-desc="@eventPromo.Description"
+                                        data-reward="@RewardName(eventPromo.RewardProductId) x@(eventPromo.RewardQuantity ?? 1)">
+                                    @eventPromo.PromotionName
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="promo-field">
+                    <label for="promotionProofImage">แนบรูปยืนยันตอนอยู่ร้าน</label>
+                    <input class="promo-input" id="promotionProofImage" type="file" name="proofImage" accept="image/*" required />
+                </div>
+
+                <div class="promo-field">
+                    <label for="promotionClaimNote">รายละเอียดเพิ่มเติม</label>
+                    <textarea class="promo-textarea" id="promotionClaimNote" name="note" placeholder="เช่น โต๊ะหน้าร้าน, มุมเช็คอิน, หรือข้อความสั้น ๆ ให้พนักงานตรวจง่ายขึ้น"></textarea>
+                </div>
+
+                <button type="submit" class="promo-submit">ส่งรูปเพื่อรับสิทธิ์</button>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (featuredEvent != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const modal = document.getElementById('promotionClaimModal');
+                const openButtons = document.querySelectorAll('[data-open-promo-modal="true"]');
+                const closeButton = document.getElementById('closePromotionClaimModal');
+                const title = document.getElementById('promotionClaimTitle');
+                const copy = document.getElementById('promotionClaimCopy');
+                const hiddenPromotionId = document.getElementById('promotionClaimId');
+                const statusBox = document.getElementById('promotionClaimStatus');
+                const form = document.getElementById('promotionClaimForm');
+                const select = document.getElementById('promotionClaimSelect');
+                const defaultPromotionName = @Html.Raw(JsonSerializer.Serialize(featuredEvent.PromotionName));
+                const defaultPromotionDesc = @Html.Raw(JsonSerializer.Serialize(featuredEvent.Description ?? "แนบรูปเพื่อรับสิทธิ์กิจกรรมจากร้าน"));
+                const defaultPromotionReward = @Html.Raw(JsonSerializer.Serialize($"{RewardName(featuredEvent.RewardProductId)} x{(featuredEvent.RewardQuantity ?? 1)}"));
+                const defaultPromotionId = @featuredEvent.PromotionId;
+
+                function showModal() {
+                    modal?.classList.add('show');
+                    document.body.style.overflow = 'hidden';
+                }
+
+                function hideModal() {
+                    modal?.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+
+                function setStatus(message, type) {
+                    if (!statusBox) return;
+                    statusBox.textContent = message;
+                    statusBox.className = `promo-status-box show ${type}`;
+                }
+
+                function clearStatus() {
+                    if (!statusBox) return;
+                    statusBox.textContent = '';
+                    statusBox.className = 'promo-status-box';
+                }
+
+                function decodeHtmlEntities(value) {
+                    if (!value) return '';
+                    const textarea = document.createElement('textarea');
+                    textarea.innerHTML = value;
+                    return textarea.value;
+                }
+
+                function syncEventPresentation(source) {
+                    if (!source) return;
+                    const name = decodeHtmlEntities(source.dataset.promotionName || source.dataset.name || defaultPromotionName);
+                    const desc = source.dataset.promotionDesc || source.dataset.desc || '@(featuredEvent.Description ?? "แนบรูปเพื่อรับสิทธิ์กิจกรรมจากร้าน")';
+                    const reward = source.dataset.promotionReward || source.dataset.reward || '@RewardName(featuredEvent.RewardProductId) x@(featuredEvent.RewardQuantity ?? 1)';
+                    const promotionId = source.dataset.promotionId || source.value || '@featuredEvent.PromotionId';
+                    const safeDesc = decodeHtmlEntities(desc);
+                    const safeReward = decodeHtmlEntities(reward);
+
+                    if (title) title.textContent = decodeHtmlEntities(name);
+                    if (copy) copy.textContent = `${desc || 'แนบรูปเพื่อรับสิทธิ์กิจกรรมจากร้าน'} รับฟรี ${reward}`;
+                    if (copy) copy.textContent = `${safeDesc || 'แนบรูปเพื่อรับสิทธิ์กิจกรรมจากร้าน'} รับฟรี ${safeReward}`;
+                    if (hiddenPromotionId) hiddenPromotionId.value = promotionId;
+                }
+
+                openButtons.forEach(button => {
+                    button.addEventListener('click', function () {
+                        clearStatus();
+                        syncEventPresentation(button);
+                        showModal();
+                    });
+                });
+
+                select?.addEventListener('change', function () {
+                    const option = this.options[this.selectedIndex];
+                    syncEventPresentation(option);
+                });
+
+                closeButton?.addEventListener('click', hideModal);
+
+                modal?.addEventListener('click', function (event) {
+                    if (event.target === modal) hideModal();
+                });
+
+                form?.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+                    clearStatus();
+
+                    const formData = new FormData(form);
+                    formData.set('promotionId', hiddenPromotionId?.value || '@featuredEvent.PromotionId');
+
+                    try {
+                        const response = await fetch('/Order/SubmitPromotionClaim', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                            setStatus(data.message || 'ส่งคำขอเรียบร้อย', 'success');
+                            form.reset();
+                            if (select) {
+                                const option = select.options[select.selectedIndex];
+                                syncEventPresentation(option);
+                            }
+                        } else {
+                            setStatus(data.message || 'ไม่สามารถส่งคำขอได้', 'error');
+                        }
+                    } catch (error) {
+                        setStatus('เกิดข้อผิดพลาดระหว่างส่งรูป กรุณาลองใหม่อีกครั้ง', 'error');
+                    }
+                });
+            });
+        </script>
+    }
+}

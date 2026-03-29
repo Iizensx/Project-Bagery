@@ -1,5 +1,15 @@
 @{
     ViewData["Title"] = "Home Page";
+    var publicPromotions = ViewBag.PublicPromotions as List<_66022380.Models.Db.Promotion> ?? new();
+
+    string HomePromoTitle(_66022380.Models.Db.Promotion promo)
+    {
+        if (promo.PromoType == 1)
+            return $"ลด {promo.DiscountValue:0.##} {(promo.DiscountType == "Percent" ? "%" : "บาท")}";
+        if (promo.PromoType == 2)
+            return $"ซื้อ {promo.BuyQuantity ?? 0} แถม {promo.RewardQuantity ?? 0}";
+        return "กิจกรรมพิเศษหน้าร้าน";
+    }
 }
 
 <style>
@@ -385,6 +395,10 @@
         font-size: 2rem;
         font-weight: 800;
         margin-bottom: 2rem;
+    }
+
+    .promo-section-wrap > .row {
+        display: none;
     }
 
     .promo-card-new {
@@ -923,7 +937,7 @@
 
 @* ─── PROMOTION SECTION ────────────────────────────── *@
 <div class="container">
-    <div class="promo-section-wrap">
+    <div class="promo-section-wrap" style="display:none;">
         <p class="promo-section-title">Special Deals</p>
         <h2 class="promo-section-heading">โปรโมชั่นพิเศษ</h2>
 
@@ -960,6 +974,78 @@
 
 
 @* ─── HIGHLIGHT / CAKE SECTION ─────────────────────── *@
+<div class="container" style="margin-top:-2rem;">
+    <div class="promo-section-wrap" style="background: transparent; box-shadow: none; padding-top: 0;">
+        @if (publicPromotions.Any())
+        {
+            var primaryPromo = publicPromotions.ElementAtOrDefault(0);
+            var secondaryPromo = publicPromotions.ElementAtOrDefault(1);
+            var tertiaryPromo = publicPromotions.ElementAtOrDefault(2);
+
+            <div class="row" style="display:flex;">
+                <div class="col-md-5">
+                    @if (primaryPromo != null)
+                    {
+                        <div class="promo-card-new promo-main"
+                             style="background:
+                                linear-gradient(120deg, rgba(17,24,39,0.76), rgba(124,45,18,0.52)),
+                                url('@primaryPromo.ImagePath') center/cover no-repeat;">
+                            <div class="promo-badge">@HomePromoTitle(primaryPromo)</div>
+                            <h2>@primaryPromo.PromotionName</h2>
+                            <p>@(string.IsNullOrWhiteSpace(primaryPromo.Description) ? "โปรโมชั่นพิเศษจาก BAGERY" : primaryPromo.Description)</p>
+                            <div class="coupon-box">SHOW PROMO</div>
+                        </div>
+                    }
+                </div>
+                <div class="col-md-7">
+                    @if (secondaryPromo != null)
+                    {
+                        <div class="promo-card-new promo-secondary"
+                             style="background:
+                                linear-gradient(120deg, rgba(255,255,255,0.92), rgba(255,247,237,0.94)),
+                                url('@secondaryPromo.ImagePath') center/cover no-repeat;">
+                            <h3>@secondaryPromo.PromotionName</h3>
+                            <p>@(string.IsNullOrWhiteSpace(secondaryPromo.Description) ? HomePromoTitle(secondaryPromo) : secondaryPromo.Description)</p>
+                            <a asp-controller="Home" asp-action="Promotion"
+                               style="display:inline-flex; align-items:center; gap:6px; margin-top:1rem;
+                                      background:#F97316; color:#fff; padding:0.6rem 1.5rem;
+                                      border-radius:20px; font-weight:700; font-size:0.88rem;
+                                      text-decoration:none; transition:all 0.3s;">
+                                ดูโปรโมชั่น →
+                            </a>
+                        </div>
+                    }
+
+                    @if (tertiaryPromo != null)
+                    {
+                        <div class="promo-card-new promo-dark"
+                             style="margin-top:0; background:
+                                linear-gradient(120deg, rgba(24,24,27,0.90), rgba(120,53,15,0.82)),
+                                url('@tertiaryPromo.ImagePath') center/cover no-repeat;">
+                            <h3>@tertiaryPromo.PromotionName</h3>
+                            <p>@(string.IsNullOrWhiteSpace(tertiaryPromo.Description) ? HomePromoTitle(tertiaryPromo) : tertiaryPromo.Description)</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="promo-card-new promo-secondary" style="margin-top:0;">
+                <h3>ยังไม่มีโปรโมชั่น Public</h3>
+                <p>โปรที่จะขึ้นหน้า Home ต้องมีรูปภาพก่อน ถ้าโปรไม่มีรูปจะถูกเก็บไว้ให้แอดมินใช้แจกอย่างเดียวและไม่โชว์ฝั่งลูกค้า</p>
+                <a asp-controller="Home" asp-action="Promotion"
+                   style="display:inline-flex; align-items:center; gap:6px; margin-top:1rem;
+                          background:#F97316; color:#fff; padding:0.6rem 1.5rem;
+                          border-radius:20px; font-weight:700; font-size:0.88rem;
+                          text-decoration:none; transition:all 0.3s;">
+                    ไปหน้ารวมโปรโมชั่น →
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
 <div class="container">
     <div class="highlight-section">
         <div class="row align-items-center g-5">

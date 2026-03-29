@@ -36,4 +36,13 @@ public class DeliveryOrderHistoryItem
     public string PromotionName { get; set; } = "-";
     public string DiscountDisplay { get; set; } = "-";
     public bool IsActive { get; set; }
+    public List<DeliveryOrderHistoryLineItem> Items { get; set; } = new();
+}
+
+public class DeliveryOrderHistoryLineItem
+{
+    public string ProductName { get; set; } = "-";
+    public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
+    public bool IsReward { get; set; }
 }

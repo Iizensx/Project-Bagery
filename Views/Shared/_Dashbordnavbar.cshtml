@@ -164,6 +164,13 @@
             </a>
         </li>
 
+        <li class="navbar-item">
+            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "EventPromotion" ? "active" : "")" asp-controller="AdminPromotion" asp-action="EventPromotion">
+                <i class="fas fa-camera-retro"></i>
+                <span>Event Promotion</span>
+            </a>
+        </li>
+
     </ul>
 
     <div class="navbar-footer">
