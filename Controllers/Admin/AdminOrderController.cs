@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using _66022380.Helpers;
 using _66022380.Models.Db;
 
 namespace _66022380.Controllers.Admin;
@@ -67,6 +68,15 @@ public class AdminOrderController : AdminControllerBase
             // เมื่อยืนยันแล้ว ให้ถือว่าออเดอร์นี้ชำระเงินสำเร็จ
             order.PaymentStatus = "Paid";
             order.Status = "Paid";
+            NotificationHelper.AddNotification(
+                Db,
+                order.UserId ?? 0,
+                "payment",
+                "Payment confirmed",
+                $"Staff confirmed payment for order #{order.OrderId}.",
+                Url.Action("Delivery", "Delivery", new { area = "" }) + "#tracking-section",
+                "Order",
+                order.OrderId);
             Db.Update(order);
             Db.SaveChanges();
 
@@ -169,6 +179,15 @@ public class AdminOrderController : AdminControllerBase
 
             // เปลี่ยนสถานะเป็นกำลังเตรียมสินค้า
             order.Status = "Preparing";
+            NotificationHelper.AddNotification(
+                Db,
+                order.UserId ?? 0,
+                "order",
+                "Order is being prepared",
+                $"Order #{order.OrderId} is now in preparation.",
+                Url.Action("Delivery", "Delivery", new { area = "" }) + "#tracking-section",
+                "Order",
+                order.OrderId);
             Db.Update(order);
             Db.SaveChanges();
 
@@ -203,6 +222,15 @@ public class AdminOrderController : AdminControllerBase
 
             // เปลี่ยนสถานะเป็นจัดส่งแล้ว
             order.Status = "Shipped";
+            NotificationHelper.AddNotification(
+                Db,
+                order.UserId ?? 0,
+                "delivery",
+                "Order shipped",
+                $"Order #{order.OrderId} is out for delivery.",
+                Url.Action("Delivery", "Delivery", new { area = "" }) + "#tracking-section",
+                "Order",
+                order.OrderId);
             Db.Update(order);
             Db.SaveChanges();
 

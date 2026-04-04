@@ -986,6 +986,285 @@
         margin-bottom: 0.2rem;
     }
 
+    .social-app-section {
+        margin: 0 0 3rem;
+    }
+
+    .social-app-shell {
+        background:
+            linear-gradient(135deg, rgba(255,255,255,0.70) 0%, rgba(246,246,247,0.82) 52%, rgba(232,233,236,0.90) 100%);
+        border-radius: 32px;
+        padding: 2.4rem;
+        color: #111827;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+        overflow: hidden;
+        position: relative;
+        border: 1px solid rgba(255,255,255,0.55);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+    }
+
+    .social-app-shell::before {
+        content: "";
+        position: absolute;
+        inset: auto -80px -120px auto;
+        width: 280px;
+        height: 280px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0) 72%);
+        pointer-events: none;
+    }
+
+    .social-app-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .social-app-kicker {
+        color: #F97316;
+        font-size: 0.78rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-bottom: 0.8rem;
+    }
+
+    .social-app-title {
+        color: #111827;
+        font-size: clamp(1.9rem, 4vw, 3rem);
+        font-weight: 900;
+        line-height: 1.08;
+        margin-bottom: 0.9rem;
+    }
+
+    .social-app-copy {
+        color: #4B5563;
+        line-height: 1.8;
+        max-width: 620px;
+        margin-bottom: 1.4rem;
+    }
+
+    .social-platforms {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .social-platform-card {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 0.95rem 1rem;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.54);
+        border: 1px solid rgba(255,255,255,0.65);
+        backdrop-filter: blur(14px);
+    }
+
+    .social-platform-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #FFF3E8 0%, #FFE2CF 100%);
+        color: #C2410C;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .social-platform-name {
+        color: #111827;
+        font-weight: 800;
+        margin-bottom: 0.15rem;
+    }
+
+    .social-platform-handle {
+        color: #6B7280;
+        font-size: 0.88rem;
+    }
+
+    .social-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+    }
+
+    .social-pill-link,
+    .social-store-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 800;
+        transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .social-pill-link {
+        background: #111827;
+        color: #fff;
+        padding: 0.82rem 1.2rem;
+    }
+
+    .social-store-link {
+        background: rgba(255,255,255,0.54);
+        color: #111827;
+        padding: 0.82rem 1rem;
+        border: 1px solid rgba(255,255,255,0.65);
+    }
+
+    .social-pill-link:hover,
+    .social-store-link:hover {
+        transform: translateY(-2px);
+        color: inherit;
+    }
+
+    .app-preview-wrap {
+        display: flex;
+        justify-content: center;
+    }
+
+    .app-phone {
+        width: min(320px, 100%);
+        border-radius: 34px;
+        padding: 14px;
+        background: linear-gradient(180deg, #2b1a12 0%, #100b08 100%);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.28);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .app-phone-screen {
+        border-radius: 26px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #fff7f1 0%, #ffe8da 100%);
+        min-height: 540px;
+        padding: 1rem;
+        color: #1f2937;
+    }
+
+    .app-phone-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        color: #6b7280;
+        font-size: 0.86rem;
+        font-weight: 700;
+    }
+
+    .app-phone-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .app-phone-brand-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+        box-shadow: 0 12px 24px rgba(249,115,22,0.28);
+    }
+
+    .app-phone-brand-name {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #111827;
+    }
+
+    .app-phone-brand-copy {
+        color: #6B7280;
+        font-size: 0.88rem;
+    }
+
+    .app-phone-card {
+        border-radius: 22px;
+        background: #fff;
+        border: 1px solid #F3E5DA;
+        padding: 1rem;
+        box-shadow: 0 14px 30px rgba(76,42,17,0.08);
+        margin-bottom: 0.9rem;
+    }
+
+    .app-phone-card-title {
+        color: #111827;
+        font-weight: 900;
+        margin-bottom: 0.45rem;
+    }
+
+    .app-phone-card-copy {
+        color: #6B7280;
+        font-size: 0.88rem;
+        line-height: 1.7;
+        margin-bottom: 0.85rem;
+    }
+
+    .app-phone-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .app-phone-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 999px;
+        background: #FFF3E8;
+        color: #C2410C;
+        padding: 0.45rem 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 800;
+    }
+
+    .app-phone-store-row {
+        display: grid;
+        gap: 0.7rem;
+    }
+
+    .app-phone-store {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid #F3E5DA;
+        padding: 0.9rem 1rem;
+    }
+
+    .app-phone-store-label {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        color: #111827;
+        font-weight: 800;
+    }
+
+    .app-phone-store-label i {
+        color: #F97316;
+        font-size: 1rem;
+    }
+
+    .app-phone-store-badge {
+        color: #F97316;
+        font-size: 0.8rem;
+        font-weight: 900;
+    }
+
     .faq-grid-home {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -1002,6 +1281,7 @@
     }
 
     @@media (max-width: 900px) {
+        .social-app-grid,
         .home-promo-grid,
         .home-extra-grid,
         .cta-home-grid,
@@ -1020,6 +1300,19 @@
 
         .home-stat-grid {
             grid-template-columns: 1fr;
+        }
+
+        .social-platforms {
+            grid-template-columns: 1fr;
+        }
+
+        .social-app-shell {
+            padding: 1.5rem;
+            border-radius: 24px;
+        }
+
+        .app-phone-screen {
+            min-height: auto;
         }
     }
 </style>
@@ -1348,6 +1641,113 @@
 
 
 
+
+<div class="container social-app-section">
+    <div class="social-app-shell">
+        <div class="social-app-grid">
+            <div>
+                <div class="social-app-kicker">BaileyBakery Online</div>
+                <h2 class="social-app-title">ติดตาม BaileyBakery ได้ทุกช่องทาง </h2>
+                <p class="social-app-copy">
+                    อัปเดตเมนูใหม่ โปรโมชั่นประจำสัปดาห์ และคอนเทนต์หลังบ้านของ BaileyBakery ได้จากทุกแพลตฟอร์ม
+                    พร้อมภาพรวมแอปของร้านที่จะทำให้การสั่งซื้อ ติดตามออเดอร์ และเก็บเมนูโปรดง่ายขึ้นกว่าเดิม
+                </p>
+
+                <div class="social-platforms">
+                    <div class="social-platform-card">
+                        <div class="social-platform-icon"><i class="bi bi-instagram"></i></div>
+                        <div>
+                            <div class="social-platform-name">Instagram</div>
+                            <div class="social-platform-handle">@@BaileyBakery</div>
+                        </div>
+                    </div>
+                    <div class="social-platform-card">
+                        <div class="social-platform-icon"><i class="bi bi-facebook"></i></div>
+                        <div>
+                            <div class="social-platform-name">Facebook</div>
+                            <div class="social-platform-handle">BaileyBakery Official</div>
+                        </div>
+                    </div>
+                    <div class="social-platform-card">
+                        <div class="social-platform-icon"><i class="bi bi-tiktok"></i></div>
+                        <div>
+                            <div class="social-platform-name">TikTok</div>
+                            <div class="social-platform-handle">@@BaileyBakeryTH</div>
+                        </div>
+                    </div>
+                    <div class="social-platform-card">
+                        <div class="social-platform-icon"><i class="bi bi-line"></i></div>
+                        <div>
+                            <div class="social-platform-name">LINE</div>
+                            <div class="social-platform-handle">@@BaileyBakery</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="social-actions">
+                    <a href="#" class="social-pill-link">
+                        <i class="bi bi-share"></i>
+                        ติดตาม BaileyBakery
+                    </a>
+                    <a href="#" class="social-store-link">
+                        <i class="bi bi-google-play"></i>
+                        Android App
+                    </a>
+                    <a href="#" class="social-store-link">
+                        <i class="bi bi-apple"></i>
+                        iPhone App
+                    </a>
+                </div>
+            </div>
+
+            <div class="app-preview-wrap">
+                <div class="app-phone">
+                    <div class="app-phone-screen">
+                        <div class="app-phone-top">
+                            <span>BaileyBakery App</span>
+                            <span><i class="fas fa-signal me-1"></i>5G</span>
+                        </div>
+
+                        <div class="app-phone-brand">
+                            <div class="app-phone-brand-icon"><i class="fas fa-bread-slice"></i></div>
+                            <div>
+                                <div class="app-phone-brand-name">BaileyBakery</div>
+                                <div class="app-phone-brand-copy">Fresh bakery, everyday.</div>
+                            </div>
+                        </div>
+
+                        <div class="app-phone-card">
+                            <div class="app-phone-card-title">แอปร้านเดียว ครบทั้งดูเมนูและติดตามออเดอร์</div>
+                            <div class="app-phone-card-copy">ออกแบบให้เหมาะกับลูกค้าที่สั่งบ่อย ดูโปรเร็ว และอยากเข้าเมนูโปรดหรือสถานะจัดส่งได้ภายในไม่กี่แตะ</div>
+                            <div class="app-phone-chip-row">
+                                <div class="app-phone-chip"><i class="fas fa-bell"></i> Flash Promo</div>
+                                <div class="app-phone-chip"><i class="fas fa-receipt"></i> Order Tracking</div>
+                                <div class="app-phone-chip"><i class="fas fa-heart"></i> Favorite Menu</div>
+                            </div>
+                        </div>
+
+                        <div class="app-phone-store-row">
+                            <div class="app-phone-store">
+                                <div class="app-phone-store-label">
+                                    <i class="fab fa-google-play"></i>
+                                    <span>Google Play</span>
+                                </div>
+                                <div class="app-phone-store-badge">Coming Soon</div>
+                            </div>
+                            <div class="app-phone-store">
+                                <div class="app-phone-store-label">
+                                    <i class="fab fa-apple"></i>
+                                    <span>App Store</span>
+                                </div>
+                                <div class="app-phone-store-badge">Coming Soon</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {

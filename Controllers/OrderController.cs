@@ -139,6 +139,18 @@ public class OrderController : Controller
 
         _db.SaveChanges();
 
+        NotificationHelper.AddNotification(
+            _db,
+            currentUserId,
+            "order",
+            "Order created",
+            $"Your order #{order.OrderId} was created successfully.",
+            Url.Action("Payment", "Order", new { orderId = order.OrderId }),
+            "Order",
+            order.OrderId);
+
+        _db.SaveChanges();
+
         return Json(new { success = true, orderId = order.OrderId });
     }
 
@@ -241,6 +253,16 @@ public class OrderController : Controller
         });
 
         _db.SaveChanges();
+        NotificationHelper.AddNotification(
+            _db,
+            userId,
+            "promotion",
+            "Promotion claim submitted",
+            "Your promotion proof was sent and is waiting for review.",
+            Url.Action("Promotion", "Home"),
+            "Promotion",
+            promotionId);
+        _db.SaveChanges();
         return Json(new { success = true, message = "ส่งรูปยืนยันเรียบร้อย กรุณารอพนักงานอนุมัติ" });
         }
         catch
@@ -307,6 +329,16 @@ public class OrderController : Controller
 
             order.SlipImagePath = "/uploads/slips/" + fileName;
             order.PaymentStatus = "PendingVerify";
+            _db.SaveChanges();
+            NotificationHelper.AddNotification(
+                _db,
+                currentUserId,
+                "payment",
+                "Slip uploaded",
+                $"Payment slip for order #{order.OrderId} was uploaded and is waiting for verification.",
+                Url.Action("Delivery", "Delivery", new { area = "" }) + "#tracking-section",
+                "Order",
+                order.OrderId);
             _db.SaveChanges();
 
             return Json(new { success = true, message = "อัปโหลดสลิปเรียบร้อย รอ Admin ยืนยัน" });

@@ -22,6 +22,8 @@ public partial class BakerydbContext : DbContext
 
     public virtual DbSet<Historyorder> Historyorders { get; set; }
 
+    public virtual DbSet<Notification> Notifications { get; set; }
+
     public virtual DbSet<Order> Orders { get; set; }
 
     public virtual DbSet<Orderdetail> Orderdetails { get; set; }
@@ -98,6 +100,29 @@ public partial class BakerydbContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Historyorders)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("historyorder_ibfk_1");
+        });
+
+        modelBuilder.Entity<Notification>(entity =>
+        {
+            entity.HasKey(e => e.NotificationId).HasName("PRIMARY");
+
+            entity.ToTable("notification");
+
+            entity.HasIndex(e => e.UserId, "UserId");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("datetime");
+            entity.Property(e => e.LinkUrl).HasMaxLength(255);
+            entity.Property(e => e.Message).HasColumnType("text");
+            entity.Property(e => e.ReferenceType).HasMaxLength(50);
+            entity.Property(e => e.Title).HasMaxLength(150);
+            entity.Property(e => e.Type).HasMaxLength(50);
+
+            entity.HasOne(d => d.User).WithMany(p => p.Notifications)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("notification_ibfk_1");
         });
 
         modelBuilder.Entity<Order>(entity =>

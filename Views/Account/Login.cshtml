@@ -264,6 +264,7 @@
             background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 550"><defs><filter id="blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2"/></filter></defs><rect fill="%23000" width="400" height="550"/><circle cx="80" cy="100" r="40" fill="%23FF6B35" opacity="0.3" filter="url(%23blur)"/><circle cx="320" cy="150" r="50" fill="%23FF8A50" opacity="0.2" filter="url(%23blur)"/><circle cx="150" cy="350" r="60" fill="%23FF6B35" opacity="0.25" filter="url(%23blur)"/><circle cx="300" cy="450" r="45" fill="%23FF8A50" opacity="0.2" filter="url(%23blur)"/><path d="M50,400 Q100,300 150,400 T250,400 T350,400" stroke="%23FF6B35" stroke-width="2" fill="none" opacity="0.15"/><path d="M30,450 Q80,350 130,450 T230,450 T330,450" stroke="%23FF8A50" stroke-width="2" fill="none" opacity="0.1"/></svg>');
             background-size: cover;
             background-position: center;
+            opacity: 0.32;
         }
 
         .flower-pattern {
@@ -273,61 +274,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: #000000;
         }
 
         .flower {
-            position: absolute;
-            font-size: 3rem;
-            opacity: 0.4;
-            filter: drop-shadow(0 0 10px rgba(255, 107, 53, 0.3));
+            display: none;
         }
 
-        .flower-1 {
-            top: 80px;
-            right: 60px;
-            font-size: 4rem;
-            opacity: 0.5;
-            animation: sway 4s ease-in-out infinite;
-        }
-
-        .flower-2 {
-            top: 250px;
-            left: 40px;
-            font-size: 3.5rem;
-            opacity: 0.4;
-            animation: sway 5s ease-in-out infinite 0.5s;
-        }
-
-        .flower-3 {
-            bottom: 100px;
-            right: 80px;
-            font-size: 3rem;
-            opacity: 0.35;
-            animation: sway 4.5s ease-in-out infinite 1s;
-        }
-
-        .flower-4 {
-            top: 150px;
-            right: 30px;
-            font-size: 2.5rem;
-            opacity: 0.3;
-            animation: sway 5.5s ease-in-out infinite 1.5s;
-        }
-
-        .flower-5 {
-            bottom: 200px;
-            left: 60px;
-            font-size: 2.8rem;
-            opacity: 0.35;
-            animation: sway 4.8s ease-in-out infinite 2s;
-        }
-
-        .flower-6 {
-            top: 350px;
-            right: 150px;
-            font-size: 3.2rem;
-            opacity: 0.4;
-            animation: sway 5.2s ease-in-out infinite 0.8s;
+        .brand-side-logo {
+            position: relative;
+            z-index: 1;
+            width: min(78%, 360px);
+            max-width: 360px;
+            object-fit: contain;
+            filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.28));
         }
 
         @@keyframes sway {
@@ -458,6 +418,7 @@
             <div class="login-image-section">
                 <div class="image-background"></div>
                 <div class="flower-pattern">
+                    <img class="brand-side-logo" src="~/img/Bailey.png" alt="Bailey Art and Bakery">
                     <div class="flower flower-1">🌹</div>
                     <div class="flower flower-2">🌷</div>
                     <div class="flower flower-3">🌺</div>

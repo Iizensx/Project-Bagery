@@ -16,6 +16,224 @@
         box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
     }
 
+    .main-navbar .nav-notification {
+        display: none;
+        margin-right: 0.85rem;
+    }
+
+    .main-navbar .notification-trigger {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        border: none !important;
+        background: #fff;
+        color: #111827;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        box-shadow: none !important;
+        outline: none;
+    }
+
+    .main-navbar .notification-trigger::after {
+        display: none !important;
+    }
+
+    .main-navbar .notification-trigger:focus,
+    .main-navbar .notification-trigger:active,
+    .main-navbar .notification-trigger.show {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .main-navbar .notification-trigger:hover {
+        background: #fff7ed;
+        color: #c2410c;
+    }
+
+    .main-navbar .notification-trigger i {
+        font-size: 1.05rem;
+    }
+
+    .main-navbar .notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -4px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 800;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 18px rgba(249,115,22,0.28);
+    }
+
+    .main-navbar .notification-menu {
+        width: min(380px, calc(100vw - 1.5rem));
+        padding: 0;
+        border: none;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 28px 60px rgba(15, 23, 42, 0.14);
+        margin-top: 16px;
+    }
+
+    .main-navbar .notification-head {
+        padding: 1rem 1rem 0.85rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        background: linear-gradient(180deg, #fffaf5 0%, #fff 100%);
+        border-bottom: 1px solid #f5e7db;
+    }
+
+    .main-navbar .notification-title {
+        color: #111827;
+        font-size: 0.98rem;
+        font-weight: 900;
+    }
+
+    .main-navbar .notification-subtitle {
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-top: 0.2rem;
+    }
+
+    .main-navbar .notification-actions {
+        display: flex;
+        gap: 0.45rem;
+    }
+
+    .main-navbar .notification-action-btn {
+        border: 1px solid #fed7aa;
+        background: #fff;
+        color: #c2410c;
+        border-radius: 999px;
+        padding: 0.38rem 0.72rem;
+        font-size: 0.74rem;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .main-navbar .notification-body {
+        max-height: 420px;
+        overflow-y: auto;
+        background: #fff;
+    }
+
+    .main-navbar .notification-empty {
+        padding: 1.2rem 1rem 1.4rem;
+        text-align: center;
+        color: #6b7280;
+        display: none;
+    }
+
+    .main-navbar .notification-empty i {
+        font-size: 1.5rem;
+        color: #fdba74;
+        margin-bottom: 0.55rem;
+        display: block;
+    }
+
+    .main-navbar .notification-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .main-navbar .notification-item {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 0.85rem;
+        padding: 0.95rem 1rem;
+        border-bottom: 1px solid #f8ede3;
+        text-decoration: none;
+        color: inherit;
+        transition: background 0.2s ease;
+    }
+
+    .main-navbar .notification-item:hover {
+        background: #fffaf5;
+    }
+
+    .main-navbar .notification-item.unread {
+        background: linear-gradient(180deg, #fffaf5 0%, #fff 100%);
+    }
+
+    .main-navbar .notification-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .main-navbar .notification-icon.order {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+
+    .main-navbar .notification-icon.promotion {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    .main-navbar .notification-icon.payment {
+        background: #ecfdf3;
+        color: #15803d;
+    }
+
+    .main-navbar .notification-icon.delivery {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .main-navbar .notification-item-title {
+        color: #111827;
+        font-weight: 800;
+        font-size: 0.92rem;
+        line-height: 1.35;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.7rem;
+        align-items: flex-start;
+    }
+
+    .main-navbar .notification-item-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #f97316;
+        margin-top: 0.32rem;
+        flex-shrink: 0;
+    }
+
+    .main-navbar .notification-item-copy {
+        color: #6b7280;
+        font-size: 0.84rem;
+        line-height: 1.6;
+        margin-top: 0.2rem;
+    }
+
+    .main-navbar .notification-item-time {
+        color: #9ca3af;
+        font-size: 0.74rem;
+        margin-top: 0.4rem;
+        font-weight: 700;
+    }
+
     @@media (max-width: 991.98px) {
         .main-navbar .container-fluid {
             padding-left: 0.85rem !important;
@@ -70,6 +288,28 @@
             font-size: 0.95rem;
         }
 
+        .main-navbar .nav-notification {
+            order: 1;
+            width: 100%;
+            margin-right: 0;
+        }
+
+        .main-navbar .notification-trigger {
+            width: 100%;
+            justify-content: center;
+            gap: 0.55rem;
+            border-radius: 12px;
+            padding: 0.75rem 0.9rem;
+            height: auto;
+            background: #f8fafc;
+        }
+
+        .main-navbar .notification-trigger::after {
+            content: 'แจ้งเตือน';
+            font-size: 0.95rem;
+            font-weight: 800;
+        }
+
         .main-navbar #login-link-container,
         .main-navbar #user-dropdown-container {
             order: 1;
@@ -89,6 +329,11 @@
         .main-navbar .dropdown-menu {
             width: 100%;
             min-width: 0 !important;
+        }
+
+        .main-navbar .notification-menu {
+            width: 100%;
+            margin-top: 0.75rem;
         }
     }
 
@@ -142,6 +387,31 @@
         </div>
 
         <div class="d-flex align-items-center" id="auth-section">
+            <div id="notification-container" class="dropdown nav-notification">
+                <a class="notification-trigger dropdown-toggle" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-bell"></i>
+                    <span id="notification-badge" class="notification-badge">0</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="notificationDropdown">
+                    <div class="notification-head">
+                        <div>
+                            <div class="notification-title">Notifications</div>
+                            <div class="notification-subtitle">อัปเดตโปรโมชั่น ออเดอร์ และการจัดส่งของคุณ</div>
+                        </div>
+                        <div class="notification-actions">
+                            <button type="button" id="markAllNotificationsRead" class="notification-action-btn">อ่านแล้ว</button>
+                            <button type="button" id="clearNotificationsBtn" class="notification-action-btn">ล้าง</button>
+                        </div>
+                    </div>
+                    <div class="notification-body">
+                        <div id="notification-empty" class="notification-empty">
+                            <i class="bi bi-bell-slash"></i>
+                            ยังไม่มีแจ้งเตือนในตอนนี้
+                        </div>
+                        <ul id="notification-list" class="notification-list"></ul>
+                    </div>
+                </div>
+            </div>
             <a href="javascript:void(0)" id="cart-trigger" style="color: #333; text-decoration: none; font-size: 1.2rem; position: relative; display: flex; align-items: center;">
                 🛒 CART
                 <span id="cart-count" class="cart-count-badge" style="display: none;">0</span>
@@ -193,13 +463,22 @@
 </nav>
 
 <script>
+    const notificationApi = {
+        listUrl: '@Url.Action("GetMyNotifications", "Notification")',
+        markReadUrl: '@Url.Action("MarkAsRead", "Notification")',
+        markAllReadUrl: '@Url.Action("MarkAllAsRead", "Notification")',
+        clearUrl: '@Url.Action("ClearMyNotifications", "Notification")'
+    };
+    window.baileyNotifications = [];
+
     function checkLoginStatus() {
         const userData = localStorage.getItem('user');
         const loginContainer = document.getElementById('login-link-container');
         const userDropdownContainer = document.getElementById('user-dropdown-container');
         const displayUsername = document.getElementById('display-username');
+        const notificationContainer = document.getElementById('notification-container');
 
-        if (!loginContainer || !userDropdownContainer || !displayUsername) return;
+        if (!loginContainer || !userDropdownContainer || !displayUsername || !notificationContainer) return;
 
         if (userData) {
             try {
@@ -208,18 +487,289 @@
                     displayUsername.innerText = user.username;
                     loginContainer.style.display = 'none';
                     userDropdownContainer.style.display = 'block';
+                    notificationContainer.style.display = 'block';
+                    refreshNotifications();
                 }
             } catch (e) {
                 console.error('Error parsing user data', e);
             }
+        } else {
+            notificationContainer.style.display = 'none';
+        }
+    }
+
+    function getNotificationStorageKey(user) {
+        const identity = (user && (user.username || user.email || user.phone)) || 'guest';
+        return `bailey_notifications_${identity}`;
+    }
+
+    function getSeedNotifications() {
+        return [
+            {
+                id: 'notif-order-created',
+                type: 'order',
+                title: 'สร้างออเดอร์สำเร็จ',
+                message: 'ออเดอร์ล่าสุดของคุณถูกสร้างแล้ว สามารถไปต่อที่หน้าชำระเงินได้ทันที',
+                timeText: '2 นาทีที่แล้ว',
+                href: '/Order/Checkout',
+                isRead: false
+            },
+            {
+                id: 'notif-payment-verify',
+                type: 'payment',
+                title: 'กำลังรอตรวจสอบสลิป',
+                message: 'ทีมร้านได้รับหลักฐานการชำระเงินแล้ว และจะอัปเดตสถานะให้ทันทีเมื่อยืนยันเสร็จ',
+                timeText: '10 นาทีที่แล้ว',
+                href: '/Delivery/Delivery#tracking-section',
+                isRead: false
+            },
+            {
+                id: 'notif-promo-approved',
+                type: 'promotion',
+                title: 'คุณได้รับโปรโมชั่นใหม่',
+                message: 'BaileyBakery อนุมัติสิทธิ์โปรโมชั่นของคุณแล้ว ลองเข้าไปดูที่หน้า Promotion ได้เลย',
+                timeText: '1 ชั่วโมงที่แล้ว',
+                href: '/Home/Promotion',
+                isRead: true
+            },
+            {
+                id: 'notif-order-shipped',
+                type: 'delivery',
+                title: 'ออเดอร์กำลังจัดส่ง',
+                message: 'คนขับกำลังนำขนมไปส่งให้คุณ สามารถติดตามสถานะล่าสุดได้จากหน้า Delivery',
+                timeText: 'เมื่อวาน',
+                href: '/Delivery/Delivery#tracking-section',
+                isRead: true
+            }
+        ];
+    }
+
+    function loadNotifications(user) {
+        if (!user) return [];
+        return Array.isArray(window.baileyNotifications) ? window.baileyNotifications : [];
+    }
+
+    function saveNotifications(user, items) {
+        if (!user) return;
+
+        const previousItems = loadNotifications(user);
+        window.baileyNotifications = Array.isArray(items) ? items : [];
+        persistNotificationChanges(previousItems, window.baileyNotifications);
+    }
+
+    function seedNotifications(user) {
+        return;
+    }
+
+    function notificationIconClass(type) {
+        switch (type) {
+            case 'promotion':
+                return 'bi bi-gift';
+            case 'payment':
+                return 'bi bi-credit-card';
+            case 'delivery':
+                return 'bi bi-truck';
+            default:
+                return 'bi bi-bag-check';
+        }
+    }
+
+    function renderNotifications(user) {
+        const list = document.getElementById('notification-list');
+        const empty = document.getElementById('notification-empty');
+        const badge = document.getElementById('notification-badge');
+        if (!list || !empty || !badge) return;
+
+        const items = loadNotifications(user);
+        const unreadCount = items.filter(item => !item.isRead).length;
+        list.innerHTML = '';
+
+        empty.style.display = items.length ? 'none' : 'block';
+
+        items.forEach(function (item) {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <a class="notification-item ${item.isRead ? '' : 'unread'}" href="${item.href || '#'}" data-id="${item.id}">
+                    <div class="notification-icon ${item.type || 'order'}">
+                        <i class="${notificationIconClass(item.type)}"></i>
+                    </div>
+                    <div>
+                        <div class="notification-item-title">
+                            <span>${item.title || 'Notification'}</span>
+                            ${item.isRead ? '' : '<span class="notification-item-dot"></span>'}
+                        </div>
+                        <div class="notification-item-copy">${item.message || ''}</div>
+                        <div class="notification-item-time">${item.timeText || ''}</div>
+                    </div>
+                </a>
+            `;
+            list.appendChild(li);
+        });
+
+        if (unreadCount > 0) {
+            badge.style.display = 'inline-flex';
+            badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function getCurrentUser() {
+        const userData = localStorage.getItem('user');
+        if (!userData) return null;
+
+        try {
+            return JSON.parse(userData);
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function formatNotificationTime(value) {
+        if (!value) return '';
+
+        const createdAt = new Date(value);
+        const diffMs = Date.now() - createdAt.getTime();
+        const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
+
+        if (diffMinutes < 1) return 'Just now';
+        if (diffMinutes < 60) return `${diffMinutes} min ago`;
+
+        const diffHours = Math.floor(diffMinutes / 60);
+        if (diffHours < 24) return `${diffHours} hr ago`;
+
+        const diffDays = Math.floor(diffHours / 24);
+        if (diffDays < 7) return `${diffDays} day ago`;
+
+        return createdAt.toLocaleString();
+    }
+
+    async function fetchNotifications() {
+        try {
+            const response = await fetch(notificationApi.listUrl, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (!response.ok) return [];
+
+            const data = await response.json();
+            if (!Array.isArray(data.notifications)) return [];
+
+            return data.notifications.map(function (item) {
+                return {
+                    ...item,
+                    timeText: formatNotificationTime(item.createdAt)
+                };
+            });
+        } catch (error) {
+            console.error('Error loading notifications', error);
+            return [];
+        }
+    }
+
+    async function refreshNotifications() {
+        const user = getCurrentUser();
+        if (!user) return;
+
+        window.baileyNotifications = await fetchNotifications();
+        renderNotifications(user);
+    }
+
+    function persistNotificationChanges(previousItems, nextItems) {
+        const prev = Array.isArray(previousItems) ? previousItems : [];
+        const next = Array.isArray(nextItems) ? nextItems : [];
+
+        if (next.length === 0 && prev.length > 0) {
+            fetch(notificationApi.clearUrl, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).catch(function (error) {
+                console.error('Error clearing notifications', error);
+            });
+            return;
+        }
+
+        const unreadBefore = prev.filter(item => !item.isRead);
+        const unreadAfter = next.filter(item => !item.isRead);
+
+        if (unreadBefore.length > 0 && unreadAfter.length === 0) {
+            fetch(notificationApi.markAllReadUrl, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).catch(function (error) {
+                console.error('Error marking all notifications as read', error);
+            });
+            return;
+        }
+
+        const changedToRead = next.find(function (item) {
+            const oldItem = prev.find(prevItem => prevItem.id === item.id);
+            return oldItem && !oldItem.isRead && item.isRead;
+        });
+
+        if (changedToRead) {
+            fetch(`${notificationApi.markReadUrl}?id=${encodeURIComponent(changedToRead.id)}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).catch(function (error) {
+                console.error('Error marking notification as read', error);
+            });
         }
     }
 
     checkLoginStatus();
     document.addEventListener('DOMContentLoaded', checkLoginStatus);
 
+    document.addEventListener('click', async function (event) {
+        const notificationLink = event.target.closest('.notification-item');
+        if (!notificationLink) return;
+
+        const user = getCurrentUser();
+        if (!user) return;
+
+        event.preventDefault();
+
+        const items = loadNotifications(user).map(function (item) {
+            if (item.id === notificationLink.dataset.id) {
+                return { ...item, isRead: true };
+            }
+            return item;
+        });
+
+        saveNotifications(user, items);
+        renderNotifications(user);
+
+        const targetUrl = notificationLink.getAttribute('href');
+        await refreshNotifications();
+        if (targetUrl && targetUrl !== '#')
+            window.location.href = targetUrl;
+    });
+
+    document.getElementById('markAllNotificationsRead')?.addEventListener('click', async function () {
+        const user = getCurrentUser();
+        if (!user) return;
+
+        const items = loadNotifications(user).map(function (item) {
+            return { ...item, isRead: true };
+        });
+
+        saveNotifications(user, items);
+        renderNotifications(user);
+        await refreshNotifications();
+    });
+
+    document.getElementById('clearNotificationsBtn')?.addEventListener('click', async function () {
+        const user = getCurrentUser();
+        if (!user) return;
+
+        saveNotifications(user, []);
+        renderNotifications(user);
+        await refreshNotifications();
+    });
+
     function logout() {
         localStorage.removeItem('user');
+        window.baileyNotifications = [];
         window.location.href = '@Url.Action("Logout", "Account")';
     }
 </script>

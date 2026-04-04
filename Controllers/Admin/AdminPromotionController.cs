@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using _66022380.Helpers;
 using _66022380.Models;
 using _66022380.Models.Db;
 
@@ -229,6 +230,15 @@ public class AdminPromotionController : AdminControllerBase
             existing.UsedAt = null;
         }
 
+        NotificationHelper.AddNotification(
+            Db,
+            userId,
+            "promotion",
+            "New promotion received",
+            $"A new promotion \"{promotion.PromotionName}\" was added to your account.",
+            Url.Action("Promotion", "Home", new { area = "" }),
+            "Promotion",
+            promotionId);
         Db.SaveChanges();
         TempData["PromotionSuccess"] = $"มอบโปรโมชั่นให้ {user.Username} เรียบร้อย";
         return RedirectToAction("PromotionAdmin");
@@ -278,6 +288,15 @@ public class AdminPromotionController : AdminControllerBase
             }
         }
 
+        NotificationHelper.AddNotifications(
+            Db,
+            users,
+            "promotion",
+            "New promotion received",
+            $"A new promotion \"{promotion.PromotionName}\" was added to your account.",
+            Url.Action("Promotion", "Home", new { area = "" }),
+            "Promotion",
+            promotionId);
         Db.SaveChanges();
         TempData["PromotionSuccess"] = "แจกโปรโมชั่นให้ผู้ใช้ทั้งหมดเรียบร้อย";
         return RedirectToAction("PromotionAdmin");
@@ -320,6 +339,16 @@ public class AdminPromotionController : AdminControllerBase
 
         Db.SaveChanges();
         TempData["PromotionSuccess"] = $"อนุมัติคำขอของ {claim.User.Username} และมอบโปรโมชั่นเรียบร้อย";
+        NotificationHelper.AddNotification(
+            Db,
+            claim.UserId,
+            "promotion",
+            "Promotion approved",
+            $"Your request for \"{claim.Promotion?.PromotionName ?? "promotion"}\" was approved.",
+            Url.Action("Promotion", "Home", new { area = "" }),
+            "Promotion",
+            claim.PromotionId);
+        Db.SaveChanges();
         return RedirectToPromotionPage(returnTo);
     }
 
@@ -332,6 +361,7 @@ public class AdminPromotionController : AdminControllerBase
 
         var claim = Db.PromotionClaims
             .Include(c => c.User)
+            .Include(c => c.Promotion)
             .FirstOrDefault(c => c.ClaimId == claimId);
 
         if (claim == null || claim.Status != "Pending")
@@ -347,6 +377,16 @@ public class AdminPromotionController : AdminControllerBase
 
         Db.SaveChanges();
         TempData["PromotionSuccess"] = $"ปฏิเสธคำขอของ {claim.User.Username} เรียบร้อย";
+        NotificationHelper.AddNotification(
+            Db,
+            claim.UserId,
+            "promotion",
+            "Promotion rejected",
+            $"Your request for \"{claim.Promotion?.PromotionName ?? "promotion"}\" was rejected.",
+            Url.Action("Promotion", "Home", new { area = "" }),
+            "Promotion",
+            claim.PromotionId);
+        Db.SaveChanges();
         return RedirectToPromotionPage(returnTo);
     }
 
