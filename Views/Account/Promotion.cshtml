@@ -42,42 +42,21 @@
     .promo-hero {
         position: relative;
         overflow: hidden;
-        border-radius: 34px;
-        padding: 2.2rem;
-        background: linear-gradient(135deg, #111827 0%, #7c2d12 48%, #fb923c 120%);
+        border-radius: 8px;
+        padding: 0;
+        width: 100%;
+        aspect-ratio: 1240 / 400;
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+        background-position: center;
         color: #fff;
         box-shadow: 0 28px 60px rgba(124, 45, 18, 0.20);
     }
 
-    .promo-hero::before,
-    .promo-hero::after {
-        content: "";
-        position: absolute;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.08);
-    }
 
-    .promo-hero::before {
-        width: 260px;
-        height: 260px;
-        top: -90px;
-        right: -60px;
-    }
-
-    .promo-hero::after {
-        width: 180px;
-        height: 180px;
-        left: 10%;
-        bottom: -90px;
-    }
 
     .promo-hero-grid {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
-        gap: 1.25rem;
-        align-items: stretch;
+        display: none;
     }
 
     .promo-kicker {
@@ -457,6 +436,11 @@
         cursor: pointer;
     }
 
+    .promo-submit:disabled {
+        opacity: 0.7;
+        cursor: wait;
+    }
+
     .promo-status-box {
         display: none;
         padding: .95rem 1rem;
@@ -503,6 +487,35 @@
 
     }
 </style>
+
+<script>
+    // Promo Hero Carousel
+    document.addEventListener('DOMContentLoaded', function() {
+        const promoImages = [
+            '/img/PRomo%20(1).png',
+            '/img/PRomo%20(2).png',
+            '/img/PRomo%20(3).png',
+            '/img/PRomo%20(4).png'
+        ];
+
+        let currentImageIndex = 0;
+        const promoHeroElement = document.querySelector('.promo-hero');
+
+        function rotatePromoImage() {
+            if (promoHeroElement) {
+                promoHeroElement.style.backgroundImage = `url('${promoImages[currentImageIndex]}')`;
+                currentImageIndex = (currentImageIndex + 1) % promoImages.length;
+            }
+        }
+
+        // Initial image
+        if (promoHeroElement) {
+            promoHeroElement.style.backgroundImage = `url('${promoImages[0]}')`;
+            // Rotate every 5 seconds
+            setInterval(rotatePromoImage, 5000);
+        }
+    });
+</script>
 
 <div class="promo-page">
     <section class="promo-hero">
@@ -668,7 +681,7 @@
                 <button type="button" class="promo-close" id="closePromotionClaimModal">×</button>
             </div>
 
-            <form class="promo-form" id="promotionClaimForm" enctype="multipart/form-data">
+            <form class="promo-form" id="promotionClaimForm" enctype="multipart/form-data" data-async-submit="true">
                 <input type="hidden" id="promotionClaimId" name="promotionId" value="@featuredEvent.PromotionId" />
 
                 <div id="promotionClaimStatus" class="promo-status-box"></div>
@@ -721,10 +734,13 @@
                 const statusBox = document.getElementById('promotionClaimStatus');
                 const form = document.getElementById('promotionClaimForm');
                 const select = document.getElementById('promotionClaimSelect');
+                const submitButton = form?.querySelector('.promo-submit');
                 const defaultPromotionName = @Html.Raw(JsonSerializer.Serialize(featuredEvent.PromotionName));
                 const defaultPromotionDesc = @Html.Raw(JsonSerializer.Serialize(featuredEvent.Description ?? "แนบรูปเพื่อรับสิทธิ์กิจกรรมจากร้าน"));
                 const defaultPromotionReward = @Html.Raw(JsonSerializer.Serialize($"{RewardName(featuredEvent.RewardProductId)} x{(featuredEvent.RewardQuantity ?? 1)}"));
                 const defaultPromotionId = @featuredEvent.PromotionId;
+                const defaultSubmitText = submitButton?.textContent?.trim() || 'ส่งรูปเพื่อรับสิทธิ์';
+                let isSubmitting = false;
 
                 function showModal() {
                     modal?.classList.add('show');
@@ -746,6 +762,14 @@
                     if (!statusBox) return;
                     statusBox.textContent = '';
                     statusBox.className = 'promo-status-box';
+                }
+
+                function setSubmittingState(submitting) {
+                    isSubmitting = submitting;
+                    if (!submitButton) return;
+
+                    submitButton.disabled = submitting;
+                    submitButton.textContent = submitting ? 'กำลังส่งรูป...' : defaultSubmitText;
                 }
 
                 function decodeHtmlEntities(value) {
@@ -791,7 +815,18 @@
 
                 form?.addEventListener('submit', async function (event) {
                     event.preventDefault();
+                    if (isSubmitting) return;
                     clearStatus();
+
+                    const proofImage = form.querySelector('#promotionProofImage');
+                    const selectedFile = proofImage?.files?.[0];
+                    if (!selectedFile) {
+                        setStatus('กรุณาเลือกรูปก่อนกดส่ง', 'error');
+                        return;
+                    }
+
+                    setSubmittingState(true);
+                    setStatus('กำลังอัปโหลดรูป กรุณารอสักครู่...', 'success');
 
                     const formData = new FormData(form);
                     formData.set('promotionId', hiddenPromotionId?.value || '@featuredEvent.PromotionId');
@@ -802,7 +837,20 @@
                             body: formData
                         });
 
-                        const data = await response.json();
+                        const contentType = response.headers.get('content-type') || '';
+                        let data = null;
+
+                        if (contentType.includes('application/json')) {
+                            data = await response.json();
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(data?.message || `HTTP ${response.status}`);
+                        }
+
+                        if (!data) {
+                            throw new Error('Non-JSON response');
+                        }
                         if (data.success) {
                             setStatus(data.message || 'ส่งคำขอเรียบร้อย', 'success');
                             form.reset();
@@ -810,12 +858,18 @@
                                 const option = select.options[select.selectedIndex];
                                 syncEventPresentation(option);
                             }
+                            setTimeout(function () {
+                                hideModal();
+                                clearStatus();
+                            }, 1400);
                         } else {
                             setStatus(data.message || 'ไม่สามารถส่งคำขอได้', 'error');
                         }
                     } catch (error) {
                         setStatus('เกิดข้อผิดพลาดระหว่างส่งรูป กรุณาลองใหม่อีกครั้ง', 'error');
                     }
+
+                    setSubmittingState(false);
                 });
             });
         </script>

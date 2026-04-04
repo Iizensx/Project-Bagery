@@ -18,6 +18,11 @@ public class HomeController : Controller
     public IActionResult Home()
     {
         ViewBag.PublicPromotions = GetPublicPromotions().Take(3).ToList();
+        ViewBag.FeaturedProducts = _db.Stocks
+            .Include(s => s.Category)
+            .OrderBy(s => s.ProductId)
+            .Take(8)
+            .ToList();
         return View("~/Views/Account/Home.cshtml");
     }
 
@@ -25,6 +30,8 @@ public class HomeController : Controller
     {
         var products = _db.Stocks
             .Include(s => s.Category)
+            .OrderBy(s => s.Price ?? decimal.MaxValue)
+            .ThenBy(s => s.ProductName)
             .ToList();
 
         return View("~/Views/Account/Menu.cshtml", products);

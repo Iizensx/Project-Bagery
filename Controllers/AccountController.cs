@@ -1,4 +1,6 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
+using _66022380.Models;
 using _66022380.Models.Db;
 
 namespace _66022380.Controllers;
@@ -8,66 +10,71 @@ public class AccountController : Controller
     private readonly BakerydbContext _db;
     private readonly ILogger<AccountController> _logger;
 
-    // รับ BakerydbContext และ Logger มาผ่าน Dependency Injection
     public AccountController(BakerydbContext db, ILogger<AccountController> logger)
     {
         _db = db;
         _logger = logger;
     }
 
-    // GET: แสดงหน้า Login
     public IActionResult Login() => View();
 
-    // POST: รับ username และ password แล้วตรวจสอบกับ database
     [HttpPost]
     public IActionResult Login(string username, string password)
     {
-        // ดึง IP ของคนที่ login มาเพื่อบันทึก log
+        username = username?.Trim() ?? string.Empty;
+        password ??= string.Empty;
+
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
 
-        // ค้นหา user ที่ username หรือ email ตรงกัน และ password ถูกต้อง
         var user = _db.Users.FirstOrDefault(u =>
             (u.Username == username || u.Email == username) &&
-            u.Password == password
-        );
+            !string.IsNullOrEmpty(u.Password));
 
-        if (user == null)
+        if (user == null || !string.Equals(user.Password, password, StringComparison.Ordinal))
         {
-            // login ไม่สำเร็จ → บันทึก log แล้วแสดง error
             LogUserLogin(username, false, ipAddress);
             ViewBag.Error = "Invalid username or password";
             return View();
         }
 
-        // login สำเร็จ → เก็บ UserId และ Username ไว้ใน Session
         HttpContext.Session.SetString("UserId", user.UserId.ToString());
         HttpContext.Session.SetString("Username", user.Username);
 
         LogUserLogin(username, true, ipAddress);
 
-        // ถ้าเป็น Admin (RoleId = 1) ให้ไปหน้า Admin Dashboard
         if (user.RoleId == 1)
             return RedirectToAction("Dashbordadmin", "AdminDashboard");
 
-        // ถ้าเป็น user ทั่วไป ให้ไปหน้า Home
         return RedirectToAction("Home", "Home");
     }
 
-    // GET: แสดงหน้าสมัครสมาชิก
     public IActionResult Signup() => View();
 
-    // POST: รับข้อมูลแล้วสร้าง User ใหม่ลง database
     [HttpPost]
     public IActionResult Signup(string username, string email, string phone, string password, string confirmPassword)
     {
-        // ตรวจสอบว่า password และ confirmPassword ตรงกันไหม
+        username = username?.Trim() ?? string.Empty;
+        email = email?.Trim() ?? string.Empty;
+        phone = phone?.Trim() ?? string.Empty;
+
         if (password != confirmPassword)
         {
             ViewBag.Error = "Passwords do not match";
             return View();
         }
 
-        // สร้าง User ใหม่ โดย RoleId = 3 หมายถึง user ทั่วไป
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            ViewBag.Error = "Please fill in all required fields";
+            return View();
+        }
+
+        if (_db.Users.Any(u => u.Username == username || u.Email == email))
+        {
+            ViewBag.Error = "Username or email already exists";
+            return View();
+        }
+
         var newUser = new User
         {
             Username = username,
@@ -80,11 +87,9 @@ public class AccountController : Controller
         _db.Users.Add(newUser);
         _db.SaveChanges();
 
-        // สมัครเสร็จแล้วพาไปหน้า Login
         return RedirectToAction("Login");
     }
 
-    // GET: ล้าง Session ทั้งหมดแล้ว redirect กลับหน้า Home
     [HttpGet]
     public IActionResult Logout()
     {
@@ -92,29 +97,158 @@ public class AccountController : Controller
         return RedirectToAction("Home", "Home");
     }
 
-    // Helper: บันทึก log การ login ลงไฟล์ .log แยกตามวันที่
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View("~/Views/Account/ForgotPassword.cshtml");
+    }
+
+    [HttpPost]
+    public IActionResult RequestPasswordReset([FromBody] ForgotPasswordRequestViewModel model)
+    {
+        var email = model.Email?.Trim();
+        if (string.IsNullOrWhiteSpace(email))
+            return Json(new { success = false, message = "Please enter your email first." });
+
+        var user = _db.Users.FirstOrDefault(u => u.Email == email);
+        if (user == null)
+            return Json(new { success = false, message = "This email was not found in the system." });
+
+        var otpCode = RandomNumberGenerator.GetInt32(1000, 10000).ToString("0000");
+        var otpExpiredAt = DateTime.Now.AddMinutes(5);
+
+        user.OtpCode = otpCode;
+        user.OtpExpiredAt = otpExpiredAt;
+        _db.SaveChanges();
+
+        HttpContext.Session.Remove("PasswordResetVerifiedEmail");
+        HttpContext.Session.Remove("PasswordResetVerifiedOtp");
+        HttpContext.Session.Remove("PasswordResetVerifiedUserId");
+
+        return Json(new
+        {
+            success = true,
+            message = "Mock OTP created successfully.",
+            mockOtp = otpCode,
+            expiresAt = otpExpiredAt.ToString("HH:mm")
+        });
+    }
+
+    [HttpPost]
+    public IActionResult VerifyPasswordResetOtp([FromBody] ForgotPasswordVerifyOtpViewModel model)
+    {
+        var email = model.Email?.Trim();
+        var otpCode = model.OtpCode?.Trim();
+
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(otpCode))
+            return Json(new { success = false, message = "Please enter both email and OTP." });
+
+        var user = _db.Users.FirstOrDefault(u => u.Email == email);
+        if (user == null || string.IsNullOrWhiteSpace(user.OtpCode) || !user.OtpExpiredAt.HasValue)
+        {
+            HttpContext.Session.Remove("PasswordResetVerifiedEmail");
+            HttpContext.Session.Remove("PasswordResetVerifiedOtp");
+            HttpContext.Session.Remove("PasswordResetVerifiedUserId");
+            return Json(new { success = false, message = "No OTP request was found. Please request a new code." });
+        }
+
+        if (user.OtpExpiredAt.Value < DateTime.Now)
+        {
+            HttpContext.Session.Remove("PasswordResetVerifiedEmail");
+            HttpContext.Session.Remove("PasswordResetVerifiedOtp");
+            HttpContext.Session.Remove("PasswordResetVerifiedUserId");
+            return Json(new { success = false, message = "OTP has expired. Please request a new code." });
+        }
+
+        if (!string.Equals(user.OtpCode, otpCode, StringComparison.Ordinal))
+        {
+            HttpContext.Session.Remove("PasswordResetVerifiedEmail");
+            HttpContext.Session.Remove("PasswordResetVerifiedOtp");
+            HttpContext.Session.Remove("PasswordResetVerifiedUserId");
+            return Json(new { success = false, message = "OTP is incorrect. Please try again." });
+        }
+
+        HttpContext.Session.SetString("PasswordResetVerifiedEmail", email);
+        HttpContext.Session.SetString("PasswordResetVerifiedOtp", otpCode);
+        HttpContext.Session.SetString("PasswordResetVerifiedUserId", user.UserId.ToString());
+        return Json(new { success = true, message = "OTP verified. You can now set a new password." });
+    }
+
+    [HttpPost]
+    public IActionResult ResetPassword([FromBody] ForgotPasswordResetViewModel model)
+    {
+        var email = model.Email?.Trim();
+        var otpCode = model.OtpCode?.Trim();
+        var verifiedEmail = HttpContext.Session.GetString("PasswordResetVerifiedEmail");
+        var verifiedOtp = HttpContext.Session.GetString("PasswordResetVerifiedOtp");
+        var verifiedUserId = HttpContext.Session.GetString("PasswordResetVerifiedUserId");
+
+        if (string.IsNullOrWhiteSpace(email) ||
+            string.IsNullOrWhiteSpace(otpCode) ||
+            string.IsNullOrWhiteSpace(model.NewPassword) ||
+            string.IsNullOrWhiteSpace(model.ConfirmPassword))
+        {
+            return Json(new { success = false, message = "Please fill in all fields." });
+        }
+
+        if (!string.Equals(email, verifiedEmail, StringComparison.OrdinalIgnoreCase))
+            return Json(new { success = false, message = "OTP verification session is invalid. Please verify OTP again." });
+
+        if (!string.Equals(otpCode, verifiedOtp, StringComparison.Ordinal))
+            return Json(new { success = false, message = "OTP does not match the verified request. Please verify OTP again." });
+
+        if (model.NewPassword != model.ConfirmPassword)
+            return Json(new { success = false, message = "New password and confirmation do not match." });
+
+        if (model.NewPassword.Length < 6)
+            return Json(new { success = false, message = "New password must be at least 6 characters long." });
+
+        var user = _db.Users.FirstOrDefault(u =>
+            u.Email == email &&
+            verifiedUserId != null &&
+            u.UserId.ToString() == verifiedUserId);
+        if (user == null)
+            return Json(new { success = false, message = "User was not found." });
+
+        if (!user.OtpExpiredAt.HasValue || user.OtpExpiredAt.Value < DateTime.Now || string.IsNullOrWhiteSpace(user.OtpCode))
+            return Json(new { success = false, message = "OTP has expired. Please request a new code." });
+
+        if (!string.Equals(user.OtpCode, otpCode, StringComparison.Ordinal))
+            return Json(new { success = false, message = "OTP is incorrect for this email. Please verify again." });
+
+        user.Password = model.NewPassword;
+        user.OtpCode = null;
+        user.OtpExpiredAt = null;
+        _db.SaveChanges();
+
+        HttpContext.Session.Remove("PasswordResetVerifiedEmail");
+        HttpContext.Session.Remove("PasswordResetVerifiedOtp");
+        HttpContext.Session.Remove("PasswordResetVerifiedUserId");
+
+        return Json(new
+        {
+            success = true,
+            message = "Password changed successfully. Please sign in again.",
+            redirectUrl = Url.Action("Login", "Account")
+        });
+    }
+
     private void LogUserLogin(string username, bool success, string ipAddress)
     {
         try
         {
-            // สร้าง folder logs ถ้ายังไม่มี
             string logDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "logs");
             if (!Directory.Exists(logDir))
                 Directory.CreateDirectory(logDir);
 
-            // ตั้งชื่อไฟล์ log ตามวันที่ เช่น login_2026-03-22.log
             string logFile = Path.Combine(logDir, $"login_{DateTime.Now:yyyy-MM-dd}.log");
-
-            // รูปแบบ log: [เวลา] Username | สำเร็จไหม | IP
             string logMessage = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] Username: {username} | Success: {success} | IP: {ipAddress}\n";
 
-            // เขียนต่อท้ายไฟล์ (AppendText ไม่ทับข้อมูลเดิม)
             using var writer = System.IO.File.AppendText(logFile);
             writer.WriteLine(logMessage);
         }
         catch (Exception ex)
         {
-            // ถ้าเขียน log ไม่ได้ ให้บันทึก error ผ่าน ILogger แทน
             _logger.LogError("Error logging user login: {Message}", ex.Message);
         }
     }

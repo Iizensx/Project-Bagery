@@ -9,6 +9,10 @@ namespace _66022380.Controllers.Admin;
 public class AdminPromotionController : AdminControllerBase
 {
     private readonly IWebHostEnvironment _environment;
+    private static readonly JsonSerializerOptions RewardItemJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     public AdminPromotionController(BakerydbContext db, IWebHostEnvironment environment) : base(db)
     {
@@ -352,7 +356,7 @@ public class AdminPromotionController : AdminControllerBase
         {
             try
             {
-                var parsed = JsonSerializer.Deserialize<List<PromotionRewardItemInput>>(rewardItemsJson);
+                var parsed = JsonSerializer.Deserialize<List<PromotionRewardItemInput>>(rewardItemsJson, RewardItemJsonOptions);
                 if (parsed != null)
                 {
                     return parsed

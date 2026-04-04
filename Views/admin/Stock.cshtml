@@ -439,6 +439,24 @@
         font-weight: 800;
     }
 
+    .product-thumb {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        object-fit: cover;
+        display: block;
+        margin-bottom: 0.55rem;
+        background: linear-gradient(135deg, #fff7ed, #ffedd5);
+        box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.08);
+        flex-shrink: 0;
+    }
+
+    .product-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+    }
+
     .product-desc {
         margin-top: 0.28rem;
         color: #64748b;
@@ -517,6 +535,39 @@
         letter-spacing: 0.04em;
     }
 
+    .image-picker-wrap {
+        display: grid;
+        grid-template-columns: 120px minmax(0, 1fr);
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .image-preview-box {
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px dashed #fdba74;
+        background: linear-gradient(135deg, #fff7ed, #ffedd5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-preview-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .input-helper {
+        margin-top: 0.45rem;
+        color: #64748b;
+        font-size: 0.84rem;
+        line-height: 1.5;
+    }
+
     .empty-state {
         padding: 2rem;
         border-radius: 18px;
@@ -570,6 +621,10 @@
 
         .category-grid {
             grid-auto-columns: 85%;
+        }
+
+        .image-picker-wrap {
+            grid-template-columns: 1fr;
         }
     }
 </style>
@@ -740,6 +795,7 @@
                                 data-category-id="@product.CategoryId">
                                 <td><span class="user-id-badge">#@product.ProductId</span></td>
                                 <td>
+                                    <img class="product-thumb" src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/img/bagery1.png" : product.ImageUrl)" alt="@product.ProductName" />
                                     <div class="product-name">@product.ProductName</div>
                                     <div class="product-desc">@(string.IsNullOrWhiteSpace(product.Description) ? "ไม่มีรายละเอียดสินค้า" : product.Description)</div>
                                 </td>
@@ -751,10 +807,16 @@
                                 <td><span class="stock-chip chip-@statusClass">@statusText</span></td>
                                 <td>
                                     <button type="button"
-                                            class="stock-btn ghost"
+                                            class="stock-btn ghost js-edit-stock"
                                             data-bs-toggle="modal"
                                             data-bs-target="#stockModal"
-                                            onclick="openStockModal(@product.ProductId, '@product.ProductName', '@(product.Description ?? "")', '@((product.Price ?? 0).ToString("0.##"))', '@(product.Stock1 ?? 0)', '@(product.CategoryId ?? 0)')">
+                                            data-product-id="@product.ProductId"
+                                            data-product-name="@product.ProductName"
+                                            data-description="@(product.Description ?? "")"
+                                            data-price="@((product.Price ?? 0).ToString("0.##"))"
+                                            data-stock="@(product.Stock1 ?? 0)"
+                                            data-category-id="@(product.CategoryId ?? 0)"
+                                            data-image-url="@(product.ImageUrl ?? "")">
                                         แก้ไข
                                     </button>
                                 </td>
@@ -825,9 +887,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body custom">
-                <form asp-action="SaveStock" asp-controller="AdminStock" method="post">
+                <form asp-action="SaveStock" asp-controller="AdminStock" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
                     <input type="hidden" id="productIdInput" name="productId" value="0" />
+                    <input type="hidden" id="currentImageUrlInput" value="" />
 
                     <div class="form-grid">
                         <div class="full">
@@ -856,6 +919,18 @@
                             <label class="field-label">รายละเอียดสินค้า</label>
                             <textarea id="productDescriptionInput" class="stock-textarea" name="description" rows="4"></textarea>
                         </div>
+                        <div class="full">
+                            <label class="field-label">รูปสินค้า</label>
+                            <div class="image-picker-wrap">
+                                <div class="image-preview-box">
+                                    <img id="productImagePreview" src="/img/bagery1.png" alt="ตัวอย่างรูปสินค้า" />
+                                </div>
+                                <div>
+                                    <input id="productImageInput" class="stock-input" type="file" name="imageFile" accept="image/*" />
+                                    <div class="input-helper">ถ้าไม่เลือกรูปใหม่ ระบบจะใช้รูปเดิมต่อไป</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="toolbar-right" style="margin-top:1rem;">
@@ -876,7 +951,7 @@
             document.getElementById('categoryDescriptionInput').value = description;
         }
 
-        function openStockModal(productId = 0, productName = '', description = '', price = '', stock = '', categoryId = '') {
+        function openStockModal(productId = 0, productName = '', description = '', price = '', stock = '', categoryId = '', imageUrl = '') {
             document.getElementById('stockModalTitle').textContent = productId > 0 ? 'แก้ไขสินค้า' : 'เพิ่มสินค้า';
             document.getElementById('productIdInput').value = productId;
             document.getElementById('productNameInput').value = productName;
@@ -884,6 +959,9 @@
             document.getElementById('productPriceInput').value = price;
             document.getElementById('productStockInput').value = stock;
             document.getElementById('productCategoryInput').value = categoryId;
+            document.getElementById('currentImageUrlInput').value = imageUrl;
+            document.getElementById('productImageInput').value = '';
+            document.getElementById('productImagePreview').src = imageUrl || '/img/bagery1.png';
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -893,8 +971,41 @@
             const prevBtn = document.getElementById('stockPrevBtn');
             const nextBtn = document.getElementById('stockNextBtn');
             const listStatus = document.getElementById('stockListStatus');
+            const imageInput = document.getElementById('productImageInput');
+            const editButtons = Array.from(document.querySelectorAll('.js-edit-stock'));
             const pageSize = 10;
             let currentPage = 1;
+
+            editButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    openStockModal(
+                        this.dataset.productId || 0,
+                        this.dataset.productName || '',
+                        this.dataset.description || '',
+                        this.dataset.price || '',
+                        this.dataset.stock || '',
+                        this.dataset.categoryId || '',
+                        this.dataset.imageUrl || ''
+                    );
+                });
+            });
+
+            if (imageInput) {
+                imageInput.addEventListener('change', function (event) {
+                    const file = event.target.files && event.target.files[0];
+                    if (!file) {
+                        document.getElementById('productImagePreview').src =
+                            document.getElementById('currentImageUrlInput').value || '/img/bagery1.png';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (loadEvent) {
+                        document.getElementById('productImagePreview').src = loadEvent.target?.result || '/img/bagery1.png';
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
 
             function getFilteredRows() {
                 const keyword = (searchInput?.value || '').trim().toLowerCase();

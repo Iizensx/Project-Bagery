@@ -367,6 +367,12 @@ public class DeliveryController : Controller
         if (promotion == null)
             return "-";
 
+        if (promotion.PromoType == 2)
+            return $"ซื้อ {promotion.BuyQuantity ?? 0} แถม {promotion.RewardQuantity ?? 0}";
+
+        if (promotion.PromoType == 3)
+            return "รับของแถมตามกิจกรรม";
+
         return promotion.DiscountType switch
         {
             "Percent" => $"{promotion.DiscountValue:0.##}%",

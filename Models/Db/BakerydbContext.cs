@@ -253,6 +253,7 @@ public partial class BakerydbContext : DbContext
             entity.HasIndex(e => e.CategoryId, "CategoryId");
 
             entity.Property(e => e.Description).HasColumnType("text");
+            entity.Property(e => e.ImageUrl).HasMaxLength(255);
             entity.Property(e => e.Price).HasPrecision(10, 2);
             entity.Property(e => e.ProductName).HasMaxLength(100);
             entity.Property(e => e.Stock1)
@@ -273,6 +274,8 @@ public partial class BakerydbContext : DbContext
             entity.HasIndex(e => e.RoleId, "RoleId");
 
             entity.Property(e => e.Email).HasMaxLength(100);
+            entity.Property(e => e.OtpCode).HasMaxLength(10);
+            entity.Property(e => e.OtpExpiredAt).HasColumnType("datetime");
             entity.Property(e => e.Password).HasMaxLength(255);
             entity.Property(e => e.Phone).HasMaxLength(20);
             entity.Property(e => e.Username).HasMaxLength(50);

@@ -17,6 +17,10 @@ public partial class User
 
     public int? RoleId { get; set; }
 
+    public string? OtpCode { get; set; }
+
+    public DateTime? OtpExpiredAt { get; set; }
+
     public virtual ICollection<Address> Addresses { get; set; } = new List<Address>();
 
     public virtual ICollection<Historyorder> Historyorders { get; set; } = new List<Historyorder>();

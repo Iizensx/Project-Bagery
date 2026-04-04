@@ -1,6 +1,18 @@
 @{
     ViewData["Title"] = "Home Page";
     var publicPromotions = ViewBag.PublicPromotions as List<_66022380.Models.Db.Promotion> ?? new();
+    var featuredProducts = ViewBag.FeaturedProducts as List<_66022380.Models.Db.Stock> ?? new();
+    var fallbackFeaturedProducts = new[]
+    {
+        new { Name = "Plain Croissant", Price = 75m, Image = "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=400" },
+        new { Name = "Blueberry Cheesecake", Price = 145m, Image = "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=400" },
+        new { Name = "Chocolate Fudge Cake", Price = 125m, Image = "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=400" },
+        new { Name = "Almond Croissant", Price = 95m, Image = "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=400" },
+        new { Name = "Classic Brownie", Price = 89m, Image = "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?auto=format&fit=crop&q=80&w=400" },
+        new { Name = "Strawberry Mini Cake", Price = 135m, Image = "https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&q=80&w=400" },
+        new { Name = "Cinnamon Roll", Price = 79m, Image = "https://images.unsplash.com/photo-1464306076886-da185f6a9d05?auto=format&fit=crop&q=80&w=400" },
+        new { Name = "Fruit Tart", Price = 119m, Image = "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&q=80&w=400" }
+    };
 
     string HomePromoTitle(_66022380.Models.Db.Promotion promo)
     {
@@ -13,9 +25,14 @@
 }
 
 <style>
+    :root {
+        --home-surface: #FDE8E1;
+    }
+
     body {
-        background-color: #FDE8E1;
+        background-color: var(--home-surface);
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding-top: 0 !important;
     }
 
     main .container {
@@ -31,11 +48,16 @@
     .hero-banner-wrap {
         position: relative;
         width: 100%;
-        height: 92vh;
-        min-height: 580px;
+        height: 100vh;
+        min-height: 520px;
         max-height: 750px;
         overflow: visible;
-        margin-top: -80px;
+        margin-top: 0;
+        background-color: var(--home-surface);
+    }
+
+    .hero-banner-wrap::before {
+        display: none;
     }
 
     .hero-banner-clip {
@@ -50,7 +72,7 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-        object-position: center 30%;
+        object-position: center 18%;
         animation: heroZoom 8s ease-out forwards;
     }
 
@@ -76,6 +98,23 @@
         position: absolute;
         inset: 0;
         background: radial-gradient(ellipse at 30% 50%, transparent 40%, rgba(0,0,0,0.40) 100%);
+    }
+
+    .wave-divider {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        line-height: 0;
+        overflow: hidden;
+        z-index: 3;
+        pointer-events: none;
+    }
+
+    .wave-divider svg {
+        display: block;
+        width: 100%;
+        height: 96px;
     }
 
     .hero-content {
@@ -472,6 +511,162 @@
     .promo-dark h3 { color: #F97316; font-size: 1.6rem; font-weight: 900; margin-bottom: 0.3rem; }
     .promo-dark p  { color: rgba(255,220,190,0.8); font-size: 0.9rem; }
 
+    .home-promo-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+
+    .home-promo-copy {
+        margin: 0.35rem 0 0;
+        color: #6B7280;
+        line-height: 1.7;
+    }
+
+    .home-promo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1.2rem;
+    }
+
+    .home-promo-card {
+        overflow: hidden;
+        border-radius: 24px;
+        background: #fff;
+        border: 1px solid #F3E5DA;
+        box-shadow: 0 16px 38px rgba(76, 42, 17, 0.08);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .home-promo-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 44px rgba(76, 42, 17, 0.12);
+    }
+
+    .home-promo-image {
+        height: 220px;
+        background: linear-gradient(135deg, #FFE7D6 0%, #FFF7F1 100%);
+        overflow: hidden;
+    }
+
+    .home-promo-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .home-promo-body {
+        padding: 1.25rem 1.25rem 1.35rem;
+    }
+
+    .home-promo-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .home-promo-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.4rem 0.78rem;
+        border-radius: 999px;
+        background: #FFF3E8;
+        color: #C2410C;
+        font-size: 0.75rem;
+        font-weight: 800;
+    }
+
+    .home-promo-name {
+        color: #1F2937;
+        font-size: 1.08rem;
+        font-weight: 900;
+        line-height: 1.3;
+        margin-bottom: 0.55rem;
+    }
+
+    .home-promo-desc {
+        color: #6B7280;
+        font-size: 0.92rem;
+        line-height: 1.7;
+        min-height: 4.7rem;
+        margin-bottom: 1rem;
+    }
+
+    .home-promo-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        color: #F97316;
+        font-size: 0.9rem;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .home-promo-link:hover {
+        color: #EA580C;
+    }
+
+    .model-section {
+        width: min(900px, calc(100% - 2rem));
+        margin: 1.5rem auto 3rem;
+    }
+
+    .model-section-head {
+        text-align: center;
+        margin-bottom: 1.15rem;
+    }
+
+    .model-section-kicker {
+        color: #F97316;
+        font-size: 0.78rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-bottom: 0.55rem;
+    }
+
+    .model-section-title {
+        color: #1a1a1a;
+        font-size: clamp(1.6rem, 3vw, 2.35rem);
+        font-weight: 900;
+        margin: 0 0 0.45rem;
+    }
+
+    .model-section-copy {
+        color: #6B7280;
+        line-height: 1.7;
+        margin: 0 auto;
+        max-width: 640px;
+    }
+
+    .sketchfab-embed-wrapper {
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 24px;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.18);
+        border: 1px solid rgba(243, 229, 218, 0.9);
+        background: linear-gradient(135deg, #fff7f1 0%, #ffe7d6 100%);
+    }
+
+    .sketchfab-embed-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        border-radius: 24px;
+    }
+
     /* ─── Cake / Feature Section ──────────────────── */
     .highlight-section {
         background: white;
@@ -553,21 +748,33 @@
             width: calc(100% - 1.5rem);
         }
 
-        .hero-content { padding: 0 2rem; padding-bottom: 5rem; max-width: 100%; }
-        .hero-title   { font-size: 2.2rem; }
+        .hero-banner-wrap { min-height: 520px; height: 100vh; }
+        .hero-content { padding: 0 1.4rem; padding-bottom: 3.5rem; max-width: 100%; }
+        .hero-title   { font-size: 1.95rem; }
+        .hero-subtitle { font-size: 0.92rem; line-height: 1.55; max-width: 100%; margin: 0.9rem 0 1.35rem; }
+        .hero-actions { gap: 0.75rem; }
+        .btn-hero-primary, .btn-hero-secondary { width: 100%; justify-content: center; padding: 0.82rem 1rem; }
         .scroll-hint  { display: none; }
         .features-float { width: calc(100% - 2rem); }
+        .features-card-inner { padding: 0.4rem 0; }
+        .feature-item-new { padding: 0.8rem 0.25rem; }
         .promo-section-wrap { padding: 2rem 1.5rem; }
     }
 
     @@media (max-width: 480px) {
-        .hero-banner-wrap { height: 100svh; max-height: none; }
-        .hero-content { padding: 0 1.5rem; padding-bottom: 5rem; }
-        .hero-title   { font-size: 1.9rem; }
-        .hero-subtitle { font-size: 0.95rem; }
-        .btn-hero-primary, .btn-hero-secondary { padding: 0.75rem 1.6rem; font-size: 0.88rem; }
-        .features-float { bottom: -280px; }
-        .hero-spacer    { height: 320px; }
+        .hero-banner-wrap { height: 100vh; min-height: 470px; max-height: none; margin-top: 0; }
+        .hero-content { padding: 0 1rem; padding-bottom: 2.75rem; }
+        .hero-title   { font-size: 1.7rem; line-height: 1.04; }
+        .hero-subtitle { font-size: 0.88rem; }
+        .hero-eyebrow { font-size: 0.62rem; letter-spacing: 2px; padding: 5px 12px; margin-bottom: 1rem; }
+        .btn-hero-primary, .btn-hero-secondary { padding: 0.72rem 1rem; font-size: 0.84rem; }
+        .features-float { bottom: -235px; left: 0.75rem; right: 0.75rem; width: auto; }
+        .features-card-inner { border-radius: 16px; padding: 0.2rem 0.9rem; }
+        .feature-item-new { gap: 0.75rem; }
+        .feature-icon-box { width: 44px; height: 44px; font-size: 1.15rem; }
+        .feature-title-new { font-size: 0.92rem; }
+        .feature-text-new { font-size: 0.78rem; }
+        .hero-spacer    { height: 270px; }
     }
     .home-extra-section {
         margin: 0 0 3rem;
@@ -784,6 +991,7 @@
     }
 
     @@media (max-width: 1100px) {
+        .home-promo-grid,
         .home-extra-grid,
         .cta-home-grid,
         .step-grid-home,
@@ -794,6 +1002,7 @@
     }
 
     @@media (max-width: 900px) {
+        .home-promo-grid,
         .home-extra-grid,
         .cta-home-grid,
         .step-grid-home,
@@ -820,7 +1029,7 @@
 <div class="hero-banner-wrap">
 
     <div class="hero-banner-clip">
-        <img class="hero-bg-img" src="~/img/HomeBG.jpg" alt="BAGERY Bakery">
+        <img class="hero-bg-img" src="~/img/HomeBG2.png" alt="BAGERY Bakery">
         <div class="hero-overlay"></div>
     </div>
 
@@ -873,10 +1082,38 @@
         </div>
     </div>
 
+    <div class="wave-divider" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 80" preserveAspectRatio="none">
+            <path d="M0,0 C360,80 1080,0 1440,60 L1440,80 L0,80 Z" fill="#FDE8E1" />
+        </svg>
+    </div>
+
 </div>
 
 @* Spacer *@
 <div class="hero-spacer"></div>
+<div class="model-section">
+    <div class="model-section-head">
+        <div class="model-section-kicker">Store Preview</div>
+        <h2 class="model-section-title">ดูพรีวิวร้านก่อนเลือกเมนู</h2>
+        <p class="model-section-copy">หมุนดูบรรยากาศหน้าร้านและโซนเบเกอรี่แบบ 3D ได้ก่อน แล้วค่อยเลื่อนลงไปดูเมนูยอดฮิตด้านล่าง</p>
+    </div>
+    <div class="sketchfab-embed-wrapper">
+        <iframe
+            title="Bakery Shop"
+            frameborder="0"
+            allowfullscreen
+            mozallowfullscreen="true"
+            webkitallowfullscreen="true"
+            allow="autoplay; fullscreen; xr-spatial-tracking"
+            xr-spatial-tracking
+            execution-while-out-of-viewport
+            execution-while-not-rendered
+            web-share
+            src="https://sketchfab.com/models/e5358ff3c23a4c10bb0975f2a4723fab/embed?autostart=1&ui_theme=dark&transparent=1">
+        </iframe>
+    </div>
+</div>
 
 
 @* ─── MENU SECTION ─────────────────────────────────── *@
@@ -885,9 +1122,44 @@
         <h2 class="section-title">เมนูยอดฮิต</h2>
         <a asp-controller="Account" asp-action="Menu" class="view-all">ดูทั้งหมด →</a>
     </div>
-
-    <div class="row">
-        <div class="col-md-3">
+    @if (featuredProducts.Any())
+    {
+        <div class="row row-cols-2 row-cols-md-4">
+            @foreach (var product in featuredProducts.Take(8))
+            {
+                <div class="col mb-4">
+                    <div class="menu-card">
+                        <div class="menu-image">
+                            <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/img/bagery1.png" : product.ImageUrl)" alt="@product.ProductName">
+                        </div>
+                        <h5 class="menu-title">@product.ProductName</h5>
+                        <p class="menu-price">@((product.Price ?? 0).ToString("0.##")) เธ.</p>
+                        <button class="btn-buy" onclick="addToCart('@product.ProductName', @(product.Price ?? 0))">เน€เธฅเธทเธญเธเธเธทเนเธญ</button>
+                        <p class="add-favorite">โก เน€เธเธดเนเธกเธฅเธเธฃเธฒเธขเธเธฒเธฃเนเธเธฃเธ”</p>
+                    </div>
+                </div>
+            }
+            @for (var i = featuredProducts.Count; i < 8; i++)
+            {
+                var fallbackProduct = fallbackFeaturedProducts[i];
+                <div class="col mb-4">
+                    <div class="menu-card">
+                        <div class="menu-image">
+                            <img src="@fallbackProduct.Image" alt="@fallbackProduct.Name">
+                        </div>
+                        <h5 class="menu-title">@fallbackProduct.Name</h5>
+                        <p class="menu-price">@fallbackProduct.Price.ToString("0.##") บ.</p>
+                        <button class="btn-buy" onclick="addToCart('@fallbackProduct.Name', @fallbackProduct.Price)">เลือกซื้อ</button>
+                        <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+    <div class="row row-cols-2 row-cols-md-4">
+        <div class="col mb-4">
             <div class="menu-card">
                 <div class="menu-image">
                     <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=400" alt="ครัวซองต์">
@@ -898,7 +1170,7 @@
                 <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col mb-4">
             <div class="menu-card">
                 <div class="menu-image">
                     <img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&q=80&w=400" alt="ชีสเค้ก">
@@ -909,7 +1181,7 @@
                 <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col mb-4">
             <div class="menu-card">
                 <div class="menu-image">
                     <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&q=80&w=400" alt="ช็อกโกแลตเค้ก">
@@ -920,7 +1192,7 @@
                 <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col mb-4">
             <div class="menu-card">
                 <div class="menu-image">
                     <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=400" alt="อัลมอนด์ครัวซองต์">
@@ -931,11 +1203,57 @@
                 <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
             </div>
         </div>
+        <div class="col mb-4">
+            <div class="menu-card">
+                <div class="menu-image">
+                    <img src="https://images.unsplash.com/photo-1486427944299-d1955d23e34d?auto=format&fit=crop&q=80&w=400" alt="บราวนี่">
+                </div>
+                <h5 class="menu-title">Classic Brownie</h5>
+                <p class="menu-price">89 บ.</p>
+                <button class="btn-buy" onclick="addToCart('Classic Brownie', 89)">เลือกซื้อ</button>
+                <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
+            </div>
+        </div>
+        <div class="col mb-4">
+            <div class="menu-card">
+                <div class="menu-image">
+                    <img src="https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&q=80&w=400" alt="มินิเค้ก">
+                </div>
+                <h5 class="menu-title">Strawberry Mini Cake</h5>
+                <p class="menu-price">135 บ.</p>
+                <button class="btn-buy" onclick="addToCart('Strawberry Mini Cake', 135)">เลือกซื้อ</button>
+                <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
+            </div>
+        </div>
+        <div class="col mb-4">
+            <div class="menu-card">
+                <div class="menu-image">
+                    <img src="https://images.unsplash.com/photo-1464306076886-da185f6a9d05?auto=format&fit=crop&q=80&w=400" alt="ซินนามอนโรล">
+                </div>
+                <h5 class="menu-title">Cinnamon Roll</h5>
+                <p class="menu-price">79 บ.</p>
+                <button class="btn-buy" onclick="addToCart('Cinnamon Roll', 79)">เลือกซื้อ</button>
+                <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
+            </div>
+        </div>
+        <div class="col mb-4">
+            <div class="menu-card">
+                <div class="menu-image">
+                    <img src="https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&q=80&w=400" alt="ทาร์ตผลไม้">
+                </div>
+                <h5 class="menu-title">Fruit Tart</h5>
+                <p class="menu-price">119 บ.</p>
+                <button class="btn-buy" onclick="addToCart('Fruit Tart', 119)">เลือกซื้อ</button>
+                <p class="add-favorite">♡ เพิ่มลงรายการโปรด</p>
+            </div>
+        </div>
     </div>
+    }
 </div>
 
 
 @* ─── PROMOTION SECTION ────────────────────────────── *@
+
 <div class="container">
     <div class="promo-section-wrap" style="display:none;">
         <p class="promo-section-title">Special Deals</p>
@@ -978,56 +1296,36 @@
     <div class="promo-section-wrap" style="background: transparent; box-shadow: none; padding-top: 0;">
         @if (publicPromotions.Any())
         {
-            var primaryPromo = publicPromotions.ElementAtOrDefault(0);
-            var secondaryPromo = publicPromotions.ElementAtOrDefault(1);
-            var tertiaryPromo = publicPromotions.ElementAtOrDefault(2);
-
-            <div class="row" style="display:flex;">
-                <div class="col-md-5">
-                    @if (primaryPromo != null)
-                    {
-                        <div class="promo-card-new promo-main"
-                             style="background:
-                                linear-gradient(120deg, rgba(17,24,39,0.76), rgba(124,45,18,0.52)),
-                                url('@primaryPromo.ImagePath') center/cover no-repeat;">
-                            <div class="promo-badge">@HomePromoTitle(primaryPromo)</div>
-                            <h2>@primaryPromo.PromotionName</h2>
-                            <p>@(string.IsNullOrWhiteSpace(primaryPromo.Description) ? "โปรโมชั่นพิเศษจาก BAGERY" : primaryPromo.Description)</p>
-                            <div class="coupon-box">SHOW PROMO</div>
-                        </div>
-                    }
+            <div class="home-promo-head">
+                <div>
+                    <div class="promo-section-title">Public Promotion</div>
+                    <h2 class="promo-section-heading" style="color:#1a1a1a; margin-bottom:0;">โปรโมชั่นแนะนำบนหน้าแรก</h2>
+                    <p class="home-promo-copy">โปรโมชั่นพิเศษจาก BAGERY ที่เปิดให้ลูกค้าเห็นบนหน้าแรกทันที</p>
                 </div>
-                <div class="col-md-7">
-                    @if (secondaryPromo != null)
-                    {
-                        <div class="promo-card-new promo-secondary"
-                             style="background:
-                                linear-gradient(120deg, rgba(255,255,255,0.92), rgba(255,247,237,0.94)),
-                                url('@secondaryPromo.ImagePath') center/cover no-repeat;">
-                            <h3>@secondaryPromo.PromotionName</h3>
-                            <p>@(string.IsNullOrWhiteSpace(secondaryPromo.Description) ? HomePromoTitle(secondaryPromo) : secondaryPromo.Description)</p>
-                            <a asp-controller="Home" asp-action="Promotion"
-                               style="display:inline-flex; align-items:center; gap:6px; margin-top:1rem;
-                                      background:#F97316; color:#fff; padding:0.6rem 1.5rem;
-                                      border-radius:20px; font-weight:700; font-size:0.88rem;
-                                      text-decoration:none; transition:all 0.3s;">
-                                ดูโปรโมชั่น →
-                            </a>
-                        </div>
-                    }
-
-                    @if (tertiaryPromo != null)
-                    {
-                        <div class="promo-card-new promo-dark"
-                             style="margin-top:0; background:
-                                linear-gradient(120deg, rgba(24,24,27,0.90), rgba(120,53,15,0.82)),
-                                url('@tertiaryPromo.ImagePath') center/cover no-repeat;">
-                            <h3>@tertiaryPromo.PromotionName</h3>
-                            <p>@(string.IsNullOrWhiteSpace(tertiaryPromo.Description) ? HomePromoTitle(tertiaryPromo) : tertiaryPromo.Description)</p>
-                        </div>
-                    }
-                </div>
+                <a asp-controller="Home" asp-action="Promotion" class="view-all">ดูโปรโมชั่นทั้งหมด →</a>
             </div>
+
+            <section class="home-promo-grid">
+                @foreach (var promo in publicPromotions.Take(3))
+                {
+                    <article class="home-promo-card">
+                        <div class="home-promo-image">
+                            @if (!string.IsNullOrWhiteSpace(promo.ImagePath))
+                            {
+                                <img src="@promo.ImagePath" alt="@promo.PromotionName">
+                            }
+                        </div>
+                        <div class="home-promo-body">
+                            <div class="home-promo-top">
+                                <div class="home-promo-badge">@HomePromoTitle(promo)</div>
+                            </div>
+                            <div class="home-promo-name">@promo.PromotionName</div>
+                            <div class="home-promo-desc">@(string.IsNullOrWhiteSpace(promo.Description) ? "โปรโมชั่นพิเศษจาก BAGERY ที่เปิดให้ลูกค้าเห็นบนหน้าแรกทันที" : promo.Description)</div>
+                            <a asp-controller="Home" asp-action="Promotion" class="home-promo-link">ดูรายละเอียดโปรโมชั่น →</a>
+                        </div>
+                    </article>
+                }
+            </section>
         }
         else
         {
@@ -1046,195 +1344,29 @@
     </div>
 </div>
 
-<div class="container">
-    <div class="highlight-section">
-        <div class="row align-items-center g-5">
-            <div class="col-md-6">
-                <p class="highlight-label">Our Specialty</p>
-                <h2 class="highlight-title">
-                    เค้กอบใหม่ทุกวัน<br>
-                    <span>สดจากเตา</span> ถึงมือคุณ
-                </h2>
-                <p class="highlight-text">
-                    เราคัดสรรวัตถุดิบคุณภาพพรีเมียม อบสดใหม่ทุกเช้า
-                    ด้วยสูตรลับที่สืบทอดมากว่า 10 ปี ทุกคำที่กัดคือ
-                    ความสุขที่มาพร้อมกับรสชาติที่คุณจะไม่ลืม
-                </p>
-                <a asp-controller="Account" asp-action="Menu" class="btn-highlight">
-                    🥐 &nbsp;ดูเมนูทั้งหมด
-                </a>
-            </div>
-            <div class="col-md-6">
-                <img src="https://img.freepik.com/free-photo/delicious-cake-with-fruits_23-2150727500.jpg"
-                     alt="Cake" class="highlight-img">
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="container home-extra-section">
-    <div class="home-extra-grid">
-        <div class="home-panel dark">
-            <div class="home-kicker">Why BAGERY</div>
-            <h3 class="home-heading">ร้านที่ไม่ได้ขายแค่ขนม แต่ขายช่วงเวลาที่อยากกลับมาซ้ำ</h3>
-            <p class="home-text">
-                ตั้งแต่ครัวซองต์หอมเนยยามเช้าไปจนถึงเค้กวันพิเศษ เราออกแบบทุกเมนูให้เหมาะกับการกินจริงในชีวิตประจำวัน
-                ทั้งสั่งทานเอง สั่งฝากเพื่อน หรือสั่งเซอร์ไพรส์คนสำคัญก็ยังดูดีและอร่อยเหมือนเดิม
-            </p>
-            <div class="home-stat-grid">
-                <div class="home-stat-box">
-                    <div class="home-stat-value">30 นาที</div>
-                    <div class="home-stat-label">เวลาจัดส่งในโซนหลักของร้าน</div>
-                </div>
-                <div class="home-stat-box">
-                    <div class="home-stat-value">10+ ปี</div>
-                    <div class="home-stat-label">ประสบการณ์สูตรเบเกอรี่ที่พัฒนาต่อเนื่อง</div>
-                </div>
-                <div class="home-stat-box">
-                    <div class="home-stat-value">ทุกวัน</div>
-                    <div class="home-stat-label">อบสดใหม่ก่อนเปิดร้านทุกเช้า</div>
-                </div>
-            </div>
-        </div>
 
-        <div class="home-panel">
-            <div class="home-kicker">Best For</div>
-            <h3 class="home-heading">BAGERY เหมาะกับวันธรรมดา และก็ดีพอสำหรับวันพิเศษ</h3>
-            <p class="home-text">
-                ถ้าคุณกำลังหาขนมเช้าแบบหยิบง่าย ของฝากที่ดูดี หรือเค้กสำหรับโอกาสสำคัญ หน้าแรกควรตอบได้ทันทีว่าร้านนี้ครบพอ
-                เราเลยจัดเมนู, โปรโมชั่น และ flow การสั่งซื้อให้ตัดสินใจง่ายที่สุดตั้งแต่ครั้งแรกที่เข้ามา
-            </p>
-            <div class="home-stat-grid">
-                <div class="home-stat-box">
-                    <div class="home-stat-value">Morning Set</div>
-                    <div class="home-stat-label">เมนูเหมาะกับมื้อเช้าก่อนเริ่มวัน</div>
-                </div>
-                <div class="home-stat-box">
-                    <div class="home-stat-value">Gift Ready</div>
-                    <div class="home-stat-label">ขนมและเค้กที่เหมาะสำหรับสั่งฝาก</div>
-                </div>
-                <div class="home-stat-box">
-                    <div class="home-stat-value">Trackable</div>
-                    <div class="home-stat-label">ติดตามออเดอร์และประวัติการซื้อได้</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="container home-extra-section">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h2 class="section-title" style="margin-top:0;">สั่งง่ายใน 4 ขั้นตอน</h2>
-        <a asp-controller="Account" asp-action="Delivery" class="view-all">ไปหน้าติดตามออเดอร์ →</a>
-    </div>
-    <div class="step-grid-home">
-        <div class="step-card-home">
-            <div class="step-num-home">1</div>
-            <div class="step-title-home">เลือกเมนูที่ชอบ</div>
-            <p class="step-text-home">เข้าเมนู, ดูรายละเอียด, แล้วเพิ่มรายการที่อยากได้ลงตะกร้าได้ทันที</p>
-        </div>
-        <div class="step-card-home">
-            <div class="step-num-home">2</div>
-            <div class="step-title-home">ชำระเงินผ่าน PromptPay</div>
-            <p class="step-text-home">ระบบสร้างออเดอร์จริง พร้อมหน้า QR และอัปโหลดสลิปได้ใน flow เดียว</p>
-        </div>
-        <div class="step-card-home">
-            <div class="step-num-home">3</div>
-            <div class="step-title-home">รอร้านยืนยัน</div>
-            <p class="step-text-home">หลังตรวจสลิปและยืนยัน ระบบจะเปลี่ยนสถานะเป็น Paid แล้วเริ่มเตรียมสินค้า</p>
-        </div>
-        <div class="step-card-home">
-            <div class="step-num-home">4</div>
-            <div class="step-title-home">ติดตามจนได้รับของ</div>
-            <p class="step-text-home">ดูสถานะ Preparing, Shipped และยืนยันรับสินค้าได้จากหน้า Delivery</p>
-        </div>
-    </div>
-</div>
 
-<div class="container home-extra-section">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <h2 class="section-title" style="margin-top:0;">ลูกค้าพูดถึง BAGERY</h2>
-        <span class="view-all" style="pointer-events:none;">รีวิวสั้น ๆ จากประสบการณ์จริง</span>
-    </div>
-    <div class="review-grid-home">
-        <div class="review-card-home">
-            <div class="review-stars-home">★★★★★</div>
-            <p class="review-copy-home">“ครัวซองต์กรอบนอกนุ่มในมาก สั่งช่วงเช้าคือยังอุ่นอยู่เลย รู้สึกว่าร้านใส่ใจทั้งรสชาติและแพ็กเกจจริง ๆ”</p>
-            <div class="review-meta-home">Thanaporn</div>
-            <div class="review-role-home">สั่งประจำช่วงมื้อเช้า</div>
-        </div>
-        <div class="review-card-home">
-            <div class="review-stars-home">★★★★★</div>
-            <p class="review-copy-home">“ชอบที่ระบบติดตามออเดอร์ดูง่าย หลังโอนแล้วก็เห็นสถานะต่อเนื่อง ไม่ต้องทักถามร้านหลายรอบ”</p>
-            <div class="review-meta-home">Mink</div>
-            <div class="review-role-home">ลูกค้าที่สั่งเค้กวันเกิด</div>
-        </div>
-        <div class="review-card-home">
-            <div class="review-stars-home">★★★★★</div>
-            <p class="review-copy-home">“โปรโมชั่นกับการส่งฟรีช่วงแรกช่วยให้ตัดสินใจลองร้านนี้ง่ายมาก พอลองแล้วก็กลับมาซื้อซ้ำจริง”</p>
-            <div class="review-meta-home">ปราย</div>
-            <div class="review-role-home">ลูกค้าใหม่ที่กลายเป็นขาประจำ</div>
-        </div>
-    </div>
-</div>
 
-<div class="container">
-    <div class="cta-home">
-        <div class="cta-home-grid">
-            <div>
-                <div class="home-kicker">Ready To Order</div>
-                <h3 class="home-heading">ถ้าหิวตอนนี้ เลือกเมนูแล้วไปต่อที่ checkout ได้เลย</h3>
-                <p class="home-text">
-                    หน้า Home ที่ดีควรพาคนไปขั้นตอนถัดไปได้ทันที เราเลยใส่ทางลัดไว้ให้ครบทั้งดูเมนู, ไป checkout และไปติดตามออเดอร์
-                    สำหรับคนที่กำลังรอของอยู่แล้ว
-                </p>
-                <div class="hero-actions">
-                    <a asp-controller="Account" asp-action="Menu" class="btn-highlight">ดูเมนูทั้งหมด</a>
-                    <a asp-controller="Account" asp-action="Checkout" class="btn-hero-secondary" style="background:#1a1a1a;color:#fff;border-color:#1a1a1a;">ไปที่ Checkout</a>
-                    <a asp-controller="Account" asp-action="Delivery" class="btn-hero-secondary" style="background:#fff;color:#1a1a1a;border-color:#E5E7EB;">ติดตามออเดอร์</a>
-                </div>
-            </div>
-            <div class="cta-home-metrics">
-                <div class="cta-home-metric">
-                    <strong>เมนูยอดนิยม</strong>
-                    ครัวซองต์, ชีสเค้ก, เค้กช็อกโกแลต และเมนูเซ็ตมื้อเช้า
-                </div>
-                <div class="cta-home-metric">
-                    <strong>ชำระเงินง่าย</strong>
-                    รองรับ PromptPay QR และอัปโหลดสลิปในหน้าเดียว
-                </div>
-                <div class="cta-home-metric">
-                    <strong>ติดตามต่อได้</strong>
-                    ดูสถานะออเดอร์ย้อนหลังและยืนยันรับสินค้าได้จากหน้า Delivery
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.menu-card .menu-price').forEach(function (priceEl) {
+            priceEl.textContent = priceEl.textContent
+                .replace(/เธ\./g, 'บ.')
+                .replace(/เน€เธย\./g, 'บ.');
+        });
 
-<div class="container">
-    <div class="home-panel" style="margin-bottom:3rem;">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h2 class="section-title" style="margin-top:0;">คำถามที่ลูกค้ามักสงสัย</h2>
-            <span class="view-all" style="pointer-events:none;">ตอบไว้ก่อนเพื่อช่วยให้ตัดสินใจง่ายขึ้น</span>
-        </div>
-        <div class="faq-grid-home">
-            <div class="faq-card-home">
-                <div class="faq-question-home">ต้องสมัครสมาชิกก่อนสั่งไหม?</div>
-                <p class="faq-answer-home">ถ้าอยากใช้โปรสมาชิก, ติดตามออเดอร์ และเก็บประวัติการสั่งซื้อ แนะนำให้สมัครก่อนเพื่อใช้งานได้ครบที่สุด</p>
-            </div>
-            <div class="faq-card-home">
-                <div class="faq-question-home">ชำระเงินได้ทางไหน?</div>
-                <p class="faq-answer-home">ตอนนี้หน้า Payment รองรับ PromptPay QR และอัปโหลดสลิปเพื่อให้แอดมินตรวจสอบและยืนยันการชำระเงิน</p>
-            </div>
-            <div class="faq-card-home">
-                <div class="faq-question-home">หลังโอนแล้วดูสถานะตรงไหน?</div>
-                <p class="faq-answer-home">ไปที่หน้า Delivery เพื่อดูสถานะตั้งแต่ PendingVerify, Paid, Preparing, Shipped จนถึงรับของเรียบร้อย</p>
-            </div>
-            <div class="faq-card-home">
-                <div class="faq-question-home">ถ้าได้รับของแล้วมีปัญหาทำยังไง?</div>
-                <p class="faq-answer-home">ในหน้า Delivery จะมีปุ่มแจ้งปัญหาเมื่อออเดอร์อยู่ระหว่างจัดส่ง พร้อมช่องทางติดต่อร้านโดยตรง</p>
-            </div>
-        </div>
-    </div>
-</div>
+        document.querySelectorAll('.menu-card .btn-buy').forEach(function (button) {
+            if (button.textContent.includes('เธ') || button.textContent.includes('เน€')) {
+                button.textContent = 'เลือกซื้อ';
+            }
+        });
+
+        document.querySelectorAll('.menu-card .add-favorite').forEach(function (favoriteEl) {
+            if (favoriteEl.textContent.includes('เธ') || favoriteEl.textContent.includes('เน€') || favoriteEl.textContent.includes('โ')) {
+                favoriteEl.textContent = '♡ เพิ่มลงรายการโปรด';
+            }
+        });
+    });
+</script>

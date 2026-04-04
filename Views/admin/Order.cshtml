@@ -34,6 +34,17 @@
         "Pending" => "muted",
         _ => "muted"
     };
+
+    string PromotionText(_66022380.Models.Db.Promotion? promotion) => promotion switch
+    {
+        null => "-",
+        { PromoType: 1 } when string.Equals(promotion.DiscountType, "Percent", StringComparison.OrdinalIgnoreCase)
+            => $"{promotion.PromotionName} · ลด {promotion.DiscountValue:0.##}%",
+        { PromoType: 1 } => $"{promotion.PromotionName} · ลด {promotion.DiscountValue:0.##} บาท",
+        { PromoType: 2 } => $"{promotion.PromotionName} · ซื้อ {promotion.BuyQuantity ?? 0} แถม {promotion.RewardQuantity ?? 0}",
+        { PromoType: 3 } => $"{promotion.PromotionName} · โปรกิจกรรม",
+        _ => promotion.PromotionName
+    };
 }
 
 <style>
@@ -374,6 +385,9 @@
     .status-chip.dark { background: #e5e7eb; color: #111827; }
     .status-chip.danger { background: #fff1f2; color: #be123c; }
     .status-chip.muted { background: #f1f5f9; color: #475569; }
+    .status-chip.promo { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+    .item-list div + div { margin-top: .35rem; }
+    .item-list .reward-line { color: #c2410c; font-weight: 700; }
 
     .slip-thumb {
         width: 54px;
@@ -646,7 +660,19 @@
                             <td><div class="customer-name">@(order.User?.Username ?? "-")</div></td>
                             <td>
                                 <div class="item-list">
-                                    @string.Join(", ", order.Orderdetails.Select(d => $"{d.Product?.ProductName} x{d.Quantity}"))
+                                    @foreach (var detail in order.Orderdetails)
+                                    {
+                                        var isReward = (detail.UnitPrice ?? 0) <= 0;
+                                        <div class="@(isReward ? "reward-line" : "")">
+                                            @(detail.Product?.ProductName ?? "-") x@(detail.Quantity ?? 0)@(isReward ? " (ของแถม)" : "")
+                                        </div>
+                                    }
+                                    @if (order.Promotion != null)
+                                    {
+                                        <div style="margin-top:.55rem;">
+                                            <span class="status-chip promo">@PromotionText(order.Promotion)</span>
+                                        </div>
+                                    }
                                 </div>
                             </td>
                             <td><div class="money">@((order.TotalAmount ?? 0).ToString("N2")) บาท</div></td>

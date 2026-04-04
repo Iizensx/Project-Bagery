@@ -17,6 +17,8 @@ public partial class Stock
 
     public int? CategoryId { get; set; }
 
+    public string? ImageUrl { get; set; }
+
     public virtual Category? Category { get; set; }
 
     public virtual ICollection<Orderdetail> Orderdetails { get; set; } = new List<Orderdetail>();

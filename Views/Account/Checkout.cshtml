@@ -104,7 +104,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // ตัวแปรหลักที่ใช้ตลอดหน้า Checkout
     let cart = JSON.parse(localStorage.getItem('bakeryCart')) || [];
-    let userId = 0;
+    let userId = @((ViewBag.CurrentUserId as int?) ?? 0);
     let selectedAddressId = null;  // ที่อยู่ที่ user เลือก
     let selectedPromoId = null;    // โปรโมชั่นที่ user เลือก
     let subtotal = 0;
@@ -142,8 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ─── 2. ดึงข้อมูล User, ที่อยู่, และโปรโมชั่น ──────────────────────────
     try {
         // เรียก API ดึง UserId จาก Session ที่ฝั่ง Server
-        const userRes = await fetch('/Order/GetCurrentUser');
-        const userData = await userRes.json();
+        const userData = { success: userId > 0, userId };
         
         // ถ้ายังไม่ได้ login ให้ redirect ไปหน้า Login
         if (!userData.success || userData.userId <= 0) {
@@ -273,6 +272,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             addressId: parseInt(selectedAddressId),
             promotionId: selectedPromoId ? parseInt(selectedPromoId) : null,
             items: cart.map(item => ({
+                productId: item.productId || null,
                 productName: item.name,
                 price: item.price,
                 quantity: item.quantity

@@ -7,7 +7,10 @@
 }
 
 <style>
-    body { background: linear-gradient(180deg, #fde8e1 0%, #fff7f1 55%, #fffaf7 100%); }
+    body {
+        background: linear-gradient(180deg, #fde8e1 0%, #fff7f1 55%, #fffaf7 100%);
+        padding-top: 0 !important;
+    }
 
     .del-shell {
         max-width: 1180px;
@@ -18,43 +21,15 @@
     .del-hero {
         position: relative;
         overflow: hidden;
-        margin-top: -80px;
-        padding: 8.5rem 0 6.5rem;
-        background: radial-gradient(circle at top left, rgba(249,115,22,0.22), transparent 30%), linear-gradient(135deg, #1b120c 0%, #2d1a08 48%, #5f2d10 100%);
-        border-bottom-left-radius: 34px;
-        border-bottom-right-radius: 34px;
-    }
-
-    .del-hero::before,
-    .del-hero::after {
-        content: "";
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.05);
-        filter: blur(2px);
-    }
-
-    .del-hero::before {
-        width: 260px;
-        height: 260px;
-        top: -80px;
-        right: 6%;
-    }
-
-    .del-hero::after {
-        width: 180px;
-        height: 180px;
-        bottom: 20px;
-        left: 8%;
+        margin-top: 0;
+        min-height: 550px;
+        padding: 0;
+        background: url('/img/BanerDelivery.png') center/cover no-repeat;
+        border-radius: 0;
     }
 
     .del-hero-grid {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
-        gap: 1.5rem;
-        align-items: end;
+        display: none;
     }
 
     .hero-badge {
@@ -1074,7 +1049,7 @@
         }
     </section>
 
-    <section class="section-block">
+    @* <section class="section-block">
         <div class="section-title">Suggestions</div>
         <h2 class="section-heading">แนะนำให้เก็บอะไรในประวัติการสั่งซื้อบ้าง</h2>
 
@@ -1095,7 +1070,7 @@
                 <p>ถ้าคุณอยากต่อยอดจริง แนะนำสร้างตาราง issue หรือ ticket แยกจาก order เพื่อเก็บปัญหา, รูป, และสถานะการแก้ไขของพนักงาน</p>
             </div>
         </div>
-    </section>
+    </section> *@
 </div>
 
 <div class="modal fade" id="problemModal" tabindex="-1" aria-hidden="true">

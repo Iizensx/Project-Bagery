@@ -1,4 +1,120 @@
-<nav class="navbar navbar-expand-lg fixed-top" style="background-color: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.08); z-index: 999; position: fixed;">
+<style>
+    .main-navbar {
+        background-color: #ffffff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        z-index: 999;
+        position: fixed;
+    }
+
+    .main-navbar .navbar-toggler {
+        border: 1px solid #e5e7eb;
+        padding: 0.42rem 0.65rem;
+        border-radius: 12px;
+    }
+
+    .main-navbar .navbar-toggler:focus {
+        box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
+    }
+
+    @@media (max-width: 991.98px) {
+        .main-navbar .container-fluid {
+            padding-left: 0.85rem !important;
+            padding-right: 0.85rem !important;
+        }
+
+        .main-navbar .navbar-brand {
+            font-size: 1rem !important;
+        }
+
+        .main-navbar .navbar-collapse {
+            margin-top: 0.65rem;
+            padding: 0.8rem;
+            border-top: 1px solid #eef2f7;
+            border-radius: 0;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        .main-navbar .navbar-nav {
+            gap: 0.25rem !important;
+        }
+
+        .main-navbar .nav-link {
+            padding: 0.6rem 0.1rem;
+            font-size: 0.95rem;
+        }
+
+        .main-navbar #auth-section {
+            width: 100%;
+            margin-top: 0.8rem;
+            padding-top: 0.8rem;
+            border-top: 1px solid #f1f5f9;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+        }
+
+        .main-navbar .auth-divider {
+            display: none;
+        }
+
+        .main-navbar #cart-trigger {
+            order: 2;
+            width: 100%;
+            justify-content: center;
+            padding: 0.7rem 0.9rem;
+            border-radius: 12px;
+            background: #fff7ed;
+            color: #c2410c !important;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        .main-navbar #login-link-container,
+        .main-navbar #user-dropdown-container {
+            order: 1;
+            width: 100%;
+        }
+
+        .main-navbar #login-link-container > a,
+        .main-navbar #user-dropdown-container > a {
+            justify-content: center;
+            width: 100%;
+            padding: 0.7rem 0.9rem;
+            border-radius: 12px;
+            background: #f8fafc;
+            font-size: 0.95rem;
+        }
+
+        .main-navbar .dropdown-menu {
+            width: 100%;
+            min-width: 0 !important;
+        }
+    }
+
+    @@media (max-width: 575.98px) {
+        .main-navbar {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .main-navbar .container-fluid {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+
+        .main-navbar .navbar-brand {
+            font-size: 0.92rem !important;
+            letter-spacing: 0.02em;
+        }
+
+        .main-navbar .navbar-toggler {
+            padding: 0.34rem 0.55rem;
+            border-radius: 10px;
+        }
+    }
+</style>
+
+<nav class="navbar navbar-expand-lg fixed-top main-navbar">
     <div class="container-fluid px-4">
         <a class="navbar-brand" asp-controller="Home" asp-action="Home" style="font-size: 1.5rem; font-weight: bold; color: #F97316;">
             BAGERY

@@ -8,14 +8,18 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
+        :root {
+            --main-navbar-offset: 80px;
+        }
+
         .navbar {
             padding: 1rem 0;
         }
-        
+
         .navbar-nav .nav-link {
             transition: color 0.3s;
         }
-        
+
         .navbar-nav .nav-link:hover {
             color: #F97316 !important;
         }
@@ -24,20 +28,124 @@
             background-color: #FFF8E7;
             color: #F97316;
         }
-        
-        /* Add spacing for fixed navbar */
+
+        html,
         body {
-            padding-top: 80px;
+            padding-top: var(--main-navbar-offset);
+            overflow-x: hidden;
+        }
+
+        main {
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .page-loader {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.28s ease, visibility 0.28s ease;
+        }
+
+        .page-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .page-loader-card {
+            min-width: 220px;
+            max-width: 280px;
+            padding: 1.5rem 1.7rem;
+            background: #fff;
+            text-align: center;
+        }
+
+        .page-loader-image-wrap {
+            width: 78px;
+            height: 78px;
+            margin: 0 auto 0.9rem;
+            overflow: hidden;
+            background: #fff;
+            animation: loaderSpin 1.2s linear infinite;
+            transform-origin: center;
+        }
+
+        .page-loader-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+        }
+
+        .page-loader-title {
+            color: #111827;
+            font-size: 1.12rem;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+        }
+
+        .page-loader-copy {
+            margin-top: 0.4rem;
+            color: #f97316;
+            font-size: 0.95rem;
+            font-weight: 800;
+            min-height: 1.5rem;
+        }
+
+        @@keyframes loaderSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         @@media (max-width: 768px) {
+            :root {
+                --main-navbar-offset: 60px;
+            }
+
             body {
-                padding-top: 60px;
+                padding-top: var(--main-navbar-offset);
+            }
+
+            .page-loader-card {
+                min-width: 180px;
+                max-width: 220px;
+                padding: 1.2rem 1.1rem;
+            }
+
+            .page-loader-image-wrap {
+                width: 68px;
+                height: 68px;
+            }
+
+            .page-loader-title {
+                font-size: 1rem;
+            }
+
+            .page-loader-copy {
+                font-size: 0.88rem;
             }
         }
     </style>
 </head>
 <body>
+    <div id="pageLoader" class="page-loader">
+        <div class="page-loader-card">
+            <div class="page-loader-image-wrap">
+                <img id="pageLoaderImage" class="page-loader-image" src="@Url.Content("~/img/bagery1.png")" alt="Bakery loading" />
+            </div>
+            <div class="page-loader-title">Bakery</div>
+            <div id="pageLoaderCopy" class="page-loader-copy">Bakery...</div>
+        </div>
+    </div>
+
     @await Html.PartialAsync("_Navbar")
 
     <main role="main">
@@ -49,6 +157,77 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            const loader = document.getElementById('pageLoader');
+            const loaderImage = document.getElementById('pageLoaderImage');
+            const loaderCopy = document.getElementById('pageLoaderCopy');
+            const images = [
+                '@Url.Content("~/img/CroissantCHOCOLATE.png")',
+                '@Url.Content("~/img/CroissantMATCHA.png")',
+                '@Url.Content("~/img/CroissantALMOND.png")',
+                '@Url.Content("~/img/Croffle CHOCOLATE.png")',
+                '@Url.Content("~/img/CroffleALMOND.png")',
+                '@Url.Content("~/img/CroffleBLACK MATCHA.png")'
+            ];
+            const copyStates = ['Bakery', 'Bakery.', 'Bakery..', 'Bakery...', 'Bakery...!'];
+            let imageIndex = 0;
+            let copyIndex = 0;
+
+            function showLoader() {
+                if (!loader) return;
+                loader.classList.remove('hidden');
+            }
+
+            function hideLoader() {
+                if (!loader) return;
+                loader.classList.add('hidden');
+            }
+
+            images.forEach(function (src) {
+                const img = new Image();
+                img.src = src;
+            });
+
+            setInterval(function () {
+                imageIndex = (imageIndex + 1) % images.length;
+                copyIndex = (copyIndex + 1) % copyStates.length;
+
+                if (loaderImage) loaderImage.src = images[imageIndex];
+                if (loaderCopy) loaderCopy.textContent = copyStates[copyIndex];
+            }, 1200);
+
+            document.addEventListener('DOMContentLoaded', function () {
+                setTimeout(hideLoader, 120);
+            });
+
+            window.addEventListener('pageshow', hideLoader);
+
+            document.addEventListener('click', function (event) {
+                const link = event.target.closest('a[href]');
+                if (!link) return;
+
+                const href = link.getAttribute('href');
+                const target = link.getAttribute('target');
+                const isHashOnly = href && href.startsWith('#');
+                const isJavaScript = href && href.startsWith('javascript:');
+                const isBlank = target === '_blank';
+                const isDownload = link.hasAttribute('download');
+
+                if (isHashOnly || isJavaScript || isBlank || isDownload) return;
+
+                showLoader();
+            });
+
+            document.addEventListener('submit', function (event) {
+                const form = event.target;
+                if (event.defaultPrevented) return;
+                if (form instanceof HTMLFormElement && form.dataset.asyncSubmit === 'true') return;
+
+                showLoader();
+            });
+        })();
+    </script>
     @await Html.PartialAsync("_CartDrawer")
     @await RenderSectionAsync("Scripts", required: false)
 </body>

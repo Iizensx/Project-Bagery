@@ -10,17 +10,37 @@ namespace _66022380.Controllers;
 public class OrderController : Controller
 {
     private readonly BakerydbContext _db;
+    private const long PromotionClaimMaxFileSizeBytes = 5 * 1024 * 1024;
+    private static readonly HashSet<string> SupportedPromotionClaimExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+    };
 
     public OrderController(BakerydbContext db)
     {
         _db = db;
     }
 
-    public IActionResult Checkout() => View("~/Views/Account/Checkout.cshtml");
+    public IActionResult Checkout()
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId <= 0)
+            return RedirectToAction("Login", "Account");
+
+        ViewBag.CurrentUserId = currentUserId;
+        return View("~/Views/Account/Checkout.cshtml");
+    }
 
     [HttpPost]
     public IActionResult CreateOrder([FromBody] OrderRequest model)
     {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId <= 0)
+            return Json(new { success = false, message = "กรุณาเข้าสู่ระบบก่อนชำระเงิน" });
+
         if (model == null || model.Items == null || !model.Items.Any())
             return Json(new { success = false, message = "ข้อมูลออเดอร์ไม่ถูกต้อง" });
 
@@ -48,7 +68,7 @@ public class OrderController : Controller
 
         var order = new Order
         {
-            UserId = model.UserId,
+            UserId = currentUserId,
             AddressId = model.AddressId,
             PromotionId = model.PromotionId,
             TotalAmount = model.TotalAmount,
@@ -63,7 +83,7 @@ public class OrderController : Controller
         if (model.PromotionId.HasValue && model.PromotionId > 0)
         {
             var userPromo = _db.UserPromotions.FirstOrDefault(up =>
-                up.UserId == model.UserId &&
+                up.UserId == currentUserId &&
                 up.PromotionId == model.PromotionId &&
                 up.IsUsed == 0);
 
@@ -76,7 +96,9 @@ public class OrderController : Controller
 
         foreach (var item in model.Items)
         {
-            var product = _db.Stocks.FirstOrDefault(s => s.ProductName == item.ProductName);
+            var product = item.ProductId.HasValue && item.ProductId.Value > 0
+                ? _db.Stocks.FirstOrDefault(s => s.ProductId == item.ProductId.Value)
+                : _db.Stocks.FirstOrDefault(s => s.ProductName == item.ProductName);
             if (product == null)
                 continue;
 
@@ -123,8 +145,8 @@ public class OrderController : Controller
     [HttpGet]
     public IActionResult GetCurrentUser()
     {
-        var userIdString = HttpContext.Session.GetString("UserId");
-        if (int.TryParse(userIdString, out int userId) && userId > 0)
+        var userId = GetCurrentUserId();
+        if (userId > 0)
             return Json(new { success = true, userId });
 
         return Json(new { success = false, userId = 0 });
@@ -133,6 +155,10 @@ public class OrderController : Controller
     [HttpGet]
     public IActionResult GetUserPromos(int userId)
     {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId <= 0 || currentUserId != userId)
+            return Json(new { success = false, promos = Array.Empty<object>() });
+
         var promos = _db.UserPromotions
             .Include(up => up.Promotion)
             .Where(up => up.UserId == userId && up.IsUsed == 0 && up.Promotion != null)
@@ -160,6 +186,8 @@ public class OrderController : Controller
     [HttpPost]
     public async Task<IActionResult> SubmitPromotionClaim(int promotionId, IFormFile proofImage, string? note)
     {
+        try
+        {
         var userIdString = HttpContext.Session.GetString("UserId");
         if (!int.TryParse(userIdString, out var userId) || userId <= 0)
             return Json(new { success = false, message = "กรุณาเข้าสู่ระบบก่อน" });
@@ -171,6 +199,13 @@ public class OrderController : Controller
         if (proofImage == null || proofImage.Length == 0)
             return Json(new { success = false, message = "กรุณาแนบรูปยืนยัน" });
 
+        var extension = Path.GetExtension(proofImage.FileName);
+        if (proofImage.Length > PromotionClaimMaxFileSizeBytes)
+            return Json(new { success = false, message = "รูปมีขนาดใหญ่เกินไป กรุณาใช้ไฟล์ไม่เกิน 5 MB" });
+
+        if (string.IsNullOrWhiteSpace(extension) || !SupportedPromotionClaimExtensions.Contains(extension))
+            return Json(new { success = false, message = "รองรับเฉพาะไฟล์รูป .jpg, .jpeg, .png และ .webp" });
+
         var hasPendingClaim = _db.PromotionClaims.Any(c =>
             c.UserId == userId &&
             c.PromotionId == promotionId &&
@@ -179,15 +214,17 @@ public class OrderController : Controller
         if (hasPendingClaim)
             return Json(new { success = false, message = "คุณส่งคำขอนี้ไว้แล้ว กรุณารอพนักงานตรวจสอบ" });
 
+        if (_db.UserPromotions.Any(up => up.UserId == userId && up.PromotionId == promotionId))
+            return Json(new { success = false, message = "ท่านมีโปรโมชั่นนี้อยู่แล้ว ไม่สามารถส่งอีกครั้งได้" });
+
         var alreadyOwned = _db.UserPromotions.Any(up => up.UserId == userId && up.PromotionId == promotionId);
         if (alreadyOwned)
             return Json(new { success = false, message = "คุณได้รับโปรโมชั่นนี้แล้ว" });
 
-        var fileName = $"claim_{userId}_{promotionId}_{DateTime.Now:yyyyMMddHHmmss}{Path.GetExtension(proofImage.FileName)}";
+        var fileName = $"claim_{userId}_{promotionId}_{DateTime.Now:yyyyMMddHHmmssfff}{extension}";
         var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "promotion-claims");
 
-        if (!Directory.Exists(folderPath))
-            Directory.CreateDirectory(folderPath);
+        Directory.CreateDirectory(folderPath);
 
         var filePath = Path.Combine(folderPath, fileName);
         await using (var stream = new FileStream(filePath, FileMode.Create))
@@ -205,14 +242,24 @@ public class OrderController : Controller
 
         _db.SaveChanges();
         return Json(new { success = true, message = "ส่งรูปยืนยันเรียบร้อย กรุณารอพนักงานอนุมัติ" });
+        }
+        catch
+        {
+            return Json(new { success = false, message = "ระบบมีปัญหาระหว่างบันทึกรูป กรุณาลองใหม่อีกครั้ง" });
+        }
     }
 
     public IActionResult Payment(int orderId)
     {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId <= 0)
+            return RedirectToAction("Login", "Account");
+
         var order = _db.Orders
             .Include(o => o.Orderdetails)
             .ThenInclude(d => d.Product)
-            .FirstOrDefault(o => o.OrderId == orderId);
+            .Include(o => o.Promotion)
+            .FirstOrDefault(o => o.OrderId == orderId && o.UserId == currentUserId);
 
         if (order == null)
             return RedirectToAction("Home", "Home");
@@ -236,7 +283,11 @@ public class OrderController : Controller
     {
         try
         {
-            var order = _db.Orders.FirstOrDefault(o => o.OrderId == orderId);
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId <= 0)
+                return Json(new { success = false, message = "กรุณาเข้าสู่ระบบก่อนชำระเงิน" });
+
+            var order = _db.Orders.FirstOrDefault(o => o.OrderId == orderId && o.UserId == currentUserId);
             if (order == null)
                 return Json(new { success = false, message = "ไม่พบ Order" });
 
@@ -279,5 +330,11 @@ public class OrderController : Controller
             return false;
 
         return true;
+    }
+
+    private int GetCurrentUserId()
+    {
+        var userIdString = HttpContext.Session.GetString("UserId");
+        return int.TryParse(userIdString, out var userId) ? userId : 0;
     }
 }

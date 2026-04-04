@@ -5,14 +5,17 @@
     ViewData["Title"] = "เมนู";
 }
 
+<!-- Bootstrap Icons CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
 <style>
     body {
-        margin-top: 80px;
+        margin-top: 0px;
     }
 
     /* Hero Banner */
     .hero-banner {
-        height: 400px;
+        height: 500px;
         background-color: #1a1a1a;
         position: relative;
         display: flex;
@@ -103,6 +106,14 @@
     }
 
     .menu-icon {
+        font-size: 1.4rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+    }
+
+    .menu-icon i {
         font-size: 1.4rem;
     }
 
@@ -243,7 +254,8 @@
     .product-image img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
+        object-position: center;
         transition: transform 0.6s ease;
     }
 
@@ -364,6 +376,14 @@
         color: #FBBF24;
         margin-top: 0.5rem;
         font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .author-rating i {
+        font-size: 1rem;
+        color: #FBBF24;
     }
 
     .testimonial-image {
@@ -372,12 +392,15 @@
         height: 100%;
         border-radius: 30px;
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .testimonial-image img {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         display: block;
     }
 
@@ -399,6 +422,10 @@
         border: 1px solid rgba(255,255,255,0.08);
         color: white;
         font-size: 1.1rem;
+    }
+
+    .small-avatar i {
+        font-size: 1.5rem;
     }
 
     /* Features Section */
@@ -429,6 +456,12 @@
         align-items: center;
         justify-content: center;
         font-size: 2rem;
+        color: #F97316;
+    }
+
+    .feature-icon i {
+        font-size: 2rem;
+        color: #F97316;
     }
 
     .feature-title {
@@ -724,6 +757,46 @@
     }
 
     @@media (max-width: 768px) {
+        .main-container {
+            margin-top: 24px;
+            padding: 0 1rem 2.25rem;
+            gap: 1rem;
+        }
+
+        .menu-sidebar {
+            padding: 1.2rem;
+            border-radius: 18px;
+            margin-bottom: 0.75rem;
+        }
+
+        .menu-title {
+            margin-bottom: 0.55rem;
+            font-size: 0.74rem;
+            letter-spacing: 1.5px;
+        }
+
+        .menu-heading {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .menu-list {
+            gap: 0.55rem;
+            padding-bottom: 0.35rem;
+            flex-wrap: nowrap;
+        }
+
+        .menu-item {
+            gap: 0.55rem;
+            padding: 0.78rem 1rem;
+            border-radius: 12px;
+            font-size: 0.92rem;
+        }
+
+        .menu-item:hover {
+            transform: none;
+        }
+
         .section-title {
             font-size: 2rem;
         }
@@ -742,22 +815,25 @@
 
         .products-section {
             padding: 1.5rem;
+            border-radius: 22px;
         }
 
         .products-grid {
             grid-template-columns: 1fr;
-            gap: 1.5rem;
+            gap: 1rem;
         }
 
         .section-header {
             flex-direction: column;
             align-items: flex-start;
-            gap: 1rem;
+            gap: 0.7rem;
+            margin-bottom: 1.5rem;
         }
 
         .nav-controls {
             width: 100%;
-            justify-content: flex-start;
+            justify-content: space-between;
+            gap: 0.6rem;
         }
 
         .testimonial-image {
@@ -766,15 +842,24 @@
 
         .page-indicator {
             min-width: 88px;
+            padding: 0.7rem 0.8rem;
+            font-size: 0.85rem;
+        }
+
+        .nav-btn {
+            min-width: 78px;
+            height: 44px;
+            padding: 0 0.9rem;
+            font-size: 0.88rem;
         }
 
         .bottom-section-wrap {
-            padding: 0 1.5rem;
+            padding: 0 1rem;
         }
 
         .cta-banner,
         .menu-bottom-card {
-            padding: 1.6rem;
+            padding: 1.25rem;
         }
     }
 
@@ -785,12 +870,97 @@
             display: grid;
         }
     }
+
+    @@media (max-width: 480px) {
+        .hero-banner {
+            height: 220px;
+        }
+
+        .hero-title {
+            font-size: 1.7rem;
+            letter-spacing: 2px;
+        }
+
+        .main-container {
+            padding: 0 0.75rem 2rem;
+        }
+
+        .menu-sidebar {
+            padding: 1rem;
+        }
+
+        .menu-heading {
+            font-size: 1rem;
+        }
+
+        .menu-item {
+            min-width: max-content;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.88rem;
+        }
+
+        .products-section {
+            padding: 1rem;
+        }
+
+        .section-subtitle {
+            font-size: 0.88rem;
+        }
+
+        .section-title {
+            font-size: 1.55rem;
+        }
+
+        .menu-range-text {
+            font-size: 0.84rem;
+            margin-top: 0.25rem;
+        }
+
+        .nav-controls {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .nav-btn,
+        .page-indicator {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .product-image {
+            height: 180px;
+        }
+
+        .product-info {
+            padding: 1rem;
+        }
+
+        .product-name {
+            font-size: 1.08rem;
+        }
+
+        .product-price {
+            font-size: 1.18rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .stock-badge {
+            margin-bottom: 0.75rem;
+            font-size: 0.78rem;
+        }
+
+        .btn-details,
+        .btn-order {
+            padding: 0.78rem;
+            font-size: 0.9rem;
+        }
+    }
 </style>
 
 <!-- Hero Banner -->
 <div class="hero-banner">
-    <img src="~/img/bagery1.png" alt="Menu Banner" style="width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0.5;">
-    <h1 class="hero-title">Menu</h1>
+    <img src="~/img/BaileyBakery.png" alt="Menu Banner" style="width: 100%; height: 100%; object-fit: cover; position: absolute; opacity: 0.5;">
+    <h1 class="hero-title"></h1>
 </div>
 
 <!-- Features Section -->
@@ -799,7 +969,9 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="feature-item">
-                    <div class="feature-icon">🛵</div>
+                    <div class="feature-icon">
+                        <i class="bi bi-truck"></i>
+                    </div>
                     <div>
                         <h3 class="feature-title">Fast Delivery</h3>
                         <p class="feature-text">Within 30 minutes</p>
@@ -808,7 +980,9 @@
             </div>
             <div class="col-md-4">
                 <div class="feature-item">
-                    <div class="feature-icon">🥐</div>
+                    <div class="feature-icon">
+                        <i class="bi bi-basket-fill"></i>
+                    </div>
                     <div>
                         <h3 class="feature-title">Freshly Baked</h3>
                         <p class="feature-text">Baked fresh every morning</p>
@@ -817,10 +991,12 @@
             </div>
             <div class="col-md-4">
                 <div class="feature-item">
-                    <div class="feature-icon">📦</div>
+                    <div class="feature-icon">
+                        <i class="bi bi-gift"></i>
+                    </div>
                     <div>
                         <h3 class="feature-title">Free Delivery</h3>
-                        <p class="feature-text">Free on your first 3 orders</p>
+                        <p class="feature-text">Near distance free delivery</p>
                     </div>
                 </div>
             </div>
@@ -836,7 +1012,7 @@
         <div class="menu-heading">Menu That Always Makes You Fall In Love</div>
         <div class="menu-list">
             <a href="#" class="menu-item active" onclick="filterMenu('all', event)">
-                <span class="menu-icon">🥐</span>
+                <span class="menu-icon"><i class="bi bi-list"></i></span>
                 เมนูทั้งหมด
             </a>
             @if (Model != null && Model.Count > 0)
@@ -844,7 +1020,7 @@
                 @foreach (var category in Model.GroupBy(p => p.Category?.CategoryName).Select(g => g.Key).Distinct())
                 {
                     <a href="#" class="menu-item" onclick="filterMenu('@(category?.ToLower() ?? "all")', event)">
-                        <span class="menu-icon">@GetCategoryIcon(category)</span>
+                        <span class="menu-icon">@Html.Raw(GetCategoryIcon(category))</span>
                         @category
                     </a>
                 }
@@ -877,20 +1053,20 @@
                 {
                     <div class="product-card" data-category="@(product.Category?.CategoryName?.ToLower() ?? "all")">
                         <div class="product-image">
-                            <img src="https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=400" alt="@product.ProductName">
+                            <img src="@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/img/bagery1.png" : product.ImageUrl)" alt="@product.ProductName">
                         </div>
                         <div class="product-info">
                             <div class="product-name">@product.ProductName</div>
                             <div class="product-price">@product.Price บาท</div>
                             <div class="stock-badge">คงเหลือ: @(product.Stock1 ?? 0)</div>
-                            <button class="btn-details" onclick="showProductDetails('@product.ProductName', '@(product.Description ?? "ไม่มีรายละเอียด")', @product.Price, 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&q=80&w=600', @(product.Stock1 ?? 0))">รายละเอียด</button>
+                            <button class="btn-details" onclick="showProductDetails(@product.ProductId, '@product.ProductName', '@(product.Description ?? "ไม่มีรายละเอียด")', @(product.Price ?? 0), '@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/img/bagery1.png" : product.ImageUrl)', @(product.Stock1 ?? 0))">รายละเอียด</button>
                             @if (product.Stock1 <= 0)
                             {
                                 <button class="btn-order" style="background: #ccc; color: #666; cursor: not-allowed;" disabled>สินค้าหมด</button>
                             }
                             else
                             {
-                                <button class="btn-order" onclick="addToCart('@product.ProductName', @product.Price)">สั่งเลย</button>
+                                <button class="btn-order" onclick="addToCart('@product.ProductName', @(product.Price ?? 0), @product.ProductId)">สั่งเลย</button>
                             }
                         </div>
                     </div>
@@ -913,24 +1089,30 @@
             <div class="testimonial-label">WHAT THEY SAY</div>
             <h2 class="testimonial-title">What Our Customers Say About Us</h2>
             <p class="testimonial-text">
-                "The best bakery in town! Everything is so fresh and delicious. The croissants are flaky and the cakes are divine. I highly recommend BAGERY to everyone!"
+                "ร้านเบเกอรี่ของดี! ของสดใหม่อร่อยมาก ครัวซองต์กรอบนอกนุ่มใน เค้กก็อร่อยเลิศ "
             </p>
             <div class="testimonial-author">
                 <div class="author-avatar">TJ</div>
                 <div class="author-info">
                     <div class="author-name">Theresa Jordan</div>
                     <div class="author-title">Bakery Blogger</div>
-                    <div class="author-rating">⭐⭐⭐⭐⭐ 4.8</div>
+                    <div class="author-rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        4.8
+                    </div>
                 </div>
             </div>
             <div class="testimonial-avatars">
-                <div class="small-avatar">👨</div>
-                <div class="small-avatar">👩</div>
-                <div class="small-avatar">👨</div>
+                <div class="small-avatar"><i class="bi bi-person-fill"></i></div>
+
             </div>
         </div>
         <div class="testimonial-image">
-            <img src="~/img/bagery1.png" alt="Chef">
+            <img src="~/img/CroffleBLACK MATCHA.png" alt="Chef">
         </div>
     </section>
 </div>
@@ -1036,18 +1218,18 @@
     </div>
 </div>
 
-@* Helper function แปลงชื่อ Category เป็น Emoji ให้แสดงหน้าเมนู *@
+@* Helper function แปลงชื่อ Category เป็น Bootstrap Icon ให้แสดงหน้าเมนู *@
 @functions {
     private string GetCategoryIcon(string categoryName)
     {
         // ใช้ Switch Expression เช็คชื่อ category (แปลงเป็นตัวเล็กก่อนเพื่อป้องกัน case sensitive)
         return categoryName?.ToLower() switch
         {
-            var s when s.Contains("ครัว") || s.Contains("pastry")    => "🥐",
-            var s when s.Contains("เค้ก") || s.Contains("cake")      => "🍰",
-            var s when s.Contains("เครื่องดื่ม") || s.Contains("drink") => "☕",
-            var s when s.Contains("ซิก") || s.Contains("signature")  => "⭐",
-            _ => "🥐" // default ถ้าไม่ตรงกับ category ไหนเลย
+            var s when s.Contains("ครัว") || s.Contains("pastry")    => "<i class=\"bi bi-basket-fill\"></i>",
+            var s when s.Contains("เค้ก") || s.Contains("cake")      => "<i class=\"bi bi-cake2-fill\"></i>",
+            var s when s.Contains("เครื่องดื่ม") || s.Contains("drink") => "<i class=\"bi bi-cup-hot-fill\"></i>",
+            var s when s.Contains("ซิก") || s.Contains("signature")  => "<i class=\"bi bi-star-fill\"></i>",
+            _ => "<i class=\"bi bi-basket\"></i>" // default ถ้าไม่ตรงกับ category ไหนเลย
         };
     }
 }
@@ -1055,7 +1237,7 @@
 @section Scripts {
     <script>
         // ─── 1. แสดง Modal รายละเอียดสินค้า ─────────────────────────────────
-        function showProductDetails(name, description, price, imageUrl, stock) {
+        function showProductDetails(productId, name, description, price, imageUrl, stock) {
             // นำข้อมูลสินค้าที่รับมาใส่ใน element ของ Modal
             document.getElementById('modalProductName').innerText = name;
             document.getElementById('modalProductDescription').innerText = description;
@@ -1066,7 +1248,7 @@
             // กำหนด onclick ของปุ่ม "เพิ่มลงตะกร้า" ใน Modal ให้เรียก addToCart()
             const addToCartBtn = document.getElementById('modalAddToCartBtn');
             addToCartBtn.onclick = function() {
-                addToCart(name, price);
+                addToCart(name, price, productId);
                 // Optional: ปิด Modal หลังเพิ่มสินค้า (ปัจจุบัน comment ไว้)
                 // var modal = bootstrap.Modal.getInstance(document.getElementById('productDetailModal'));
                 // modal.hide();

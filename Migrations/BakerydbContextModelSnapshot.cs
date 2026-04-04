@@ -378,6 +378,10 @@ namespace _66022380.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
                     b.Property<decimal?>("Price")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");

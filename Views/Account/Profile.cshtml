@@ -710,6 +710,19 @@
     const addressForm  = document.getElementById('address-form');
     const userId       = document.getElementById('profile-userid').value; // ดึง UserId จาก hidden input
 
+    async function parseJsonResponse(response) {
+        const text = await response.text();
+        if (!text) {
+            throw new Error(`Empty response (${response.status})`);
+        }
+
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            throw new Error(`Invalid JSON response (${response.status})`);
+        }
+    }
+
     // ─── 1. Tab Navigation (สลับ Tab ข้อมูลส่วนตัว / ที่อยู่) ─────────────── ❌ยังไม่่ได้ทำ
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', function() {
@@ -725,7 +738,7 @@
             e.preventDefault(); // ป้องกัน form submit แบบปกติ
 
             // ส่งข้อมูลโปรไฟล์ไปที่ /Profile/Profile แบบ POST JSON
-            fetch('@Url.Action("Profile", "Account")', {
+            fetch('@Url.Action("Profile", "Profile")', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -735,7 +748,7 @@
                     Phone:    document.getElementById('profile-phone').value
                 })
             })
-            .then(response => response.json())
+            .then(parseJsonResponse)
             .then(data => {
                 alert(data.success ? data.message : (data.message || 'เกิดข้อผิดพลาด'));
             })
@@ -802,7 +815,7 @@
         }
 
         // ส่งแบบ form-urlencoded เพราะ Controller รับแบบ parameter ธรรมดา
-        fetch('@Url.Action("SaveAddress", "Account")', {
+        fetch('@Url.Action("SaveAddress", "Profile")', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
@@ -812,7 +825,7 @@
                 postalCode: postal
             })
         })
-        .then(response => response.json())
+        .then(parseJsonResponse)
         .then(data => {
             if (data.success) {
                 alert(data.message);
@@ -834,12 +847,12 @@
                 const card = e.target.closest('.address-card');
                 const addressId = card.dataset.addressId;
                 
-                fetch('@Url.Action("DeleteAddress", "Account")', {
+                fetch('@Url.Action("DeleteAddress", "Profile")', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: new URLSearchParams({ addressId, userId })
                 })
-                .then(response => response.json())
+                .then(parseJsonResponse)
                 .then(data => {
                     if (data.success) {
                         alert(data.message);
@@ -929,12 +942,12 @@
 
             console.log('Sending JSON:', JSON.stringify(payloadData));
 
-            fetch('@Url.Action("Profile", "Account")', {
+            fetch('@Url.Action("Profile", "Profile")', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payloadData)
             })
-            .then(response => response.json())
+            .then(parseJsonResponse)
             .then(data => {
                 if (data.success) {
                     alert(data.message);

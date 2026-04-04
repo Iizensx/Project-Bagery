@@ -26,6 +26,7 @@ public class AdminOrderController : AdminControllerBase
         // ดึงออเดอร์ล่าสุดขึ้นก่อน เพื่อให้แอดมินเห็นงานใหม่เร็วที่สุด
         var orders = Db.Orders
             .Include(o => o.User)
+            .Include(o => o.Promotion)
             .Include(o => o.Orderdetails)
                 .ThenInclude(d => d.Product)
             .OrderByDescending(o => o.OrderDate)
@@ -92,6 +93,7 @@ public class AdminOrderController : AdminControllerBase
         // ดึงทั้งข้อมูลลูกค้า รายการสินค้า และข้อมูลสลิป
         var order = Db.Orders
             .Include(o => o.User)
+            .Include(o => o.Promotion)
             .Include(o => o.Orderdetails)
                 .ThenInclude(d => d.Product)
             .FirstOrDefault(o => o.OrderId == orderId);
@@ -112,14 +114,36 @@ public class AdminOrderController : AdminControllerBase
             status = order.Status,
             paymentStatus = order.PaymentStatus,
             slipImagePath = order.SlipImagePath,
+            promotionName = order.Promotion?.PromotionName,
+            promotionLabel = BuildPromotionLabel(order.Promotion),
+            paidItemCount = order.Orderdetails.Where(d => (d.UnitPrice ?? 0) > 0).Sum(d => d.Quantity ?? 0),
+            rewardItemCount = order.Orderdetails.Where(d => (d.UnitPrice ?? 0) <= 0).Sum(d => d.Quantity ?? 0),
+            totalItemCount = order.Orderdetails.Sum(d => d.Quantity ?? 0),
             items = order.Orderdetails.Select(d => new
             {
                 productName = d.Product?.ProductName,
                 quantity = d.Quantity,
                 unitPrice = d.UnitPrice,
-                subtotal = d.Quantity * d.UnitPrice
+                subtotal = d.Quantity * d.UnitPrice,
+                isReward = (d.UnitPrice ?? 0) <= 0
             }).ToList()
         });
+    }
+
+    private static string? BuildPromotionLabel(Promotion? promotion)
+    {
+        if (promotion == null)
+            return null;
+
+        return promotion.PromoType switch
+        {
+            1 when string.Equals(promotion.DiscountType, "Percent", StringComparison.OrdinalIgnoreCase)
+                => $"{promotion.PromotionName} - ลด {promotion.DiscountValue:0.##}%",
+            1 => $"{promotion.PromotionName} - ลด {promotion.DiscountValue:0.##} บาท",
+            2 => $"{promotion.PromotionName} - ซื้อ {promotion.BuyQuantity ?? 0} แถม {promotion.RewardQuantity ?? 0}",
+            3 => $"{promotion.PromotionName} - โปรกิจกรรม / ของแถม",
+            _ => promotion.PromotionName
+        };
     }
 
     // POST: เมื่อแอดมินรับงานแล้ว เปลี่ยนสถานะออเดอร์เป็น Preparing
