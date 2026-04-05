@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Mvc;
 using _66022380.Models;
 using _66022380.Models.Db;
+using _66022380.Viewmodels;
 
 namespace _66022380.Controllers;
 
@@ -17,25 +18,33 @@ public class AccountController : Controller
         _logger = logger;
     }
 
-    public IActionResult Login() => View();
+    public IActionResult Login() => View(new AuthUserViewModel());
 
     [HttpPost]
-    public IActionResult Login(string username, string password)
+    public IActionResult Login(AuthUserViewModel model)
     {
-        username = username?.Trim() ?? string.Empty;
-        password ??= string.Empty;
+        model ??= new AuthUserViewModel();
+        model.Username = model.Username?.Trim() ?? string.Empty;
+        model.Password ??= string.Empty;
+
+        if (string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
+        {
+            ModelState.AddModelError(string.Empty, "Please enter your username/email and password.");
+            return View(model);
+        }
 
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
 
         var user = _db.Users.FirstOrDefault(u =>
-            (u.Username == username || u.Email == username) &&
+            (u.Username == model.Username || u.Email == model.Username) &&
             !string.IsNullOrEmpty(u.Password));
 
-        if (user == null || !string.Equals(user.Password, password, StringComparison.Ordinal))
+        if (user == null || !string.Equals(user.Password, model.Password, StringComparison.Ordinal))
         {
-            LogUserLogin(username, false, ipAddress);
-            ViewBag.Error = "Invalid username or password";
-            return View();
+            LogUserLogin(model.Username, false, ipAddress);
+            ModelState.AddModelError(string.Empty, "Invalid username or password");
+            model.Password = string.Empty;
+            return View(model);
         }
 
         HttpContext.Session.SetString("UserId", user.UserId.ToString());
@@ -48,7 +57,7 @@ public class AccountController : Controller
             _ => "User"
         });
 
-        LogUserLogin(username, true, ipAddress);
+        LogUserLogin(model.Username, true, ipAddress);
 
         if (user.RoleId == 1)
             return RedirectToAction("Dashbordadmin", "AdminDashboard");
@@ -59,39 +68,48 @@ public class AccountController : Controller
         return RedirectToAction("Home", "Home");
     }
 
-    public IActionResult Signup() => View();
+    public IActionResult Signup() => View(new AuthUserViewModel());
 
     [HttpPost]
-    public IActionResult Signup(string username, string email, string phone, string password, string confirmPassword)
+    public IActionResult Signup(AuthUserViewModel model)
     {
-        username = username?.Trim() ?? string.Empty;
-        email = email?.Trim() ?? string.Empty;
-        phone = phone?.Trim() ?? string.Empty;
+        model ??= new AuthUserViewModel();
+        model.Username = model.Username?.Trim() ?? string.Empty;
+        model.Email = model.Email?.Trim() ?? string.Empty;
+        model.Phone = model.Phone?.Trim() ?? string.Empty;
+        model.Password ??= string.Empty;
+        model.ConfirmPassword ??= string.Empty;
 
-        if (password != confirmPassword)
+        if (model.Password != model.ConfirmPassword)
         {
-            ViewBag.Error = "Passwords do not match";
-            return View();
+            ModelState.AddModelError(string.Empty, "Passwords do not match");
+            model.Password = string.Empty;
+            model.ConfirmPassword = string.Empty;
+            return View(model);
         }
 
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Email) || string.IsNullOrWhiteSpace(model.Password))
         {
-            ViewBag.Error = "Please fill in all required fields";
-            return View();
+            ModelState.AddModelError(string.Empty, "Please fill in all required fields");
+            model.Password = string.Empty;
+            model.ConfirmPassword = string.Empty;
+            return View(model);
         }
 
-        if (_db.Users.Any(u => u.Username == username || u.Email == email))
+        if (_db.Users.Any(u => u.Username == model.Username || u.Email == model.Email))
         {
-            ViewBag.Error = "Username or email already exists";
-            return View();
+            ModelState.AddModelError(string.Empty, "Username or email already exists");
+            model.Password = string.Empty;
+            model.ConfirmPassword = string.Empty;
+            return View(model);
         }
 
         var newUser = new User
         {
-            Username = username,
-            Email = email,
-            Phone = phone,
-            Password = password,
+            Username = model.Username,
+            Email = model.Email,
+            Phone = model.Phone,
+            Password = model.Password,
             RoleId = 3
         };
 

@@ -1,4 +1,4 @@
-@using _66022380.Models.Db;
+﻿@using _66022380.Models.Db;
 @model List<Stock>
 
 @{
@@ -1064,7 +1064,7 @@
                             <div class="product-name">@product.ProductName</div>
                             <div class="product-price">@product.Price บาท</div>
                             <div class="stock-badge">คงเหลือ: @(product.Stock1 ?? 0)</div>
-                            <button class="btn-details" onclick="showProductDetails(@product.ProductId, '@product.ProductName', '@(product.Description ?? "ไม่มีรายละเอียด")', @(product.Price ?? 0), '@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/img/bagery1.png" : product.ImageUrl)', @(product.Stock1 ?? 0))">รายละเอียด</button>
+                            <button class="btn-details" onclick="showProductDetails(@product.ProductId, '@product.ProductName', '@(product.Description ?? "ไม่มีรายละเอียด")', @(product.Price ?? 0), '@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/img/bagery1.png" : product.ImageUrl)', @(product.Stock1 ?? 0), @product.IsLimitedQuantity.ToString().ToLower())">รายละเอียด</button>
                             @if (product.IsLimitedQuantity)
                             {
                                 <div class="stock-badge limited">[สินค้ามีจำนวนจำกัด]</div>
@@ -1098,7 +1098,7 @@
             <div class="testimonial-label">WHAT THEY SAY</div>
             <h2 class="testimonial-title">What Our Customers Say About Us</h2>
             <p class="testimonial-text">
-                "ร้านเบเกอรี่ของดี! ของสดใหม่อร่อยมาก ครัวซองต์กรอบนอกนุ่มใน เค้กก็อร่อยเลิศ "
+                "ร้านเบเกอรี่ของดี! ของสดใหม่ อร่อยมาก ครัวซองต์กรอบนอกนุ่มใน เค้กก็อร่อยเลิศ"
             </p>
             <div class="testimonial-author">
                 <div class="author-avatar">TJ</div>
@@ -1134,7 +1134,7 @@
             <div>
                 <div class="bottom-kicker" style="color:#FDBA74;">READY TO ORDER</div>
                 <h2 class="cta-title">เลือกเมนูโปรด แล้วไปต่อที่ตะกร้าได้เลย</h2>
-                <p class="cta-text">เมนูขายดีประจำวัน — บอกลูกค้าว่าวันนี้อะไรมาแรง </p>
+                <p class="cta-text">เมนูขายดีประจำวัน พร้อมให้เลือกสั่งได้ทันที</p>
             </div>
             <div class="cta-actions">
                 <a class="cta-btn primary" asp-controller="Account" asp-action="Checkout">ไปที่ Checkout</a>
@@ -1167,58 +1167,58 @@
     </div>
 </div>
 
-@* Helper function แปลงชื่อ Category เป็น Bootstrap Icon ให้แสดงหน้าเมนู *@
+@* Helper function เนเธเธฅเธเธเธทเนเธญ Category เน€เธเนเธ Bootstrap Icon เนเธซเนเนเธชเธ”เธเธซเธเนเธฒเน€เธกเธเธน *@
 @functions {
     private string GetCategoryIcon(string categoryName)
     {
-        // ใช้ Switch Expression เช็คชื่อ category (แปลงเป็นตัวเล็กก่อนเพื่อป้องกัน case sensitive)
+        // เนเธเน Switch Expression เน€เธเนเธเธเธทเนเธญ category (เนเธเธฅเธเน€เธเนเธเธ•เธฑเธงเน€เธฅเนเธเธเนเธญเธเน€เธเธทเนเธญเธเนเธญเธเธเธฑเธ case sensitive)
         return categoryName?.ToLower() switch
         {
             var s when s.Contains("ครัว") || s.Contains("pastry")    => "<i class=\"bi bi-basket-fill\"></i>",
             var s when s.Contains("เค้ก") || s.Contains("cake")      => "<i class=\"bi bi-cake2-fill\"></i>",
             var s when s.Contains("เครื่องดื่ม") || s.Contains("drink") => "<i class=\"bi bi-cup-hot-fill\"></i>",
             var s when s.Contains("ซิก") || s.Contains("signature")  => "<i class=\"bi bi-star-fill\"></i>",
-            _ => "<i class=\"bi bi-basket\"></i>" // default ถ้าไม่ตรงกับ category ไหนเลย
+            _ => "<i class=\"bi bi-basket\"></i>" // default เธ–เนเธฒเนเธกเนเธ•เธฃเธเธเธฑเธ category เนเธซเธเน€เธฅเธข
         };
     }
 }
 
 @section Scripts {
     <script>
-        // ─── 1. แสดง Modal รายละเอียดสินค้า ─────────────────────────────────
+        // โ”€โ”€โ”€ 1. เนเธชเธ”เธ Modal เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”เธชเธดเธเธเนเธฒ โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
         function showProductDetails(productId, name, description, price, imageUrl, stock, isLimitedQuantity = false) {
-            // นำข้อมูลสินค้าที่รับมาใส่ใน element ของ Modal
+            // เธเธณเธเนเธญเธกเธนเธฅเธชเธดเธเธเนเธฒเธ—เธตเนเธฃเธฑเธเธกเธฒเนเธชเนเนเธ element เธเธญเธ Modal
             document.getElementById('modalProductName').innerText = name;
             document.getElementById('modalProductDescription').innerText = description;
             document.getElementById('modalProductPrice').innerText = price + ' บาท';
             document.getElementById('modalProductImage').src = imageUrl;
             document.getElementById('modalProductStock').innerText = 'คงเหลือ: ' + stock;
             
-            // กำหนด onclick ของปุ่ม "เพิ่มลงตะกร้า" ใน Modal ให้เรียก addToCart()
+            // เธเธณเธซเธเธ” onclick เธเธญเธเธเธธเนเธก "เน€เธเธดเนเธกเธฅเธเธ•เธฐเธเธฃเนเธฒ" เนเธ Modal เนเธซเนเน€เธฃเธตเธขเธ addToCart()
             const addToCartBtn = document.getElementById('modalAddToCartBtn');
             addToCartBtn.onclick = function() {
                 addToCart(name, price, productId);
-                // Optional: ปิด Modal หลังเพิ่มสินค้า (ปัจจุบัน comment ไว้)
+                // Optional: เธเธดเธ” Modal เธซเธฅเธฑเธเน€เธเธดเนเธกเธชเธดเธเธเนเธฒ (เธเธฑเธเธเธธเธเธฑเธ comment เนเธงเน)
                 // var modal = bootstrap.Modal.getInstance(document.getElementById('productDetailModal'));
                 // modal.hide();
             };
 
-            // เปิด Bootstrap Modal
+            // เน€เธเธดเธ” Bootstrap Modal
             var productModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
             productModal.show();
         }
 
-        // ─── 2. ตัวแปร State ของระบบ Pagination และ Filter ──────────────────
-        const productsPerPage = 6; // แสดงสินค้า 6 ชิ้นต่อหน้า
+        // โ”€โ”€โ”€ 2. เธ•เธฑเธงเนเธเธฃ State เธเธญเธเธฃเธฐเธเธ Pagination เนเธฅเธฐ Filter โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+        const productsPerPage = 6; // เนเธชเธ”เธเธชเธดเธเธเนเธฒ 6 เธเธดเนเธเธ•เนเธญเธซเธเนเธฒ
         let currentPage = 1;
-        let currentCategory = 'all'; // category ที่กรองอยู่ตอนนี้
+        let currentCategory = 'all'; // category เธ—เธตเนเธเธฃเธญเธเธญเธขเธนเนเธ•เธญเธเธเธตเน
 
-        // ดึง product card ทั้งหมดในหน้า
+        // เธ”เธถเธ product card เธ—เธฑเนเธเธซเธกเธ”เนเธเธซเธเนเธฒ
         function getAllProductCards() {
             return Array.from(document.querySelectorAll('.product-card'));
         }
 
-        // กรองเฉพาะ product ที่ตรงกับ category ที่เลือก
+        // เธเธฃเธญเธเน€เธเธเธฒเธฐ product เธ—เธตเนเธ•เธฃเธเธเธฑเธ category เธ—เธตเนเน€เธฅเธทเธญเธ
         function getFilteredProducts() {
             return getAllProductCards().filter(product => {
                 const productCategory = product.getAttribute('data-category');
@@ -1226,7 +1226,7 @@
             });
         }
 
-        // ─── 3. สร้าง Page Indicator (ถ้ายังไม่มี) ───────────────────────────
+        // โ”€โ”€โ”€ 3. เธชเธฃเนเธฒเธ Page Indicator (เธ–เนเธฒเธขเธฑเธเนเธกเนเธกเธต) โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
         function ensurePageIndicator() {
             const navControls = document.querySelector('.nav-controls');
             if (!navControls || document.getElementById('pageIndicator')) return;
@@ -1235,22 +1235,22 @@
             indicator.id = 'pageIndicator';
             indicator.className = 'page-indicator';
             indicator.innerText = '1 / 1';
-            // แทรก indicator ระหว่างปุ่ม Prev และ Next
+            // เนเธ—เธฃเธ indicator เธฃเธฐเธซเธงเนเธฒเธเธเธธเนเธก Prev เนเธฅเธฐ Next
             navControls.insertBefore(indicator, navControls.children[1] || null);
         }
 
-        // ─── 4. Setup ปุ่ม Prev / Next ───────────────────────────────────────
+        // โ”€โ”€โ”€ 4. Setup เธเธธเนเธก Prev / Next โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
         function setupNavButtons() {
             const navButtons = document.querySelectorAll('.nav-controls .nav-btn');
             if (navButtons.length < 2) return;
 
             navButtons[0].textContent = 'Prev';
             navButtons[1].textContent = 'Next';
-            navButtons[0].onclick = () => changePage(-1); // กด Prev ลดหน้า
-            navButtons[1].onclick = () => changePage(1);  // กด Next เพิ่มหน้า
+            navButtons[0].onclick = () => changePage(-1); // เธเธ” Prev เธฅเธ”เธซเธเนเธฒ
+            navButtons[1].onclick = () => changePage(1);  // เธเธ” Next เน€เธเธดเนเธกเธซเธเนเธฒ
         }
 
-        // ─── 5. Render สินค้าในหน้าปัจจุบัน ─────────────────────────────────
+        // โ”€โ”€โ”€ 5. Render เธชเธดเธเธเนเธฒเนเธเธซเธเนเธฒเธเธฑเธเธเธธเธเธฑเธ โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
         function renderProducts() {
             const allProducts = getAllProductCards();
             const filteredProducts = getFilteredProducts();
@@ -1259,29 +1259,29 @@
             const pageIndicator = document.getElementById('pageIndicator');
             const rangeText = document.getElementById('menuRangeText');
 
-            // ป้องกัน currentPage เกิน totalPages เมื่อ filter เปลี่ยน
+            // เธเนเธญเธเธเธฑเธ currentPage เน€เธเธดเธ totalPages เน€เธกเธทเนเธญ filter เน€เธเธฅเธตเนเธขเธ
             if (currentPage > totalPages) currentPage = totalPages;
 
-            // ซ่อนสินค้าทั้งหมดก่อน แล้วค่อยแสดงเฉพาะที่อยู่ในหน้านี้
+            // เธเนเธญเธเธชเธดเธเธเนเธฒเธ—เธฑเนเธเธซเธกเธ”เธเนเธญเธ เนเธฅเนเธงเธเนเธญเธขเนเธชเธ”เธเน€เธเธเธฒเธฐเธ—เธตเนเธญเธขเธนเนเนเธเธซเธเนเธฒเธเธตเน
             allProducts.forEach(product => {
                 product.style.display = 'none';
             });
 
-            // คำนวณ index เริ่มต้นและสิ้นสุดของหน้านี้
+            // เธเธณเธเธงเธ“ index เน€เธฃเธดเนเธกเธ•เนเธเนเธฅเธฐเธชเธดเนเธเธชเธธเธ”เธเธญเธเธซเธเนเธฒเธเธตเน
             const startIndex = (currentPage - 1) * productsPerPage;
             const endIndex = Math.min(startIndex + productsPerPage, filteredProducts.length);
 
-            // แสดงเฉพาะสินค้าในช่วง startIndex ถึง endIndex
+            // เนเธชเธ”เธเน€เธเธเธฒเธฐเธชเธดเธเธเนเธฒเนเธเธเนเธงเธ startIndex เธ–เธถเธ endIndex
             filteredProducts.slice(startIndex, endIndex).forEach(product => {
                 product.style.display = 'block';
             });
 
-            // อัปเดต Page Indicator เช่น "2 / 4"
+            // เธญเธฑเธเน€เธ”เธ• Page Indicator เน€เธเนเธ "2 / 4"
             if (pageIndicator) {
                 pageIndicator.innerText = `${currentPage} / ${totalPages}`;
             }
 
-            // อัปเดตข้อความบอกจำนวนสินค้าที่แสดงอยู่
+            // เธญเธฑเธเน€เธ”เธ•เธเนเธญเธเธงเธฒเธกเธเธญเธเธเธณเธเธงเธเธชเธดเธเธเนเธฒเธ—เธตเนเนเธชเธ”เธเธญเธขเธนเน
             if (rangeText) {
                 if (filteredProducts.length === 0) {
                     rangeText.innerText = 'No menu items found in this category yet';
@@ -1290,30 +1290,30 @@
                 }
             }
 
-            // disable ปุ่ม Prev ถ้าอยู่หน้าแรก / ปุ่ม Next ถ้าอยู่หน้าสุดท้าย
+            // disable เธเธธเนเธก Prev เธ–เนเธฒเธญเธขเธนเนเธซเธเนเธฒเนเธฃเธ / เธเธธเนเธก Next เธ–เนเธฒเธญเธขเธนเนเธซเธเนเธฒเธชเธธเธ”เธ—เนเธฒเธข
             if (navButtons.length >= 2) {
                 navButtons[0].disabled = currentPage === 1;
                 navButtons[1].disabled = currentPage === totalPages;
             }
         }
 
-        // ─── 6. เปลี่ยนหน้า Prev / Next ──────────────────────────────────────
+        // โ”€โ”€โ”€ 6. เน€เธเธฅเธตเนเธขเธเธซเธเนเธฒ Prev / Next โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
         function changePage(direction) {
             const totalPages = Math.max(1, Math.ceil(getFilteredProducts().length / productsPerPage));
             const nextPage = currentPage + direction;
-            // ป้องกันออกนอก range
+            // เธเนเธญเธเธเธฑเธเธญเธญเธเธเธญเธ range
             if (nextPage < 1 || nextPage > totalPages) return;
             currentPage = nextPage;
             renderProducts();
         }
 
-        // ─── 7. กรองสินค้าตาม Category ───────────────────────────────────────
+        // โ”€โ”€โ”€ 7. เธเธฃเธญเธเธชเธดเธเธเนเธฒเธ•เธฒเธก Category โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
         function filterMenu(category, event) {
             if (event) {
                 event.preventDefault();
             }
 
-            // ล้าง active ของทุก menu item แล้ว active อันที่กด
+            // เธฅเนเธฒเธ active เธเธญเธเธ—เธธเธ menu item เนเธฅเนเธง active เธญเธฑเธเธ—เธตเนเธเธ”
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -1322,17 +1322,19 @@
                 event.currentTarget.classList.add('active');
             }
 
-            // เปลี่ยน category และ reset กลับหน้า 1 แล้ว render ใหม่
+            // เน€เธเธฅเธตเนเธขเธ category เนเธฅเธฐ reset เธเธฅเธฑเธเธซเธเนเธฒ 1 เนเธฅเนเธง render เนเธซเธกเน
             currentCategory = category;
             currentPage = 1;
             renderProducts();
         }
 
-        // ─── 8. เริ่มต้นระบบเมื่อโหลดหน้าเสร็จ ──────────────────────────────
+        // โ”€โ”€โ”€ 8. เน€เธฃเธดเนเธกเธ•เนเธเธฃเธฐเธเธเน€เธกเธทเนเธญเนเธซเธฅเธ”เธซเธเนเธฒเน€เธชเธฃเนเธ โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
         document.addEventListener('DOMContentLoaded', function () {
-            ensurePageIndicator(); // สร้าง page indicator
-            setupNavButtons();     // setup ปุ่ม prev/next
-            renderProducts();      // render สินค้าหน้าแรก
+            ensurePageIndicator(); // เธชเธฃเนเธฒเธ page indicator
+            setupNavButtons();     // setup เธเธธเนเธก prev/next
+            renderProducts();      // render เธชเธดเธเธเนเธฒเธซเธเนเธฒเนเธฃเธ
         });
     </script>
 }
+
+
