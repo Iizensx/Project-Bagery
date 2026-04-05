@@ -19,7 +19,6 @@ public class AccountController : Controller
     }
 
     public IActionResult Login() => View(new AuthUserViewModel());
-
     [HttpPost]
     public IActionResult Login(AuthUserViewModel model)
     {
