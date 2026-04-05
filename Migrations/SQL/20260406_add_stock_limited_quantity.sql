@@ -1,0 +1,2 @@
+ALTER TABLE `stock`
+ADD COLUMN `IsLimitedQuantity` TINYINT(1) NOT NULL DEFAULT 0 AFTER `ImageUrl`;

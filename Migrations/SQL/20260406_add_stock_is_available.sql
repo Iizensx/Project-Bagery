@@ -1,0 +1,2 @@
+ALTER TABLE `stock`
+ADD COLUMN `IsAvailable` TINYINT(1) NOT NULL DEFAULT 1 AFTER `ImageUrl`;

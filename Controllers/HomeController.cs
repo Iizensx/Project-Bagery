@@ -20,6 +20,7 @@ public class HomeController : Controller
         ViewBag.PublicPromotions = GetPublicPromotions().Take(3).ToList();
         ViewBag.FeaturedProducts = _db.Stocks
             .Include(s => s.Category)
+            .Where(s => s.IsAvailable)
             .OrderBy(s => s.ProductId)
             .Take(8)
             .ToList();
@@ -30,6 +31,7 @@ public class HomeController : Controller
     {
         var products = _db.Stocks
             .Include(s => s.Category)
+            .Where(s => s.IsAvailable)
             .OrderBy(s => s.Price ?? decimal.MaxValue)
             .ThenBy(s => s.ProductName)
             .ToList();

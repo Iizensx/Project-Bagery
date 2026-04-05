@@ -9,6 +9,7 @@ public class AccountController : Controller
 {
     private readonly BakerydbContext _db;
     private readonly ILogger<AccountController> _logger;
+    private const int WelcomePromotionId = 1;
 
     public AccountController(BakerydbContext db, ILogger<AccountController> logger)
     {
@@ -39,11 +40,21 @@ public class AccountController : Controller
 
         HttpContext.Session.SetString("UserId", user.UserId.ToString());
         HttpContext.Session.SetString("Username", user.Username);
+        HttpContext.Session.SetString("RoleId", (user.RoleId ?? 0).ToString());
+        HttpContext.Session.SetString("RoleName", user.RoleId switch
+        {
+            1 => "Admin",
+            2 => "Staff",
+            _ => "User"
+        });
 
         LogUserLogin(username, true, ipAddress);
 
         if (user.RoleId == 1)
             return RedirectToAction("Dashbordadmin", "AdminDashboard");
+
+        if (user.RoleId == 2)
+            return RedirectToAction("Order", "AdminOrder");
 
         return RedirectToAction("Home", "Home");
     }
@@ -86,6 +97,8 @@ public class AccountController : Controller
 
         _db.Users.Add(newUser);
         _db.SaveChanges();
+
+        GrantWelcomePromotion(newUser.UserId);
 
         return RedirectToAction("Login");
     }
@@ -250,6 +263,37 @@ public class AccountController : Controller
         catch (Exception ex)
         {
             _logger.LogError("Error logging user login: {Message}", ex.Message);
+        }
+    }
+
+    private void GrantWelcomePromotion(int userId)
+    {
+        try
+        {
+            var welcomePromotion = _db.Promotions.FirstOrDefault(p => p.PromotionId == WelcomePromotionId);
+            if (welcomePromotion == null)
+            {
+                _logger.LogWarning("Welcome promotion {PromotionId} was not found for new user {UserId}", WelcomePromotionId, userId);
+                return;
+            }
+
+            var alreadyGranted = _db.UserPromotions.Any(up => up.UserId == userId && up.PromotionId == WelcomePromotionId);
+            if (alreadyGranted)
+                return;
+
+            _db.UserPromotions.Add(new UserPromotion
+            {
+                UserId = userId,
+                PromotionId = WelcomePromotionId,
+                IsUsed = 0,
+                UsedAt = null
+            });
+
+            _db.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to grant welcome promotion {PromotionId} to user {UserId}", WelcomePromotionId, userId);
         }
     }
 }

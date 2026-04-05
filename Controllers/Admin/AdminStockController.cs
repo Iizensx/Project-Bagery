@@ -16,7 +16,7 @@ public class AdminStockController : AdminControllerBase
 
     public IActionResult Stock()
     {
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         var model = new AdminStockViewModel
@@ -32,6 +32,34 @@ public class AdminStockController : AdminControllerBase
         };
 
         return View("~/Views/admin/Stock.cshtml", model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateStockSettings(
+        int productId,
+        int stockAdjustment,
+        bool isAvailable,
+        bool isLimitedQuantity)
+    {
+        if (!IsCurrentUserAdminOrStaff())
+            return RedirectToAdminLogin();
+
+        var product = await Db.Stocks.FirstOrDefaultAsync(s => s.ProductId == productId);
+        if (product == null)
+        {
+            TempData["StockError"] = "ไม่พบสินค้าที่ต้องการแก้ไข";
+            return RedirectToAction("Stock");
+        }
+
+        product.Stock1 = Math.Max(0, (product.Stock1 ?? 0) + stockAdjustment);
+        product.IsAvailable = isAvailable;
+        product.IsLimitedQuantity = isLimitedQuantity;
+
+        await Db.SaveChangesAsync();
+
+        TempData["StockSuccess"] = "อัปเดตสต็อกและสถานะสินค้าเรียบร้อย";
+        return RedirectToAction("Stock");
     }
 
     [HttpPost]
@@ -83,6 +111,8 @@ public class AdminStockController : AdminControllerBase
         string? description,
         decimal? price,
         int? stock1,
+        bool isAvailable,
+        bool isLimitedQuantity,
         int? categoryId,
         IFormFile? imageFile)
     {
@@ -132,6 +162,8 @@ public class AdminStockController : AdminControllerBase
             product.Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
             product.Price = price;
             product.Stock1 = stock1;
+            product.IsAvailable = isAvailable;
+            product.IsLimitedQuantity = isLimitedQuantity;
             product.CategoryId = categoryId;
 
             if (imageFile != null && imageFile.Length > 0)
@@ -149,6 +181,8 @@ public class AdminStockController : AdminControllerBase
             Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
             Price = price,
             Stock1 = stock1,
+            IsAvailable = isAvailable,
+            IsLimitedQuantity = isLimitedQuantity,
             CategoryId = categoryId
         };
 

@@ -21,7 +21,7 @@ public class AdminOrderController : AdminControllerBase
     public IActionResult Order()
     {
         // กันผู้ใช้ที่ไม่ใช่ Admin ออกจากหน้าจัดการออเดอร์
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         // ดึงออเดอร์ล่าสุดขึ้นก่อน เพื่อให้แอดมินเห็นงานใหม่เร็วที่สุด
@@ -40,7 +40,7 @@ public class AdminOrderController : AdminControllerBase
     [HttpPost]
     public IActionResult ConfirmPayment(int orderId)
     {
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         try
@@ -97,7 +97,7 @@ public class AdminOrderController : AdminControllerBase
     [HttpGet]
     public IActionResult GetOrderDetails(int orderId)
     {
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         // ดึงทั้งข้อมูลลูกค้า รายการสินค้า และข้อมูลสลิป
@@ -160,7 +160,7 @@ public class AdminOrderController : AdminControllerBase
     [HttpPost]
     public IActionResult AcceptOrder(int orderId)
     {
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         try
@@ -206,7 +206,7 @@ public class AdminOrderController : AdminControllerBase
     [HttpPost]
     public IActionResult ShipOrder(int orderId)
     {
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         try

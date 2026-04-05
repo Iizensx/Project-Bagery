@@ -9,6 +9,8 @@ namespace _66022380.Controllers.Admin;
 public abstract class AdminControllerBase : Controller
 {
     protected readonly BakerydbContext Db;
+    protected const int AdminRoleId = 1;
+    protected const int StaffRoleId = 2;
 
     // รับ BakerydbContext มาผ่าน Dependency Injection
     protected AdminControllerBase(BakerydbContext db)
@@ -23,7 +25,25 @@ public abstract class AdminControllerBase : Controller
         if (userId <= 0)
             return false;
 
-        return Db.Users.Any(u => u.UserId == userId && u.RoleId == 1);
+        return Db.Users.Any(u => u.UserId == userId && u.RoleId == AdminRoleId);
+    }
+
+    protected bool IsCurrentUserStaff()
+    {
+        var userId = GetCurrentUserId();
+        if (userId <= 0)
+            return false;
+
+        return Db.Users.Any(u => u.UserId == userId && u.RoleId == StaffRoleId);
+    }
+
+    protected bool IsCurrentUserAdminOrStaff()
+    {
+        var userId = GetCurrentUserId();
+        if (userId <= 0)
+            return false;
+
+        return Db.Users.Any(u => u.UserId == userId && (u.RoleId == AdminRoleId || u.RoleId == StaffRoleId));
     }
 
     // ดึง UserId ของผู้ใช้ปัจจุบันจาก Session
@@ -37,6 +57,12 @@ public abstract class AdminControllerBase : Controller
     // ถ้าไม่ใช่ Admin ให้ redirect กลับไปหน้า Login ของระบบหลัก
     protected IActionResult RedirectToAdminLogin()
     {
+        if (IsCurrentUserStaff())
+            return RedirectToAction("Order", "AdminOrder", new { area = "" });
+
+        if (IsCurrentUserAdmin())
+            return RedirectToAction("Dashbordadmin", "AdminDashboard", new { area = "" });
+
         return RedirectToAction("Login", "Account", new { area = "" });
     }
 }

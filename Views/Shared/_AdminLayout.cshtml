@@ -1,5 +1,9 @@
+@using Microsoft.AspNetCore.Http
 @{
     ViewData["Title"] = ViewBag.Title ?? "Admin Dashboard";
+    var sessionRoleName = Context.Session.GetString("RoleName") ?? "Admin";
+    var sessionUsername = Context.Session.GetString("Username") ?? sessionRoleName;
+    var dashboardTitle = sessionRoleName == "Staff" ? "Staff Dashboard" : "Admin Dashboard";
 }
 
 <!DOCTYPE html>
@@ -294,7 +298,7 @@
             <div class="dashboard-topbar">
                 <h1 class="page-title">@ViewBag.PageTitle</h1>
                 <div class="topbar-user">
-                    <span class="user-name">@User.Identity?.Name ?? "Admin"</span>
+                    <span class="user-name">@sessionUsername (@sessionRoleName)</span>
                     <a href="@Url.Action("Logout", "Account")" class="btn-logout">
                         <i class="fas fa-sign-out-alt"></i>
                     </a>
@@ -308,7 +312,7 @@
 
             <!-- Footer -->
             <div class="dashboard-footer">
-                <p>&copy; 2025 Admin Dashboard. All rights reserved.</p>
+                <p>&copy; 2025 @dashboardTitle. All rights reserved.</p>
             </div>
         </div>
     </div>

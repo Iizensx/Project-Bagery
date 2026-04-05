@@ -102,6 +102,9 @@ public class OrderController : Controller
             if (product == null)
                 continue;
 
+            if (!product.IsAvailable)
+                return Json(new { success = false, message = $"สินค้า {product.ProductName} ถูกปิดขายชั่วคราว" });
+
             _db.Orderdetails.Add(new Orderdetail
             {
                 OrderId = order.OrderId,

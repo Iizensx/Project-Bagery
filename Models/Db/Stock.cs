@@ -19,6 +19,10 @@ public partial class Stock
 
     public string? ImageUrl { get; set; }
 
+    public bool IsAvailable { get; set; }
+
+    public bool IsLimitedQuantity { get; set; }
+
     public virtual Category? Category { get; set; }
 
     public virtual ICollection<Orderdetail> Orderdetails { get; set; } = new List<Orderdetail>();

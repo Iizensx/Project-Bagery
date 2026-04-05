@@ -1,3 +1,10 @@
+@using Microsoft.AspNetCore.Http
+@{
+    var roleName = Context.Session.GetString("RoleName") ?? "Admin";
+    var isStaff = string.Equals(roleName, "Staff", StringComparison.OrdinalIgnoreCase);
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString();
+}
+
 <!-- Dashboard Sidebar Navigation -->
 <style>
     .dashboard-navbar {
@@ -120,57 +127,57 @@
 
 <nav class="dashboard-navbar">
     <div class="navbar-header">
-        <h2 class="navbar-logo">ADMIN</h2>
+        <h2 class="navbar-logo">@(isStaff ? "STAFF" : "ADMIN")</h2>
     </div>
 
     <ul class="navbar-menu">
-        <!-- รายงาน & สรุปยอด -->
-        <li class="navbar-item">
-            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashbordadmin" ? "active" : "")" asp-controller="AdminDashboard" asp-action="Dashbordadmin">
-                <i class="fas fa-chart-bar"></i>
-                <span>รายงาน & สรุปยอด</span>
-            </a>
-        </li>
+        @if (!isStaff)
+        {
+            <li class="navbar-item">
+                <a class="navbar-link @(currentAction == "Dashbordadmin" ? "active" : "")" asp-controller="AdminDashboard" asp-action="Dashbordadmin">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>รายงาน & สรุปยอด</span>
+                </a>
+            </li>
+        }
 
-        <!-- จัดการสินค้า & สต๊อก -->
         <li class="navbar-item">
-            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Stock" ? "active" : "")" asp-controller="AdminStock" asp-action="Stock">
+            <a class="navbar-link @(currentAction == "Stock" ? "active" : "")" asp-controller="AdminStock" asp-action="Stock">
                 <i class="fas fa-box"></i>
                 <span>จัดการสินค้า & สต๊อก</span>
             </a>
         </li>
 
-            <!-- จัดการคำสั่งซื้อ -->
         <li class="navbar-item">
-            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Order" ? "active" : "")" asp-controller="AdminOrder" asp-action="Order">
+            <a class="navbar-link @(currentAction == "Order" ? "active" : "")" asp-controller="AdminOrder" asp-action="Order">
                 <i class="fas fa-shopping-cart"></i>
                 <span>ออเดอร์</span>
             </a>
         </li>
 
-        <!-- จัดการผู้ใช้งาน -->
-        <li class="navbar-item">
-            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Member" ? "active" : "")" asp-controller="AdminMember" asp-action="Member">
-                <i class="fas fa-users"></i>
-                <span>จัดการผู้ใช้งาน</span>
-            </a>
-        </li>
+        @if (!isStaff)
+        {
+            <li class="navbar-item">
+                <a class="navbar-link @(currentAction == "Member" ? "active" : "")" asp-controller="AdminMember" asp-action="Member">
+                    <i class="fas fa-users"></i>
+                    <span>จัดการผู้ใช้งาน</span>
+                </a>
+            </li>
 
+            <li class="navbar-item">
+                <a class="navbar-link @(currentAction == "PromotionAdmin" ? "active" : "")" asp-controller="AdminPromotion" asp-action="PromotionAdmin">
+                    <i class="fas fa-gift"></i>
+                    <span>จัดการโปรโมชั่น</span>
+                </a>
+            </li>
+        }
 
         <li class="navbar-item">
-            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "PromotionAdmin" ? "active" : "")" asp-controller="AdminPromotion" asp-action="PromotionAdmin">
-                <i class="fas fa-gift"></i>
-                <span>จัดการโปรโมชั่น</span>
-            </a>
-        </li>
-
-        <li class="navbar-item">
-            <a class="navbar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "EventPromotion" ? "active" : "")" asp-controller="AdminPromotion" asp-action="EventPromotion">
+            <a class="navbar-link @(currentAction == "EventPromotion" ? "active" : "")" asp-controller="AdminPromotion" asp-action="EventPromotion">
                 <i class="fas fa-camera-retro"></i>
                 <span>Event Promotion</span>
             </a>
         </li>
-
     </ul>
 
     <div class="navbar-footer">
@@ -180,346 +187,3 @@
         </a>
     </div>
 </nav>
-
-<script>
-    function loadPage(event, page) {
-        event.preventDefault();
-        
-        // Remove active class from all links
-        const links = document.querySelectorAll('.navbar-link');
-        links.forEach(link => link.classList.remove('active'));
-
-        // Add active class to clicked link
-        event.target.closest('.navbar-link').classList.add('active');
-
-        // Load content based on page
-        const contentDiv = document.getElementById('content');
-        
-        switch(page) {
-            case 'product':
-                contentDiv.innerHTML = getProductPage();
-                break;
-            case 'order':
-                contentDiv.innerHTML = getOrderPage();
-                break;
-            case 'user':
-                contentDiv.innerHTML = getUserPage();
-                break;
-            case 'report':
-                contentDiv.innerHTML = getReportPage();
-                break;
-            case 'settings':
-                contentDiv.innerHTML = getSettingsPage();
-                break;
-        }
-    }
-
-    // Product Page Content
-    function getProductPage() {
-        return `
-            <div class="dashboard-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 class="dashboard-card-title" style="margin: 0;">
-                        <i class="fas fa-box"></i> จัดการสินค้า & สต๊อก
-                    </h3>
-                    <button class="btn btn-dashboard primary" onclick="alert('เพิ่มสินค้าใหม่')">
-                        <i class="fas fa-plus"></i> เพิ่มสินค้า
-                    </button>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <input type="text" class="form-control" placeholder="🔍 ค้นหาสินค้า..." />
-                </div>
-
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>รหัสสินค้า</th>
-                            <th>ชื่อสินค้า</th>
-                            <th>ราคา</th>
-                            <th>สต๊อก</th>
-                            <th>สถานะ</th>
-                            <th>การกระทำ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>PRD-001</td>
-                            <td>เสื้อยืดคุณภาพดี</td>
-                            <td>฿299</td>
-                            <td><span class="badge bg-danger">0</span></td>
-                            <td><span class="badge bg-warning">หมดสต๊อก</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                                <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>PRD-002</td>
-                            <td>กางเกงสีดำ</td>
-                            <td>฿499</td>
-                            <td><span class="badge bg-success">45</span></td>
-                            <td><span class="badge bg-success">มีจำหน่าย</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                                <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>PRD-003</td>
-                            <td>รองเท้าสนีกเกอร์</td>
-                            <td>฿1,299</td>
-                            <td><span class="badge bg-warning">8</span></td>
-                            <td><span class="badge bg-info">ใกล้หมด</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                                <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-
-    // Order Page Content
-    function getOrderPage() {
-        return `
-            <div class="dashboard-card">
-                <h3 class="dashboard-card-title">
-                    <i class="fas fa-shopping-cart"></i> จัดการคำสั่งซื้อ
-                </h3>
-
-                <div style="margin-bottom: 20px;">
-                    <input type="text" class="form-control" placeholder="🔍 ค้นหาคำสั่งซื้อ..." />
-                </div>
-
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>เลขที่คำสั่ง</th>
-                            <th>ลูกค้า</th>
-                            <th>วันที่</th>
-                            <th>ยอดรวม</th>
-                            <th>สถานะ</th>
-                            <th>การกระทำ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ORD-001</td>
-                            <td>สมชาย ใจดี</td>
-                            <td>02-Feb-2025</td>
-                            <td>฿3,500</td>
-                            <td><span class="badge bg-success">สำเร็จ</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('ดู')">ดู</button>
-                                <button class="btn btn-sm btn-dashboard secondary" onclick="alert('พิมพ์')">พิมพ์</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-002</td>
-                            <td>สุมาลี เรียนดี</td>
-                            <td>01-Feb-2025</td>
-                            <td>฿2,800</td>
-                            <td><span class="badge bg-warning">รอส่ง</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('ดู')">ดู</button>
-                                <button class="btn btn-sm btn-dashboard secondary" onclick="alert('พิมพ์')">พิมพ์</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-003</td>
-                            <td>กานต์ งามงาม</td>
-                            <td>31-Jan-2025</td>
-                            <td>฿4,200</td>
-                            <td><span class="badge bg-info">กำลังจัดส่ง</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('ดู')">ดู</button>
-                                <button class="btn btn-sm btn-dashboard secondary" onclick="alert('พิมพ์')">พิมพ์</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-
-    // User Page Content
-    function getUserPage() {
-        return `
-            <div class="dashboard-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 class="dashboard-card-title" style="margin: 0;">
-                        <i class="fas fa-users"></i> จัดการผู้ใช้งาน
-                    </h3>
-                    <button class="btn btn-dashboard primary" onclick="alert('เพิ่มผู้ใช้ใหม่')">
-                        <i class="fas fa-user-plus"></i> เพิ่มผู้ใช้
-                    </button>
-                </div>
-
-                <div style="margin-bottom: 20px;">
-                    <input type="text" class="form-control" placeholder="🔍 ค้นหาผู้ใช้งาน..." />
-                </div>
-
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>ชื่อผู้ใช้</th>
-                            <th>อีเมล</th>
-                            <th>บทบาท</th>
-                            <th>สถานะ</th>
-                            <th>การกระทำ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Jenny Wilson</td>
-                            <td>jenny@example.com</td>
-                            <td><span class="badge bg-primary">Admin</span></td>
-                            <td><span class="badge bg-success">ใช้งาน</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                                <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Marvin McKinney</td>
-                            <td>marvin@example.com</td>
-                            <td><span class="badge bg-info">Manager</span></td>
-                            <td><span class="badge bg-success">ใช้งาน</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                                <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Jerome Bell</td>
-                            <td>jerome@example.com</td>
-                            <td><span class="badge bg-secondary">User</span></td>
-                            <td><span class="badge bg-danger">ปิด</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-dashboard primary" onclick="alert('แก้ไข')">แก้ไข</button>
-                                <button class="btn btn-sm btn-dashboard danger" onclick="alert('ลบ')">ลบ</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-
-    // Report Page Content
-    function getReportPage() {
-        return `
-            <div class="dashboard-card">
-                <h3 class="dashboard-card-title">
-                    <i class="fas fa-chart-bar"></i> รายงาน & สรุปยอด
-                </h3>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
-                        <div class="stat-label">รายได้รวม</div>
-                        <div class="stat-value">฿125,430</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-shopping-cart"></i></div>
-                        <div class="stat-label">คำสั่งซื้อ</div>
-                        <div class="stat-value">542</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-users"></i></div>
-                        <div class="stat-label">ผู้ใช้ใหม่</div>
-                        <div class="stat-value">89</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon"><i class="fas fa-percent"></i></div>
-                        <div class="stat-label">อัตราการขาย</div>
-                        <div class="stat-value">85.3%</div>
-                    </div>
-                </div>
-
-                <h4 style="margin-top: 30px; margin-bottom: 15px; font-weight: 600;">ยอดขายรายเดือน</h4>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>เดือน</th>
-                            <th>ยอดขาย</th>
-                            <th>คำสั่งซื้อ</th>
-                            <th>เปรียบเทียบเดือนก่อน</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>มกราคม 2025</td>
-                            <td>฿45,230</td>
-                            <td>120</td>
-                            <td><span style="color: green;">↑ +12%</span></td>
-                        </tr>
-                        <tr>
-                            <td>ธันวาคม 2024</td>
-                            <td>฿40,350</td>
-                            <td>108</td>
-                            <td><span style="color: green;">↑ +8%</span></td>
-                        </tr>
-                        <tr>
-                            <td>พฤศจิกายน 2024</td>
-                            <td>฿37,600</td>
-                            <td>99</td>
-                            <td><span style="color: red;">↓ -5%</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-
-    // Settings Page Content
-    function getSettingsPage() {
-        return `
-            <div class="dashboard-card">
-                <h3 class="dashboard-card-title">
-                    <i class="fas fa-cog"></i> ตั้งค่าระบบ
-                </h3>
-
-                <form style="max-width: 600px;">
-                    <div class="form-group">
-                        <label class="form-label">ชื่อร้านค้า</label>
-                        <input type="text" class="form-control" value="My Shop Store" />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">อีเมลเว็บไซต์</label>
-                        <input type="email" class="form-control" value="info@myshop.com" />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">เบอร์โทรศัพท์</label>
-                        <input type="tel" class="form-control" value="02-XXXXXX" />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">ที่อยู่ร้าน</label>
-                        <textarea class="form-control" rows="3">123 ถนนสุขุมวิท ซอย 21 แขวงพระโขนง เขตคลองเตย กรุงเทพฯ</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">ค่าธรรมชาติการจัดส่ง</label>
-                        <input type="number" class="form-control" value="50" />
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <input type="checkbox" checked /> เปิดใช้งานโปรโมชั่น
-                        </label>
-                    </div>
-
-                    <button type="button" class="btn btn-dashboard primary" onclick="alert('บันทึกการตั้งค่า')">
-                        <i class="fas fa-save"></i> บันทึก
-                    </button>
-                </form>
-            </div>
-        `;
-    }
-</script>

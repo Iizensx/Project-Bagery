@@ -526,6 +526,11 @@
         color: #166534;
     }
 
+    .stock-badge.limited {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
     .btn-details {
         width: 100%;
         padding: 0.8rem;
@@ -1060,6 +1065,10 @@
                             <div class="product-price">@product.Price บาท</div>
                             <div class="stock-badge">คงเหลือ: @(product.Stock1 ?? 0)</div>
                             <button class="btn-details" onclick="showProductDetails(@product.ProductId, '@product.ProductName', '@(product.Description ?? "ไม่มีรายละเอียด")', @(product.Price ?? 0), '@(string.IsNullOrWhiteSpace(product.ImageUrl) ? "/img/bagery1.png" : product.ImageUrl)', @(product.Stock1 ?? 0))">รายละเอียด</button>
+                            @if (product.IsLimitedQuantity)
+                            {
+                                <div class="stock-badge limited">[สินค้ามีจำนวนจำกัด]</div>
+                            }
                             @if (product.Stock1 <= 0)
                             {
                                 <button class="btn-order" style="background: #ccc; color: #666; cursor: not-allowed;" disabled>สินค้าหมด</button>
@@ -1177,7 +1186,7 @@
 @section Scripts {
     <script>
         // ─── 1. แสดง Modal รายละเอียดสินค้า ─────────────────────────────────
-        function showProductDetails(productId, name, description, price, imageUrl, stock) {
+        function showProductDetails(productId, name, description, price, imageUrl, stock, isLimitedQuantity = false) {
             // นำข้อมูลสินค้าที่รับมาใส่ใน element ของ Modal
             document.getElementById('modalProductName').innerText = name;
             document.getElementById('modalProductDescription').innerText = description;

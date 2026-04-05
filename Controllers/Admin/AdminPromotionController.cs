@@ -32,7 +32,7 @@ public class AdminPromotionController : AdminControllerBase
 
     public IActionResult EventPromotion()
     {
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         ViewBag.Title = "Event Promotion";
@@ -306,7 +306,7 @@ public class AdminPromotionController : AdminControllerBase
     [ValidateAntiForgeryToken]
     public IActionResult ApproveClaim(int claimId, string? returnTo)
     {
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         var claim = Db.PromotionClaims
@@ -356,7 +356,7 @@ public class AdminPromotionController : AdminControllerBase
     [ValidateAntiForgeryToken]
     public IActionResult RejectClaim(int claimId, string? reviewNote, string? returnTo)
     {
-        if (!IsCurrentUserAdmin())
+        if (!IsCurrentUserAdminOrStaff())
             return RedirectToAdminLogin();
 
         var claim = Db.PromotionClaims

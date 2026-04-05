@@ -279,6 +279,12 @@ public partial class BakerydbContext : DbContext
 
             entity.Property(e => e.Description).HasColumnType("text");
             entity.Property(e => e.ImageUrl).HasMaxLength(255);
+            entity.Property(e => e.IsAvailable)
+                .HasDefaultValue(true)
+                .HasColumnName("IsAvailable");
+            entity.Property(e => e.IsLimitedQuantity)
+                .HasDefaultValue(false)
+                .HasColumnName("IsLimitedQuantity");
             entity.Property(e => e.Price).HasPrecision(10, 2);
             entity.Property(e => e.ProductName).HasMaxLength(100);
             entity.Property(e => e.Stock1)

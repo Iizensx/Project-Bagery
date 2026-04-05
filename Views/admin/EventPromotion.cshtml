@@ -1,10 +1,12 @@
 @using _66022380.Models
+@using Microsoft.AspNetCore.Http
 @model AdminPromotionViewModel
 
 @{
     ViewBag.Title = "Event Promotion";
     ViewBag.PageTitle = "Event Promotion";
     Layout = "_AdminLayout";
+    var isStaff = string.Equals(Context.Session.GetString("RoleName"), "Staff", StringComparison.OrdinalIgnoreCase);
 }
 
 <style>
@@ -153,8 +155,8 @@
     <section class="event-card event-hero">
         <h2 class="event-title">Event Promotion Review</h2>
         <p class="event-copy">
-            หน้านี้ให้พนักงานตรวจรูปที่ลูกค้าแนบเข้ามา ถ้ารูปผ่านจึงค่อยอนุมัติและเพิ่มสิทธิ์โปรโมชั่นเข้าบัญชีลูกค้าคนนั้น
-            ตอนลูกค้าส่งรูปเข้ามา ระบบจะเก็บเป็นสถานะรอตรวจสอบก่อน ยังไม่ได้รับโปรโมชั่นทันที
+            หน้านี้ใช้สำหรับตรวจรูปหลักฐานจากลูกค้า ก่อนอนุมัติสิทธิ์ Event Promotion ให้กับผู้ใช้ที่ส่งคำขอเข้ามา
+            เมื่อผ่านการตรวจสอบ ระบบจะเพิ่มสิทธิ์โปรโมชั่นให้เฉพาะบัญชีของลูกค้าคนนั้นทันที
         </p>
         <div class="event-top">
             <div class="event-stat">
@@ -186,11 +188,20 @@
         <div class="section-head">
             <div>
                 <h3 class="section-title">รายการรอตรวจสอบ</h3>
-                <p class="section-copy">ตรวจภาพ, ดูว่าเป็นการเช็กอินจริงหรือไม่, แล้วค่อยอนุมัติหรือปฏิเสธจากรายการด้านล่าง</p>
+                <p class="section-copy">ตรวจภาพ ดูรายละเอียดคำขอ แล้วค่อยอนุมัติหรือปฏิเสธได้จากหน้านี้ทันที</p>
             </div>
-            <a asp-controller="AdminPromotion" asp-action="PromotionAdmin" class="event-link">
-                <i class="fas fa-arrow-left"></i> กลับไปหน้า Promotion Dashboard
-            </a>
+            @if (isStaff)
+            {
+                <a asp-controller="AdminOrder" asp-action="Order" class="event-link">
+                    <i class="fas fa-arrow-left"></i> กลับไปหน้าจัดการออเดอร์
+                </a>
+            }
+            else
+            {
+                <a asp-controller="AdminPromotion" asp-action="PromotionAdmin" class="event-link">
+                    <i class="fas fa-arrow-left"></i> กลับไปหน้า Promotion Dashboard
+                </a>
+            }
         </div>
 
         @if (Model.PendingClaims.Any())
@@ -210,7 +221,7 @@
                                 โปรโมชั่น: @claim.Promotion.PromotionName<br />
                                 ส่งเมื่อ: @claim.RequestedAt.ToString("dd/MM/yyyy HH:mm")<br />
                                 หมายเหตุจากลูกค้า: @(string.IsNullOrWhiteSpace(claim.Note) ? "-" : claim.Note)<br />
-                                ถ้าอนุมัติ ระบบจะเพิ่มโปรโมชั่นนี้ให้ผู้ใช้คนนี้เท่านั้น
+                                หากอนุมัติ ระบบจะเพิ่มสิทธิ์โปรโมชั่นนี้ให้เฉพาะลูกค้าคนนี้
                             </div>
 
                             <div class="claim-actions">
@@ -236,7 +247,7 @@
         }
         else
         {
-            <div class="empty-state">ตอนนี้ยังไม่มีรูปจากลูกค้าที่รอพนักงานตรวจสอบ</div>
+            <div class="empty-state">ตอนนี้ยังไม่มีคำขอ Event Promotion ที่รอให้ตรวจสอบ</div>
         }
     </section>
 </div>
