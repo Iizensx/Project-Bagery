@@ -35,6 +35,29 @@
 - จัดการโปรโมชั่นและแจกคูปองให้ผู้ใช้
 - จัดการสมาชิกและบทบาทผู้ใช้
 
+## ภาพรวมระบบแยกตามสิทธิ์
+
+### ฝั่งผู้ใช้ทั่วไป (User / Customer)
+- `Signup` ใช้สมัครสมาชิกใหม่และบันทึกข้อมูลผู้ใช้ลงระบบ
+- `Login` ใช้ตรวจสอบตัวตนและแยกสิทธิ์การเข้าใช้งานตามบทบาท
+- `Home / Menu / Promotion` ใช้แสดงสินค้า โปรโมชัน และข้อมูลหน้าร้าน
+- `Profile / SaveAddress / DeleteAddress / GetUserAddresses` ใช้จัดการข้อมูลส่วนตัวและที่อยู่จัดส่ง
+- `Checkout / CreateOrder / Payment / UploadSlip / Delivery / CompleteOrder` ใช้สั่งซื้อ ชำระเงิน แนบสลิป และติดตามสถานะคำสั่งซื้อ
+- `GetUserPromos / SubmitPromotionClaim / GetMyNotifications` ใช้รับสิทธิ์โปรโมชันและติดตามการแจ้งเตือนของผู้ใช้
+
+### ฝั่งพนักงาน (Staff)
+- `Order / GetOrderDetails` ใช้ดูรายการออเดอร์และรายละเอียดการสั่งซื้อ
+- `ConfirmPayment` ใช้ตรวจสอบการชำระเงินและอัปเดตสถานะคำสั่งซื้อ
+- `AcceptOrder / ShipOrder` ใช้เปลี่ยนสถานะออเดอร์เข้าสู่ขั้นตอนเตรียมสินค้าและจัดส่ง
+- `Stock / UpdateStockSettings` ใช้ดูและปรับจำนวนสต็อกหรือสถานะพร้อมขายของสินค้า
+- `EventPromotion / ApproveClaim / RejectClaim` ใช้ตรวจสอบคำขอโปรโมชันจากลูกค้าและอนุมัติหรือปฏิเสธ
+
+### ฝั่งผู้ดูแลระบบ (Admin)
+- `Dashbordadmin` ใช้ดูภาพรวมของระบบ เช่น ยอดขาย คำสั่งซื้อ สินค้าใกล้หมด และข้อมูลสรุปสำคัญของร้าน
+- `Member / SaveMember / DeleteMember` ใช้จัดการสมาชิกและกำหนดบทบาทของผู้ใช้
+- `Stock / UpdateStockSettings / SaveCategory / SaveStock` ใช้จัดการสินค้า หมวดหมู่ และการปรับสต็อก โดยส่วนปรับสต็อกบางส่วนเป็นงานที่ทำร่วมกับ staff
+- `PromotionAdmin / SavePromotion / GiftPromotion / GiftPromotionToAll` ใช้สร้าง แก้ไข บันทึก และมอบโปรโมชันให้ผู้ใช้
+
 ## Flowchart การทำงานของระบบ
 
 ```text
