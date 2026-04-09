@@ -1185,40 +1185,40 @@
 
 @section Scripts {
     <script>
-        // โ”€โ”€โ”€ 1. เนเธชเธ”เธ Modal เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ”เธชเธดเธเธเนเธฒ โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+        // 1. แสดง Modal รายละเอียดสินค้า
         function showProductDetails(productId, name, description, price, imageUrl, stock, isLimitedQuantity = false) {
-            // เธเธณเธเนเธญเธกเธนเธฅเธชเธดเธเธเนเธฒเธ—เธตเนเธฃเธฑเธเธกเธฒเนเธชเนเนเธ element เธเธญเธ Modal
+            // นำข้อมูลสินค้าที่รับมาไปแสดงในองค์ประกอบของ Modal
             document.getElementById('modalProductName').innerText = name;
             document.getElementById('modalProductDescription').innerText = description;
             document.getElementById('modalProductPrice').innerText = price + ' บาท';
             document.getElementById('modalProductImage').src = imageUrl;
             document.getElementById('modalProductStock').innerText = 'คงเหลือ: ' + stock;
             
-            // เธเธณเธซเธเธ” onclick เธเธญเธเธเธธเนเธก "เน€เธเธดเนเธกเธฅเธเธ•เธฐเธเธฃเนเธฒ" เนเธ Modal เนเธซเนเน€เธฃเธตเธขเธ addToCart()
+            // กำหนดการกดปุ่ม "เพิ่มลงตะกร้า" ใน Modal ให้เรียก addToCart()
             const addToCartBtn = document.getElementById('modalAddToCartBtn');
             addToCartBtn.onclick = function() {
                 addToCart(name, price, productId);
-                // Optional: เธเธดเธ” Modal เธซเธฅเธฑเธเน€เธเธดเนเธกเธชเธดเธเธเนเธฒ (เธเธฑเธเธเธธเธเธฑเธ comment เนเธงเน)
+                // ถ้าต้องการ สามารถสั่งปิด Modal หลังเพิ่มสินค้าได้
                 // var modal = bootstrap.Modal.getInstance(document.getElementById('productDetailModal'));
                 // modal.hide();
             };
 
-            // เน€เธเธดเธ” Bootstrap Modal
+            // เปิด Bootstrap Modal
             var productModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
             productModal.show();
         }
 
-        // โ”€โ”€โ”€ 2. เธ•เธฑเธงเนเธเธฃ State เธเธญเธเธฃเธฐเธเธ Pagination เนเธฅเธฐ Filter โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
-        const productsPerPage = 6; // เนเธชเธ”เธเธชเธดเธเธเนเธฒ 6 เธเธดเนเธเธ•เนเธญเธซเธเนเธฒ
+        // 2. ตัวแปรสถานะของระบบแบ่งหน้าและกรองหมวดหมู่
+        const productsPerPage = 6; // แสดงสินค้า 6 ชิ้นต่อหน้า
         let currentPage = 1;
-        let currentCategory = 'all'; // category เธ—เธตเนเธเธฃเธญเธเธญเธขเธนเนเธ•เธญเธเธเธตเน
+        let currentCategory = 'all'; // หมวดหมู่ที่กำลังถูกกรองอยู่ตอนนี้
 
-        // เธ”เธถเธ product card เธ—เธฑเนเธเธซเธกเธ”เนเธเธซเธเนเธฒ
+        // ดึง product card ทั้งหมดในหน้า
         function getAllProductCards() {
             return Array.from(document.querySelectorAll('.product-card'));
         }
 
-        // เธเธฃเธญเธเน€เธเธเธฒเธฐ product เธ—เธตเนเธ•เธฃเธเธเธฑเธ category เธ—เธตเนเน€เธฅเธทเธญเธ
+        // กรองเฉพาะสินค้าที่ตรงกับหมวดหมู่ที่เลือก
         function getFilteredProducts() {
             return getAllProductCards().filter(product => {
                 const productCategory = product.getAttribute('data-category');
@@ -1226,7 +1226,7 @@
             });
         }
 
-        // โ”€โ”€โ”€ 3. เธชเธฃเนเธฒเธ Page Indicator (เธ–เนเธฒเธขเธฑเธเนเธกเนเธกเธต) โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+        // 3. สร้างตัวบอกเลขหน้า ถ้ายังไม่มีใน DOM
         function ensurePageIndicator() {
             const navControls = document.querySelector('.nav-controls');
             if (!navControls || document.getElementById('pageIndicator')) return;
@@ -1235,22 +1235,22 @@
             indicator.id = 'pageIndicator';
             indicator.className = 'page-indicator';
             indicator.innerText = '1 / 1';
-            // เนเธ—เธฃเธ indicator เธฃเธฐเธซเธงเนเธฒเธเธเธธเนเธก Prev เนเธฅเธฐ Next
+            // แทรกตัวบอกเลขหน้าไว้ระหว่างปุ่ม Prev และ Next
             navControls.insertBefore(indicator, navControls.children[1] || null);
         }
 
-        // โ”€โ”€โ”€ 4. Setup เธเธธเนเธก Prev / Next โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+        // 4. ตั้งค่าปุ่ม Prev / Next
         function setupNavButtons() {
             const navButtons = document.querySelectorAll('.nav-controls .nav-btn');
             if (navButtons.length < 2) return;
 
             navButtons[0].textContent = 'Prev';
             navButtons[1].textContent = 'Next';
-            navButtons[0].onclick = () => changePage(-1); // เธเธ” Prev เธฅเธ”เธซเธเนเธฒ
-            navButtons[1].onclick = () => changePage(1);  // เธเธ” Next เน€เธเธดเนเธกเธซเธเนเธฒ
+            navButtons[0].onclick = () => changePage(-1); // กด Prev เพื่อย้อนกลับไปหน้าก่อน
+            navButtons[1].onclick = () => changePage(1);  // กด Next เพื่อไปหน้าถัดไป
         }
 
-        // โ”€โ”€โ”€ 5. Render เธชเธดเธเธเนเธฒเนเธเธซเธเนเธฒเธเธฑเธเธเธธเธเธฑเธ โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+        // 5. แสดงสินค้าในหน้าปัจจุบันตามการแบ่งหน้าและการกรอง
         function renderProducts() {
             const allProducts = getAllProductCards();
             const filteredProducts = getFilteredProducts();
@@ -1259,29 +1259,29 @@
             const pageIndicator = document.getElementById('pageIndicator');
             const rangeText = document.getElementById('menuRangeText');
 
-            // เธเนเธญเธเธเธฑเธ currentPage เน€เธเธดเธ totalPages เน€เธกเธทเนเธญ filter เน€เธเธฅเธตเนเธขเธ
+            // ป้องกันไม่ให้ currentPage เกินจำนวนหน้าทั้งหมดหลังจากมีการกรอง
             if (currentPage > totalPages) currentPage = totalPages;
 
-            // เธเนเธญเธเธชเธดเธเธเนเธฒเธ—เธฑเนเธเธซเธกเธ”เธเนเธญเธ เนเธฅเนเธงเธเนเธญเธขเนเธชเธ”เธเน€เธเธเธฒเธฐเธ—เธตเนเธญเธขเธนเนเนเธเธซเธเนเธฒเธเธตเน
+            // ซ่อนสินค้าทั้งหมดก่อน แล้วค่อยแสดงเฉพาะสินค้าที่อยู่ในหน้าปัจจุบัน
             allProducts.forEach(product => {
                 product.style.display = 'none';
             });
 
-            // เธเธณเธเธงเธ“ index เน€เธฃเธดเนเธกเธ•เนเธเนเธฅเธฐเธชเธดเนเธเธชเธธเธ”เธเธญเธเธซเธเนเธฒเธเธตเน
+            // คำนวณตำแหน่งเริ่มต้นและสิ้นสุดของสินค้าที่ต้องแสดงในหน้านี้
             const startIndex = (currentPage - 1) * productsPerPage;
             const endIndex = Math.min(startIndex + productsPerPage, filteredProducts.length);
 
-            // เนเธชเธ”เธเน€เธเธเธฒเธฐเธชเธดเธเธเนเธฒเนเธเธเนเธงเธ startIndex เธ–เธถเธ endIndex
+            // แสดงเฉพาะสินค้าที่อยู่ในช่วง startIndex ถึง endIndex
             filteredProducts.slice(startIndex, endIndex).forEach(product => {
                 product.style.display = 'block';
             });
 
-            // เธญเธฑเธเน€เธ”เธ• Page Indicator เน€เธเนเธ "2 / 4"
+            // อัปเดตตัวบอกเลขหน้า เช่น "2 / 4"
             if (pageIndicator) {
                 pageIndicator.innerText = `${currentPage} / ${totalPages}`;
             }
 
-            // เธญเธฑเธเน€เธ”เธ•เธเนเธญเธเธงเธฒเธกเธเธญเธเธเธณเธเธงเธเธชเธดเธเธเนเธฒเธ—เธตเนเนเธชเธ”เธเธญเธขเธนเน
+            // อัปเดตข้อความบอกจำนวนสินค้าที่กำลังแสดง
             if (rangeText) {
                 if (filteredProducts.length === 0) {
                     rangeText.innerText = 'No menu items found in this category yet';
@@ -1290,30 +1290,30 @@
                 }
             }
 
-            // disable เธเธธเนเธก Prev เธ–เนเธฒเธญเธขเธนเนเธซเธเนเธฒเนเธฃเธ / เธเธธเนเธก Next เธ–เนเธฒเธญเธขเธนเนเธซเธเนเธฒเธชเธธเธ”เธ—เนเธฒเธข
+            // ปิดการใช้งานปุ่ม Prev หรือ Next เมื่ออยู่หน้าแรกหรือหน้าสุดท้าย
             if (navButtons.length >= 2) {
                 navButtons[0].disabled = currentPage === 1;
                 navButtons[1].disabled = currentPage === totalPages;
             }
         }
 
-        // โ”€โ”€โ”€ 6. เน€เธเธฅเธตเนเธขเธเธซเธเนเธฒ Prev / Next โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+        // 6. เปลี่ยนหน้าเมื่อกด Prev / Next
         function changePage(direction) {
             const totalPages = Math.max(1, Math.ceil(getFilteredProducts().length / productsPerPage));
             const nextPage = currentPage + direction;
-            // เธเนเธญเธเธเธฑเธเธญเธญเธเธเธญเธ range
+            // ป้องกันไม่ให้เลขหน้าเกินขอบเขตที่มีจริง
             if (nextPage < 1 || nextPage > totalPages) return;
             currentPage = nextPage;
             renderProducts();
         }
 
-        // โ”€โ”€โ”€ 7. เธเธฃเธญเธเธชเธดเธเธเนเธฒเธ•เธฒเธก Category โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+        // 7. กรองสินค้าตามหมวดหมู่ที่เลือก
         function filterMenu(category, event) {
             if (event) {
                 event.preventDefault();
             }
 
-            // เธฅเนเธฒเธ active เธเธญเธเธ—เธธเธ menu item เนเธฅเนเธง active เธญเธฑเธเธ—เธตเนเธเธ”
+            // ล้างสถานะ active ของทุกเมนู แล้วตั้งค่า active ให้เมนูที่ถูกเลือก
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.classList.remove('active');
             });
@@ -1322,17 +1322,17 @@
                 event.currentTarget.classList.add('active');
             }
 
-            // เน€เธเธฅเธตเนเธขเธ category เนเธฅเธฐ reset เธเธฅเธฑเธเธซเธเนเธฒ 1 เนเธฅเนเธง render เนเธซเธกเน
+            // เปลี่ยนหมวดหมู่ที่กรอง รีเซ็ตกลับไปหน้า 1 แล้วแสดงผลใหม่
             currentCategory = category;
             currentPage = 1;
             renderProducts();
         }
 
-        // โ”€โ”€โ”€ 8. เน€เธฃเธดเนเธกเธ•เนเธเธฃเธฐเธเธเน€เธกเธทเนเธญเนเธซเธฅเธ”เธซเธเนเธฒเน€เธชเธฃเนเธ โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€โ”€
+        // 8. เริ่มต้นการทำงานเมื่อหน้าเว็บโหลดเสร็จ
         document.addEventListener('DOMContentLoaded', function () {
-            ensurePageIndicator(); // เธชเธฃเนเธฒเธ page indicator
-            setupNavButtons();     // setup เธเธธเนเธก prev/next
-            renderProducts();      // render เธชเธดเธเธเนเธฒเธซเธเนเธฒเนเธฃเธ
+            ensurePageIndicator(); // สร้างตัวบอกเลขหน้า
+            setupNavButtons();     // ตั้งค่าปุ่ม prev/next
+            renderProducts();      // แสดงสินค้าในหน้าแรก
         });
     </script>
 }

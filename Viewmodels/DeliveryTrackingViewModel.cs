@@ -21,7 +21,6 @@ public class DeliveryTrackingViewModel
     public bool IsCompleted { get; set; }
     public List<DeliveryOrderHistoryItem> OrderHistory { get; set; } = new();
 }
-
 public class DeliveryOrderHistoryItem
 {
     public int OrderId { get; set; }
@@ -38,7 +37,6 @@ public class DeliveryOrderHistoryItem
     public bool IsActive { get; set; }
     public List<DeliveryOrderHistoryLineItem> Items { get; set; } = new();
 }
-
 public class DeliveryOrderHistoryLineItem
 {
     public string ProductName { get; set; } = "-";
